@@ -149,7 +149,8 @@ const HeroSection = () => {
               href="#contato"
               whileHover={{ scale: 1.03, boxShadow: "0 0 30px hsl(220 100% 55% / 0.5), 0 0 80px hsl(220 100% 55% / 0.2)" }}
               whileTap={{ scale: 0.97 }}
-              className="inline-flex items-center justify-center px-8 py-4 font-display font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 glow-box-intense tracking-wide uppercase text-sm relative overflow-hidden group"
+              className="inline-flex items-center justify-center px-8 py-4 font-display font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 tracking-wide uppercase text-sm relative overflow-hidden group"
+              style={{ boxShadow: "0 0 20px hsl(220 100% 55% / 0.4), 0 0 60px hsl(220 100% 55% / 0.2), 0 0 100px hsl(220 100% 55% / 0.1)" }}
             >
               <span className="relative z-10">Solicitar Diagnóstico</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
