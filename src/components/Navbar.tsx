@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import spectraLogo from "@/assets/spectra-logo.svg";
 
 const navLinks = [
-  { label: "Serviços", href: "#servicos" },
-  { label: "Cases", href: "#arsenal" },
+  { label: "Arsenal", href: "#arsenal" },
+  { label: "Cases", href: "#cases" },
   { label: "Contato", href: "#contato" },
 ];
 
