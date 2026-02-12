@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import spectraLogo from "@/assets/spectra-logo.svg";
 
 const navLinks = [
@@ -12,6 +13,7 @@ const navLinks = [
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -57,6 +59,13 @@ const Navbar = () => {
               <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary group-hover:w-full transition-all duration-300" />
             </a>
           ))}
+          <button
+            onClick={() => navigate("/login")}
+            className="font-body text-sm text-muted-foreground hover:text-primary transition-colors duration-300 uppercase tracking-widest relative group"
+          >
+            Admin
+            <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary group-hover:w-full transition-all duration-300" />
+          </button>
           <motion.a
             href="#contato"
             whileHover={{ scale: 1.05, boxShadow: "0 0 20px hsl(220 100% 55% / 0.3)" }}
@@ -95,6 +104,12 @@ const Navbar = () => {
               {link.label}
             </a>
           ))}
+          <button
+            onClick={() => { navigate("/login"); setOpen(false); }}
+            className="font-body text-sm text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest"
+          >
+            Admin
+          </button>
           <a
             href="#contato"
             onClick={() => setOpen(false)}
