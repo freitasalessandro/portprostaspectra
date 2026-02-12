@@ -1,12 +1,12 @@
 const items = [
-  "DESIGN",
-  "BRANDING",
-  "DESENVOLVIMENTO",
-  "ESTRATÉGIA",
+  "ENGENHARIA",
+  "INTELIGÊNCIA",
   "AUTOMAÇÃO",
   "PERFORMANCE",
-  "UI/UX",
-  "MARKETING",
+  "SOBERANIA DIGITAL",
+  "CTO AS A SERVICE",
+  "IA & ROI",
+  "ESCALA",
 ];
 
 const MarqueeBar = () => {
