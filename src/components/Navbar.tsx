@@ -69,8 +69,8 @@ const Navbar = () => {
           <img
             src={spectraLogo}
             alt=""
-            className="w-6 h-5 opacity-40"
-            style={{ filter: "brightness(0) saturate(100%) invert(35%) sepia(98%) saturate(2000%) hue-rotate(210deg) brightness(100%)" }}
+            className="w-6 h-5 opacity-50 dark:opacity-40"
+            style={{ filter: isDark ? "brightness(0) saturate(100%) invert(35%) sepia(98%) saturate(2000%) hue-rotate(210deg) brightness(100%)" : "brightness(0) saturate(100%) invert(25%) sepia(80%) saturate(1500%) hue-rotate(215deg) brightness(90%)" }}
           />
           {navLinks.map((link) => (
             <a
