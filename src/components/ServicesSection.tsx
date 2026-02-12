@@ -1,29 +1,29 @@
 import { motion } from "framer-motion";
-import { Code, Palette, TrendingUp, Zap } from "lucide-react";
+import { Shield, Target, Cpu, Zap } from "lucide-react";
 
 const services = [
   {
-    icon: Palette,
-    title: "Design & Branding",
-    description: "Identidade visual, UI/UX e sistemas de design que posicionam sua marca acima da concorrência.",
+    icon: Target,
+    title: "Diagnóstico Estratégico Remunerado",
+    description: "Não começamos um código sem garantir que cada linha escrita vai reduzir custos e escalar sua operação. Valor 100% revertido no setup.",
     tag: "01",
   },
   {
-    icon: Code,
-    title: "Desenvolvimento Web",
-    description: "Sites e aplicações de alta performance com tecnologias modernas e foco em conversão.",
+    icon: Cpu,
+    title: "Especialistas em Impossíveis",
+    description: "Legado obsoleto que trava a empresa ou sistema crítico que ninguém escala — a Spectra resolve. Do Governo a Fintechs, de ISPs a Educação.",
     tag: "02",
   },
   {
-    icon: TrendingUp,
-    title: "Marketing Digital",
-    description: "Estratégias orientadas a dados, SEO avançado e campanhas que geram resultados mensuráveis.",
+    icon: Shield,
+    title: "Soberania Digital",
+    description: "Projetos como PAX e SAGAS não são softwares; são ecossistemas de soberania digital construídos para dominar mercados.",
     tag: "03",
   },
   {
     icon: Zap,
-    title: "Automação & IA",
-    description: "Soluções inteligentes que otimizam processos e escalam operações com eficiência.",
+    title: "IA que Gera Margem",
+    description: "Esqueça o hype. Nossa IA é focada em otimização de custos e novas receitas. Se usamos IA para diagnósticos médicos de alta precisão, imagine o que faremos com seus dados.",
     tag: "04",
   },
 ];
@@ -39,11 +39,13 @@ const ServicesSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-20"
         >
-          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">O que fazemos</p>
+          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">Onde a complexidade se curva</p>
           <h2 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight">
-            Serviços sob
+            O mercado entrega o que
             <br />
-            <span className="text-gradient">medida.</span>
+            você pede. A Spectra entrega
+            <br />
+            <span className="text-gradient">o que o seu lucro exige.</span>
           </h2>
         </motion.div>
 

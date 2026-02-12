@@ -6,8 +6,8 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-40" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 py-32">
@@ -17,15 +17,15 @@ const HeroSection = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <p className="font-body text-primary tracking-[0.3em] uppercase text-sm mb-6">
-            Proposta Comercial & Portfólio
+            Engenharia de Software & Inteligência de Negócios
           </p>
 
           <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-extrabold leading-[0.9] tracking-tight mb-8">
-            Criamos
+            Spectra
             <br />
-            <span className="text-gradient">experiências</span>
+            <span className="text-gradient">CTO as a</span>
             <br />
-            que vendem.
+            Service.
           </h1>
         </motion.div>
 
@@ -33,9 +33,9 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="font-body text-muted-foreground text-lg md:text-xl max-w-xl mb-12 leading-relaxed"
+          className="font-body text-muted-foreground text-lg md:text-xl max-w-2xl mb-12 leading-relaxed"
         >
-          Design estratégico, tecnologia de ponta e narrativa visual que transforma marcas em referências de mercado.
+          Transformamos complexidade operacional em ativos digitais de alta performance sob o modelo CTO as a Service.
         </motion.p>
 
         <motion.div
@@ -48,13 +48,13 @@ const HeroSection = () => {
             href="#contato"
             className="inline-flex items-center justify-center px-8 py-4 font-display font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 glow-box tracking-wide uppercase text-sm"
           >
-            Solicitar Proposta
+            Solicitar Diagnóstico
           </a>
           <a
-            href="#portfolio"
+            href="#arsenal"
             className="inline-flex items-center justify-center px-8 py-4 font-display font-bold text-foreground border border-border hover:border-primary/50 transition-all duration-300 tracking-wide uppercase text-sm"
           >
-            Ver Portfólio
+            Ver Arsenal
           </a>
         </motion.div>
 

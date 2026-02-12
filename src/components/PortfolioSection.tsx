@@ -1,36 +1,36 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 
-const projects = [
+const products = [
   {
-    title: "E-commerce Premium",
-    category: "Design & Dev",
-    result: "+340% conversão",
-    description: "Redesign completo de plataforma de e-commerce para marca de luxo.",
+    title: "Contrato Online + Boleto Fácil",
+    category: "Domínio Financeiro",
+    result: "Vendas automatizadas",
+    description: "Dinheiro no caixa com vendas automatizadas e gestão de contratos integrada.",
   },
   {
-    title: "App Fintech",
-    category: "UI/UX & Mobile",
-    result: "200k+ usuários",
-    description: "Aplicativo de gestão financeira com interface premiada.",
+    title: "FlowList",
+    category: "Controle Total",
+    result: "Gestão 360°",
+    description: "Gestão completa de projetos e margem financeira. O fim do 'acho que estamos lucrando'.",
   },
   {
-    title: "Portal Corporativo",
-    category: "Desenvolvimento",
-    result: "99.9% uptime",
-    description: "Plataforma escalável para multinacional com alta disponibilidade.",
+    title: "Forms",
+    category: "Inteligência Pura",
+    result: "Dados → Insights",
+    description: "Captura de dados que gera insight estratégico, não apenas lista.",
   },
   {
-    title: "Campanha Digital",
-    category: "Marketing",
-    result: "12x ROI",
-    description: "Estratégia integrada de marketing que superou todas as metas.",
+    title: "Calculadora de Linfedema",
+    category: "IA de Elite",
+    result: "Alta precisão",
+    description: "IA para diagnósticos médicos de alta precisão em hospitais de referência.",
   },
 ];
 
 const PortfolioSection = () => {
   return (
-    <section className="py-32 px-6" id="portfolio">
+    <section className="py-32 px-6" id="arsenal">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -39,18 +39,21 @@ const PortfolioSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-20"
         >
-          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">Cases de sucesso</p>
+          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">O Arsenal Spectra</p>
           <h2 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight">
-            Resultados que
+            SaaS de resposta
             <br />
-            <span className="text-gradient">falam.</span>
+            <span className="text-gradient">rápida.</span>
           </h2>
+          <p className="text-muted-foreground text-lg mt-6 font-body max-w-xl">
+            Ferramentas criadas para quem não tem tempo a perder.
+          </p>
         </motion.div>
 
         <div className="space-y-2">
-          {projects.map((project, i) => (
+          {products.map((product, i) => (
             <motion.div
-              key={project.title}
+              key={product.title}
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-50px" }}
@@ -59,19 +62,19 @@ const PortfolioSection = () => {
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xs text-primary tracking-[0.2em] uppercase font-body">{project.category}</span>
+                  <span className="text-xs text-primary tracking-[0.2em] uppercase font-body">{product.category}</span>
                 </div>
                 <h3 className="font-display text-2xl md:text-3xl font-bold group-hover:text-primary transition-colors duration-300">
-                  {project.title}
+                  {product.title}
                 </h3>
               </div>
 
               <p className="text-muted-foreground font-body max-w-xs hidden md:block">
-                {project.description}
+                {product.description}
               </p>
 
               <div className="flex items-center gap-4">
-                <span className="font-display font-bold text-primary text-lg">{project.result}</span>
+                <span className="font-display font-bold text-primary text-lg">{product.result}</span>
                 <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all duration-300">
                   <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground transition-colors duration-300" />
                 </div>

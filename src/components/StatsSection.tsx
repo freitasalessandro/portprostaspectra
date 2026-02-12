@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 const stats = [
-  { value: "150+", label: "Projetos Entregues" },
-  { value: "98%", label: "Clientes Satisfeitos" },
-  { value: "5x", label: "ROI Médio" },
-  { value: "8+", label: "Anos de Mercado" },
+  { value: "Risco 0", label: "Desenvolvimento Cego" },
+  { value: "100%", label: "Diagnóstico Revertido" },
+  { value: "CTO", label: "As a Service" },
+  { value: "360°", label: "Gestão Integrada" },
 ];
 
 const StatsSection = () => {
@@ -24,7 +24,7 @@ const StatsSection = () => {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="text-center"
             >
-              <div className="font-display text-5xl md:text-7xl font-extrabold text-gradient mb-3">
+              <div className="font-display text-4xl md:text-6xl font-extrabold text-gradient mb-3">
                 {stat.value}
               </div>
               <p className="text-muted-foreground text-sm tracking-[0.15em] uppercase font-body">
