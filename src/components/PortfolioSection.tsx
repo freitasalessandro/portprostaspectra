@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight, FileText, ListChecks, ClipboardList, Brain, Palette, Share2, Globe, Megaphone } from "lucide-react";
+import spectraLogo from "@/assets/spectra-logo.svg";
 
 const cases = [
   {
@@ -63,22 +64,70 @@ const PortfolioSection = () => {
   return (
     <section className="py-32 px-6" id="arsenal">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Hero Title with Logo Concept */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
-          className="mb-16"
+          className="mb-20"
         >
-          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">Cases & Produtos</p>
-          <h2 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight">
-            Desenvolvido pela
+          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">Portfólio & Proposta</p>
+          <h2 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight mb-8">
+            Do ponto A ao ponto B.
             <br />
-            <span className="text-gradient">Spectra.</span>
+            <span className="text-gradient">Nós traçamos o caminho.</span>
           </h2>
-          <p className="text-muted-foreground text-lg mt-6 font-body max-w-xl">
-            Cada projeto é um ecossistema criado para gerar resultado real. Conheça o que já construímos.
+
+          {/* A → Logo → B visual */}
+          <div className="flex items-center gap-6 md:gap-10 mt-12 mb-6">
+            {/* Ponto A */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
+                <span className="font-display text-xl md:text-2xl font-extrabold text-muted-foreground">A</span>
+              </div>
+              <span className="text-[10px] md:text-xs text-muted-foreground font-body uppercase tracking-widest">Sua empresa hoje</span>
+            </motion.div>
+
+            {/* Trajeto - Linha + Logo */}
+            <motion.div
+              initial={{ opacity: 0, scaleX: 0 }}
+              whileInView={{ opacity: 1, scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="flex-1 flex items-center gap-4 origin-left"
+            >
+              <div className="flex-1 h-px bg-gradient-to-r from-muted-foreground/40 via-primary/60 to-primary" />
+              <div className="relative">
+                <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full" />
+                <img src={spectraLogo} alt="Spectra" className="w-10 h-8 md:w-14 md:h-10 relative z-10 text-primary" style={{ filter: "drop-shadow(0 0 12px hsl(82 85% 50% / 0.4))" }} />
+              </div>
+              <div className="flex-1 h-px bg-gradient-to-r from-primary via-primary/60 to-muted-foreground/40" />
+            </motion.div>
+
+            {/* Ponto B */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center shadow-[0_0_30px_hsl(82_85%_50%/0.3)]">
+                <span className="font-display text-xl md:text-2xl font-extrabold text-primary">B</span>
+              </div>
+              <span className="text-[10px] md:text-xs text-primary font-body uppercase tracking-widest font-semibold">Onde ela deveria estar</span>
+            </motion.div>
+          </div>
+
+          <p className="text-muted-foreground text-base md:text-lg mt-8 font-body max-w-2xl">
+            Nosso logo conta a história: o elo central é o trajeto que traçamos para levar sua operação do estado atual ao patamar que ela merece. Cada case abaixo é prova disso.
           </p>
         </motion.div>
 
@@ -93,11 +142,9 @@ const PortfolioSection = () => {
               transition={{ duration: 0.5, delay: i * 0.12 }}
               className="group relative border border-border/40 rounded-2xl p-8 md:p-10 hover:border-primary/60 transition-all duration-500 bg-card/10 hover:bg-card/40 cursor-pointer overflow-hidden"
             >
-              {/* Corner glow */}
               <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/5 opacity-0 group-hover:opacity-100 blur-3xl transition-opacity duration-700 pointer-events-none" />
 
               <div className="relative z-10">
-                {/* Top row */}
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all duration-300">
@@ -116,7 +163,6 @@ const PortfolioSection = () => {
                   </div>
                 </div>
 
-                {/* Title & Description */}
                 <h3 className="font-display text-2xl md:text-3xl font-extrabold mb-3 group-hover:text-primary transition-colors duration-300 leading-tight">
                   {item.title}
                 </h3>
@@ -124,7 +170,6 @@ const PortfolioSection = () => {
                   {item.description}
                 </p>
 
-                {/* Tags */}
                 <div className="flex flex-wrap gap-2">
                   {item.tags.map((tag) => (
                     <span
@@ -159,7 +204,6 @@ const PortfolioSection = () => {
           </p>
         </motion.div>
 
-        {/* Design Services */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {designCases.map((service, i) => (
             <motion.div
