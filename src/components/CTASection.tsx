@@ -1,8 +1,20 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
 import spectraLogo from "@/assets/spectra-logo.svg";
 
 const CTASection = () => {
+  const [isLight, setIsLight] = useState(false);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsLight(document.documentElement.classList.contains("light"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    setIsLight(document.documentElement.classList.contains("light"));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="relative overflow-hidden" id="contato">
       {/* Top border */}
@@ -51,8 +63,12 @@ const CTASection = () => {
             <motion.img
               src={spectraLogo}
               alt=""
-              className="w-10 h-8 mb-10 opacity-40"
-              style={{ filter: "drop-shadow(0 0 15px hsl(220 100% 55% / 0.3))" }}
+              className={`w-10 h-8 mb-10 ${isLight ? "opacity-60" : "opacity-40"}`}
+              style={{
+                filter: isLight
+                  ? "brightness(0) saturate(100%) invert(25%) sepia(80%) saturate(1500%) hue-rotate(215deg) brightness(90%) drop-shadow(0 0 15px hsl(220 100% 45% / 0.3))"
+                  : "drop-shadow(0 0 15px hsl(220 100% 55% / 0.3))",
+              }}
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
