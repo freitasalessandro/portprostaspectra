@@ -52,8 +52,93 @@ export type Database = {
           },
         ]
       }
+      proposal_sections: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          proposal_id: string
+          section_key: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          proposal_id: string
+          section_key: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          proposal_id?: string
+          section_key?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_sections_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_social_proof: {
+        Row: {
+          case_category: string
+          case_description: string
+          case_metric: string | null
+          case_metric_label: string | null
+          case_title: string
+          created_at: string
+          id: string
+          proposal_id: string
+          sort_order: number
+        }
+        Insert: {
+          case_category: string
+          case_description: string
+          case_metric?: string | null
+          case_metric_label?: string | null
+          case_title: string
+          created_at?: string
+          id?: string
+          proposal_id: string
+          sort_order?: number
+        }
+        Update: {
+          case_category?: string
+          case_description?: string
+          case_metric?: string | null
+          case_metric_label?: string | null
+          case_title?: string
+          created_at?: string
+          id?: string
+          proposal_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_social_proof_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposals: {
         Row: {
+          accepted_at: string | null
+          accepted_by_email: string | null
+          accepted_by_name: string | null
           client_email: string | null
           client_name: string
           client_phone: string | null
@@ -64,11 +149,16 @@ export type Database = {
           project_title: string
           status: string
           total_value: number
+          type: string
           updated_at: string
           user_id: string
           valid_until: string | null
+          whatsapp_number: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by_email?: string | null
+          accepted_by_name?: string | null
           client_email?: string | null
           client_name: string
           client_phone?: string | null
@@ -79,11 +169,16 @@ export type Database = {
           project_title: string
           status?: string
           total_value?: number
+          type?: string
           updated_at?: string
           user_id: string
           valid_until?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by_email?: string | null
+          accepted_by_name?: string | null
           client_email?: string | null
           client_name?: string
           client_phone?: string | null
@@ -94,9 +189,11 @@ export type Database = {
           project_title?: string
           status?: string
           total_value?: number
+          type?: string
           updated_at?: string
           user_id?: string
           valid_until?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
