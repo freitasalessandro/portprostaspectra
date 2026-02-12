@@ -166,7 +166,7 @@ const PortfolioSection = () => {
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:border-primary group-hover:shadow-[0_0_20px_hsl(82_85%_50%/0.3)] transition-all duration-300">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:border-primary group-hover:shadow-[0_0_20px_hsl(220_100%_55%/0.3)] transition-all duration-300">
                       <item.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
                     </div>
                     <div>
@@ -179,7 +179,7 @@ const PortfolioSection = () => {
                   </div>
                   <motion.div
                     whileHover={{ scale: 1.1, rotate: 45 }}
-                    className="w-10 h-10 rounded-full border border-border/50 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:shadow-[0_0_15px_hsl(82_85%_50%/0.3)] transition-all duration-300"
+                    className="w-10 h-10 rounded-full border border-border/50 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:shadow-[0_0_15px_hsl(220_100%_55%/0.3)] transition-all duration-300"
                   >
                     <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground transition-colors duration-300" />
                   </motion.div>
@@ -242,7 +242,7 @@ const PortfolioSection = () => {
             >
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/40 to-transparent transition-all duration-500" />
 
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(82_85%_50%/0.2)] transition-all duration-300">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(220_100%_55%/0.2)] transition-all duration-300">
                 <service.icon className="w-4 h-4 text-primary" />
               </div>
               <h3 className="font-display text-lg font-bold mb-2 group-hover:text-primary transition-colors duration-300">
