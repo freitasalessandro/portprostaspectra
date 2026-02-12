@@ -46,15 +46,21 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo + Brand */}
         <a href="#" className="flex items-center gap-3 group">
-          <motion.img
-            src={spectraLogo}
-            alt="Spectra"
-            className="w-8 h-6 transition-all duration-300 group-hover:scale-110"
-            style={{ filter: "drop-shadow(0 0 8px hsl(220 100% 55% / 0.3))" }}
-            whileHover={{ filter: "drop-shadow(0 0 16px hsl(220 100% 55% / 0.6))" }}
-          />
-          <span className="font-display text-xl font-extrabold tracking-tight text-foreground">
-            SPECTRA
+          <motion.div
+            className="w-9 h-7 relative flex items-center justify-center"
+            whileHover={{ scale: 1.1 }}
+          >
+            <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full animate-pulse-glow" />
+            <img
+              src={spectraLogo}
+              alt="Spectra"
+              className="w-9 h-7 relative z-10 transition-all duration-300"
+              style={{ filter: "brightness(0) saturate(100%) invert(35%) sepia(98%) saturate(2000%) hue-rotate(210deg) brightness(100%)" }}
+            />
+          </motion.div>
+          <span className="font-display text-xl font-extrabold tracking-tight">
+            <span className="text-foreground">SPECTR</span>
+            <span className="text-primary">A</span>
           </span>
         </a>
 
