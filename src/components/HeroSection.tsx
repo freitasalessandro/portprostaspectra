@@ -94,7 +94,8 @@ const HeroSection = () => {
       <motion.img
         src={spectraLogo}
         alt=""
-        className="absolute top-1/2 right-[10%] -translate-y-1/2 w-[300px] md:w-[500px] opacity-[0.03] pointer-events-none hidden lg:block animate-float"
+        className="absolute top-1/2 right-[8%] -translate-y-1/2 w-[280px] md:w-[420px] opacity-[0.08] pointer-events-none hidden lg:block animate-float"
+        style={{ filter: "drop-shadow(0 0 40px hsl(220 100% 55% / 0.15))" }}
       />
 
       <FloatingParticles />
