@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, GripVertical, ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { ProposalType, getSectionsForType, SPECTRA_CASES } from "@/lib/proposal-templates";
+import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ProposalItem {
   id?: string;
@@ -53,7 +55,31 @@ const ProposalEditor = () => {
   // Social proof
   const [selectedCases, setSelectedCases] = useState<SocialProofCase[]>([]);
 
+  // Modular: which sections are enabled and which are collapsed
+  const [enabledSections, setEnabledSections] = useState<Record<string, boolean>>({});
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  // Module toggles for fixed blocks
+  const [enabledBlocks, setEnabledBlocks] = useState<Record<string, boolean>>({
+    client: true,
+    project: true,
+    items: true,
+    socialProof: true,
+  });
+  const [collapsedBlocks, setCollapsedBlocks] = useState<Record<string, boolean>>({});
+
   const sections = getSectionsForType(proposalType);
+
+  // Initialize enabled sections when type changes
+  useEffect(() => {
+    const newSections = getSectionsForType(proposalType);
+    setEnabledSections((prev) => {
+      const updated = { ...prev };
+      newSections.forEach((s) => {
+        if (updated[s.key] === undefined) updated[s.key] = true;
+      });
+      return updated;
+    });
+  }, [proposalType]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -301,10 +327,14 @@ const ProposalEditor = () => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-4xl mx-auto px-6 py-8 space-y-4">
         {/* Proposal Type */}
-        <section className="glass-card p-6 space-y-4">
-          <h2 className="font-display font-bold text-lg">Tipo de Proposta</h2>
+        <ModuleBlock
+          title="Tipo de Proposta"
+          alwaysOn
+          collapsed={!!collapsedBlocks["type"]}
+          onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, type: !p["type"] }))}
+        >
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setProposalType("cto")}
@@ -329,11 +359,16 @@ const ProposalEditor = () => {
               <span className="text-xs text-muted-foreground">Branding, tráfego, redes sociais e sites</span>
             </button>
           </div>
-        </section>
+        </ModuleBlock>
 
         {/* Client Info */}
-        <section className="glass-card p-6 space-y-4">
-          <h2 className="font-display font-bold text-lg">Dados do Cliente</h2>
+        <ModuleBlock
+          title="Dados do Cliente"
+          enabled={enabledBlocks.client}
+          onToggleEnabled={() => setEnabledBlocks((p) => ({ ...p, client: !p.client }))}
+          collapsed={!!collapsedBlocks["client"]}
+          onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, client: !p["client"] }))}
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Nome do Cliente *</Label>
@@ -348,11 +383,16 @@ const ProposalEditor = () => {
               <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="(11) 99999-9999" />
             </div>
           </div>
-        </section>
+        </ModuleBlock>
 
         {/* Project Info */}
-        <section className="glass-card p-6 space-y-4">
-          <h2 className="font-display font-bold text-lg">Projeto</h2>
+        <ModuleBlock
+          title="Projeto"
+          enabled={enabledBlocks.project}
+          onToggleEnabled={() => setEnabledBlocks((p) => ({ ...p, project: !p.project }))}
+          collapsed={!!collapsedBlocks["project"]}
+          onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, project: !p["project"] }))}
+        >
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -379,15 +419,19 @@ const ProposalEditor = () => {
               </div>
             </div>
           </div>
-        </section>
+        </ModuleBlock>
 
-        {/* Template Sections */}
-        {sections.map((section) => (
-          <section key={section.key} className="glass-card p-6 space-y-4">
-            <h2 className="font-display font-bold text-lg flex items-center gap-2">
-              <span className="text-primary text-xs tracking-[0.3em] uppercase">{section.key === "scenario" ? "01" : section.key === "solution" ? "02" : section.key === "delivery" ? "03" : "04"}</span>
-              {section.title}
-            </h2>
+        {/* Template Sections — modular */}
+        {sections.map((section, idx) => (
+          <ModuleBlock
+            key={section.key}
+            title={section.title}
+            number={String(idx + 1).padStart(2, "0")}
+            enabled={enabledSections[section.key] !== false}
+            onToggleEnabled={() => setEnabledSections((p) => ({ ...p, [section.key]: !(p[section.key] !== false) }))}
+            collapsed={!!collapsedSections[section.key]}
+            onToggleCollapse={() => setCollapsedSections((p) => ({ ...p, [section.key]: !p[section.key] }))}
+          >
             {section.items.map((item) => (
               <div key={item.key} className="space-y-2">
                 <Label>{item.label}</Label>
@@ -399,21 +443,23 @@ const ProposalEditor = () => {
                 />
               </div>
             ))}
-          </section>
+          </ModuleBlock>
         ))}
 
         {/* Services / Investment Items */}
-        <section className="glass-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display font-bold text-lg">
-              <span className="text-primary text-xs tracking-[0.3em] uppercase mr-2">04</span>
-              Itens do Investimento
-            </h2>
+        <ModuleBlock
+          title="Itens do Investimento"
+          number={String(sections.length + 1).padStart(2, "0")}
+          enabled={enabledBlocks.items}
+          onToggleEnabled={() => setEnabledBlocks((p) => ({ ...p, items: !p.items }))}
+          collapsed={!!collapsedBlocks["items"]}
+          onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, items: !p["items"] }))}
+          action={
             <Button variant="outline" size="sm" onClick={addItem}>
               <Plus className="w-4 h-4 mr-2" /> Adicionar
             </Button>
-          </div>
-
+          }
+        >
           <div className="space-y-4">
             {items.map((item, index) => (
               <div key={index} className="border border-border/30 rounded-sm p-4 space-y-3">
@@ -466,14 +512,17 @@ const ProposalEditor = () => {
               <p className="text-2xl font-display font-extrabold text-primary">{formatCurrency(totalValue)}</p>
             </div>
           </div>
-        </section>
+        </ModuleBlock>
 
         {/* Social Proof Selection */}
-        <section className="glass-card p-6 space-y-4">
-          <h2 className="font-display font-bold text-lg">
-            <span className="text-primary text-xs tracking-[0.3em] uppercase mr-2">05</span>
-            Prova Social — Selecione os Cases
-          </h2>
+        <ModuleBlock
+          title="Prova Social — Selecione os Cases"
+          number={String(sections.length + 2).padStart(2, "0")}
+          enabled={enabledBlocks.socialProof}
+          onToggleEnabled={() => setEnabledBlocks((p) => ({ ...p, socialProof: !p.socialProof }))}
+          collapsed={!!collapsedBlocks["socialProof"]}
+          onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, socialProof: !p["socialProof"] }))}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {SPECTRA_CASES.map((c) => {
               const isSelected = selectedCases.some((sc) => sc.case_title === c.title);
@@ -499,8 +548,53 @@ const ProposalEditor = () => {
               );
             })}
           </div>
-        </section>
+        </ModuleBlock>
       </main>
+    </div>
+  );
+};
+
+/* ─── Modular Block Component ─── */
+interface ModuleBlockProps {
+  title: string;
+  number?: string;
+  enabled?: boolean;
+  alwaysOn?: boolean;
+  onToggleEnabled?: () => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+const ModuleBlock = ({ title, number, enabled = true, alwaysOn, onToggleEnabled, collapsed, onToggleCollapse, action, children }: ModuleBlockProps) => {
+  return (
+    <div className={`glass-card overflow-hidden transition-all duration-300 ${!enabled ? "opacity-50" : ""}`}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-6 py-4 cursor-pointer select-none" onClick={onToggleCollapse}>
+        <button className="text-muted-foreground hover:text-foreground transition-colors">
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {number && (
+          <span className="text-primary text-xs tracking-[0.3em] uppercase font-semibold">{number}</span>
+        )}
+        <h2 className="font-display font-bold text-lg flex-1">{title}</h2>
+        {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
+        {!alwaysOn && onToggleEnabled && (
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              {enabled ? "Ativo" : "Oculto"}
+            </span>
+            <Switch checked={enabled} onCheckedChange={onToggleEnabled} />
+          </div>
+        )}
+      </div>
+      {/* Content */}
+      {!collapsed && enabled && (
+        <div className="px-6 pb-6 space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          {children}
+        </div>
+      )}
     </div>
   );
 };
