@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -45,8 +45,8 @@
     --sidebar-border: 220 15% 16%;
     --sidebar-ring: 82 85% 50%;
 
-    --font-display: 'Syne', sans-serif;
-    --font-body: 'Space Grotesk', sans-serif;
+    --font-display: 'Archivo', sans-serif;
+    --font-body: 'Inter', sans-serif;
 
     --glow-primary: 0 0 40px hsl(82 85% 50% / 0.3);
     --glow-strong: 0 0 80px hsl(82 85% 50% / 0.2), 0 0 160px hsl(82 85% 50% / 0.1);
