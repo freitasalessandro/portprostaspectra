@@ -54,7 +54,8 @@ const HorizontalScrollSection = () => {
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["2%", "-55%"]);
+  const x = useTransform(scrollYProgress, [0, 1], ["5%", "-55%"]);
+  const progressScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
     <section ref={containerRef} className="relative h-[200vh]" id="arsenal">
@@ -90,11 +91,9 @@ const HorizontalScrollSection = () => {
               }`}
               whileHover={{ y: -8, transition: { duration: 0.4 } }}
             >
-              {/* Glow on hover */}
               <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full bg-primary/0 group-hover:bg-primary/10 blur-[80px] transition-all duration-700 pointer-events-none" />
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/50 to-transparent transition-all duration-700" />
 
-              {/* Content */}
               <div className="relative z-10 flex flex-col justify-between h-full p-8 md:p-10">
                 <div>
                   <div className="flex items-center justify-between mb-8">
@@ -114,7 +113,6 @@ const HorizontalScrollSection = () => {
                 </p>
               </div>
 
-              {/* Diagonal line decoration */}
               <div className="absolute top-0 right-0 w-32 h-32 overflow-hidden pointer-events-none">
                 <div className="absolute top-6 -right-6 w-40 h-px bg-gradient-to-r from-primary/30 to-transparent rotate-[-45deg] group-hover:from-primary/60 transition-colors duration-500" />
               </div>
@@ -126,7 +124,7 @@ const HorizontalScrollSection = () => {
         <div className="px-6 md:px-12 mt-8 md:mt-10 relative z-10">
           <div className="max-w-md h-px bg-border/30 relative overflow-hidden">
             <motion.div
-              style={{ scaleX: scrollYProgress }}
+              style={{ scaleX: progressScale }}
               className="absolute inset-y-0 left-0 w-full bg-primary origin-left"
             />
           </div>

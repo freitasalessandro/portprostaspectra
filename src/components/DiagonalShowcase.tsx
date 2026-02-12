@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { ArrowUpRight, FileText, ListChecks, ClipboardList, Brain } from "lucide-react";
+import { FileText, ListChecks, ClipboardList, Brain } from "lucide-react";
 
 const cases = [
   {
@@ -44,12 +44,11 @@ const DiagonalShowcase = () => {
     offset: ["start end", "end start"],
   });
 
-  const row1X = useTransform(scrollYProgress, [0, 1], ["-3%", "3%"]);
-  const row2X = useTransform(scrollYProgress, [0, 1], ["3%", "-3%"]);
+  const row1X = useTransform(scrollYProgress, [0, 1], ["-10%", "5%"]);
+  const row2X = useTransform(scrollYProgress, [0, 1], ["5%", "-10%"]);
 
   return (
     <section ref={containerRef} className="py-32 relative overflow-hidden noise-overlay">
-      {/* Background */}
       <div className="absolute inset-0 grid-pattern opacity-20" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
@@ -67,9 +66,8 @@ const DiagonalShowcase = () => {
             <span className="w-8 h-px bg-primary" />
             Cases de Impacto
           </p>
-          <h2 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight">
-            Resultados que
-            <br />
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
+            Resultados que{" "}
             <span className="text-gradient-intense">falam sozinhos.</span>
           </h2>
         </motion.div>
@@ -77,7 +75,6 @@ const DiagonalShowcase = () => {
 
       {/* Diagonal grid — slight tilt with parallax rows */}
       <div className="relative -mx-12 rotate-[-2deg]">
-        {/* Row 1 */}
         <motion.div
           style={{ x: row1X }}
           className="flex gap-5 md:gap-6 mb-5 md:mb-6 will-change-transform"
@@ -87,7 +84,6 @@ const DiagonalShowcase = () => {
           ))}
         </motion.div>
 
-        {/* Row 2 */}
         <motion.div
           style={{ x: row2X }}
           className="flex gap-5 md:gap-6 will-change-transform"
