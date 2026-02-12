@@ -62,8 +62,11 @@ const designCases = [
 
 const PortfolioSection = () => {
   return (
-    <section className="py-32 px-6" id="arsenal">
-      <div className="max-w-7xl mx-auto">
+    <section className="py-32 px-6 relative noise-overlay" id="arsenal">
+      <div className="absolute inset-0 grid-pattern opacity-30" />
+      <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-primary/3 blur-[200px] rounded-full pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Hero Title with Logo Concept */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -72,11 +75,14 @@ const PortfolioSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-20"
         >
-          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">Portfólio & Proposta</p>
+          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body flex items-center gap-3">
+            <span className="w-8 h-px bg-primary" />
+            Portfólio & Proposta
+          </p>
           <h2 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight mb-8">
             Do ponto A ao ponto B.
             <br />
-            <span className="text-gradient">Nós traçamos o caminho.</span>
+            <span className="text-gradient-intense">Nós traçamos o caminho.</span>
           </h2>
 
           {/* A → Logo → B visual */}
@@ -89,7 +95,7 @@ const PortfolioSection = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="flex flex-col items-center gap-2"
             >
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-muted-foreground/40 flex items-center justify-center relative">
                 <span className="font-display text-xl md:text-2xl font-extrabold text-muted-foreground">A</span>
               </div>
               <span className="text-[10px] md:text-xs text-muted-foreground font-body uppercase tracking-widest">Sua empresa hoje</span>
@@ -103,12 +109,20 @@ const PortfolioSection = () => {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="flex-1 flex items-center gap-4 origin-left"
             >
-              <div className="flex-1 h-px bg-gradient-to-r from-muted-foreground/40 via-primary/60 to-primary" />
-              <div className="relative">
-                <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full" />
-                <img src={spectraLogo} alt="Spectra" className="w-10 h-8 md:w-14 md:h-10 relative z-10 text-primary" style={{ filter: "drop-shadow(0 0 12px hsl(82 85% 50% / 0.4))" }} />
+              <div className="flex-1 h-px bg-gradient-to-r from-muted-foreground/40 via-primary/60 to-primary relative">
+                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent animate-shimmer" style={{ animation: "shimmer 3s ease-in-out infinite" }} />
               </div>
-              <div className="flex-1 h-px bg-gradient-to-r from-primary via-primary/60 to-muted-foreground/40" />
+              <motion.div
+                className="relative"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <div className="absolute -inset-4 blur-xl bg-primary/20 rounded-full animate-breathe" />
+                <img src={spectraLogo} alt="Spectra" className="w-10 h-8 md:w-14 md:h-10 relative z-10" style={{ filter: "drop-shadow(0 0 20px hsl(82 85% 50% / 0.5))" }} />
+              </motion.div>
+              <div className="flex-1 h-px bg-gradient-to-r from-primary via-primary/60 to-muted-foreground/40 relative">
+                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" style={{ animation: "shimmer 3s ease-in-out infinite 0.5s" }} />
+              </div>
             </motion.div>
 
             {/* Ponto B */}
@@ -119,8 +133,9 @@ const PortfolioSection = () => {
               transition={{ duration: 0.5, delay: 0.6 }}
               className="flex flex-col items-center gap-2"
             >
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center shadow-[0_0_30px_hsl(82_85%_50%/0.3)]">
-                <span className="font-display text-xl md:text-2xl font-extrabold text-primary">B</span>
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center relative">
+                <div className="absolute inset-0 rounded-full bg-primary/20 animate-breathe" />
+                <span className="font-display text-xl md:text-2xl font-extrabold text-primary relative z-10">B</span>
               </div>
               <span className="text-[10px] md:text-xs text-primary font-body uppercase tracking-widest font-semibold">Onde ela deveria estar</span>
             </motion.div>
@@ -140,14 +155,18 @@ const PortfolioSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.12 }}
+              whileHover={{ y: -6, transition: { duration: 0.3 } }}
               className="group relative border border-border/40 rounded-2xl p-8 md:p-10 hover:border-primary/60 transition-all duration-500 bg-card/10 hover:bg-card/40 cursor-pointer overflow-hidden"
             >
-              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/5 opacity-0 group-hover:opacity-100 blur-3xl transition-opacity duration-700 pointer-events-none" />
+              {/* Multi-layer glow */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/0 group-hover:bg-primary/10 blur-3xl transition-all duration-700 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/50 to-transparent transition-all duration-700" />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/20 to-transparent transition-all duration-700" />
 
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all duration-300">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:border-primary group-hover:shadow-[0_0_20px_hsl(82_85%_50%/0.3)] transition-all duration-300">
                       <item.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
                     </div>
                     <div>
@@ -158,9 +177,12 @@ const PortfolioSection = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full border border-border/50 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all duration-300">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 45 }}
+                    className="w-10 h-10 rounded-full border border-border/50 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:shadow-[0_0_15px_hsl(82_85%_50%/0.3)] transition-all duration-300"
+                  >
                     <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground transition-colors duration-300" />
-                  </div>
+                  </motion.div>
                 </div>
 
                 <h3 className="font-display text-2xl md:text-3xl font-extrabold mb-3 group-hover:text-primary transition-colors duration-300 leading-tight">
@@ -193,11 +215,14 @@ const PortfolioSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-16"
         >
-          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body">Inteligência em Design</p>
+          <p className="text-primary tracking-[0.3em] uppercase text-sm mb-4 font-body flex items-center gap-3">
+            <span className="w-8 h-px bg-primary" />
+            Inteligência em Design
+          </p>
           <h2 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight">
             Marca que
             <br />
-            <span className="text-gradient">domina.</span>
+            <span className="text-gradient-intense">domina.</span>
           </h2>
           <p className="text-muted-foreground text-lg mt-6 font-body max-w-xl">
             Design, branding e tráfego integrados para que sua tecnologia seja dominante no mercado.
@@ -212,9 +237,12 @@ const PortfolioSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group border border-border/30 rounded-2xl p-6 hover:border-primary/40 transition-all duration-500 bg-card/10 hover:bg-card/30 cursor-pointer"
+              whileHover={{ y: -4, transition: { duration: 0.3 } }}
+              className="group border border-border/30 rounded-2xl p-6 hover:border-primary/40 transition-all duration-500 bg-card/10 hover:bg-card/30 cursor-pointer relative overflow-hidden"
             >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors duration-300">
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/40 to-transparent transition-all duration-500" />
+
+              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(82_85%_50%/0.2)] transition-all duration-300">
                 <service.icon className="w-4 h-4 text-primary" />
               </div>
               <h3 className="font-display text-lg font-bold mb-2 group-hover:text-primary transition-colors duration-300">

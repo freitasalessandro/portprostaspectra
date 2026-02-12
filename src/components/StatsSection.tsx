@@ -1,16 +1,57 @@
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 
 const stats = [
-  { value: "Risco 0", label: "Desenvolvimento Cego" },
-  { value: "100%", label: "Diagnóstico Revertido" },
-  { value: "CTO", label: "As a Service" },
-  { value: "360°", label: "Gestão Integrada" },
+  { value: "0", suffix: "", prefix: "Risco ", label: "Desenvolvimento Cego" },
+  { value: "100", suffix: "%", prefix: "", label: "Diagnóstico Revertido" },
+  { value: "CTO", suffix: "", prefix: "", label: "As a Service", isText: true },
+  { value: "360", suffix: "°", prefix: "", label: "Gestão Integrada" },
 ];
+
+const AnimatedCounter = ({ value, suffix, prefix, isText }: { value: string; suffix: string; prefix: string; isText?: boolean }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+  const numValue = parseInt(value);
+
+  useEffect(() => {
+    if (!isInView || isText || isNaN(numValue)) return;
+    let start = 0;
+    const duration = 2000;
+    const steps = 60;
+    const increment = numValue / steps;
+    const stepDuration = duration / steps;
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= numValue) {
+        setCount(numValue);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, stepDuration);
+
+    return () => clearInterval(timer);
+  }, [isInView, numValue, isText]);
+
+  return (
+    <div ref={ref} className="font-display text-5xl md:text-7xl font-extrabold text-gradient-intense mb-3">
+      {isText ? value : `${prefix}${count}${suffix}`}
+    </div>
+  );
+};
 
 const StatsSection = () => {
   return (
-    <section className="py-24 px-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5" />
+    <section className="py-28 px-6 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/10 to-primary/5" />
+      <div className="absolute inset-0 grid-pattern opacity-30" />
+
+      {/* Animated glow orbs */}
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 blur-[100px] rounded-full animate-breathe" />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 blur-[100px] rounded-full animate-breathe" style={{ animationDelay: "2s" }} />
+
       <div className="line-accent mb-24" />
 
       <div className="max-w-7xl mx-auto relative z-10">
@@ -21,13 +62,16 @@ const StatsSection = () => {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="text-center"
+              transition={{ duration: 0.5, delay: i * 0.15 }}
+              className="text-center group"
             >
-              <div className="font-display text-4xl md:text-6xl font-extrabold text-gradient mb-3">
-                {stat.value}
-              </div>
-              <p className="text-muted-foreground text-sm tracking-[0.15em] uppercase font-body">
+              <AnimatedCounter
+                value={stat.value}
+                suffix={stat.suffix}
+                prefix={stat.prefix}
+                isText={stat.isText}
+              />
+              <p className="text-muted-foreground text-sm tracking-[0.15em] uppercase font-body group-hover:text-primary/70 transition-colors duration-300">
                 {stat.label}
               </p>
             </motion.div>
