@@ -37,8 +37,8 @@ const Navbar = () => {
             src={spectraLogo}
             alt="Spectra"
             className="w-8 h-6 transition-all duration-300 group-hover:scale-110"
-            style={{ filter: "drop-shadow(0 0 8px hsl(82 85% 50% / 0.3))" }}
-            whileHover={{ filter: "drop-shadow(0 0 16px hsl(82 85% 50% / 0.6))" }}
+            style={{ filter: "drop-shadow(0 0 8px hsl(220 100% 55% / 0.3))" }}
+            whileHover={{ filter: "drop-shadow(0 0 16px hsl(220 100% 55% / 0.6))" }}
           />
           <span className="font-display text-xl font-extrabold tracking-tight">
             SPECTR<span className="text-primary">A</span>
@@ -59,7 +59,7 @@ const Navbar = () => {
           ))}
           <motion.a
             href="#contato"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 20px hsl(82 85% 50% / 0.3)" }}
+            whileHover={{ scale: 1.05, boxShadow: "0 0 20px hsl(220 100% 55% / 0.3)" }}
             whileTap={{ scale: 0.95 }}
             className="font-display text-xs font-bold uppercase tracking-widest px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 relative overflow-hidden group"
           >
