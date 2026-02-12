@@ -66,6 +66,12 @@ const Navbar = () => {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8">
+          <img
+            src={spectraLogo}
+            alt=""
+            className="w-6 h-5 opacity-40"
+            style={{ filter: "brightness(0) saturate(100%) invert(35%) sepia(98%) saturate(2000%) hue-rotate(210deg) brightness(100%)" }}
+          />
           {navLinks.map((link) => (
             <a
               key={link.label}
