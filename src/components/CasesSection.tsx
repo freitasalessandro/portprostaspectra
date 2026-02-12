@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
-import { ArrowUpRight, FileText, ListChecks, ClipboardList, Brain } from "lucide-react";
+import { FileText, ListChecks, ClipboardList, Brain } from "lucide-react";
 
 const cases = [
   {
     title: "Contrato Online + Boleto Fácil",
     category: "SaaS · Fintech",
-    description: "Plataforma que automatiza vendas, gestão de contratos e cobrança via boleto. Dinheiro no caixa sem fricção.",
+    description: "Plataforma que automatiza vendas, gestão de contratos e cobrança via boleto.",
     icon: FileText,
     metric: "3x",
     metricLabel: "conversão",
@@ -13,7 +13,7 @@ const cases = [
   {
     title: "FlowList",
     category: "SaaS · Gestão",
-    description: "Sistema de gestão 360° com controle de margem financeira em tempo real.",
+    description: "Gestão 360° com controle de margem financeira em tempo real.",
     icon: ListChecks,
     metric: "360°",
     metricLabel: "visão total",
@@ -21,7 +21,7 @@ const cases = [
   {
     title: "Forms",
     category: "SaaS · Dados",
-    description: "Motor de captura que transforma respostas em insights estratégicos acionáveis.",
+    description: "Motor de captura que transforma respostas em insights acionáveis.",
     icon: ClipboardList,
     metric: "10x",
     metricLabel: "mais dados",
@@ -29,7 +29,7 @@ const cases = [
   {
     title: "Calculadora de Linfedema",
     category: "HealthTech · IA",
-    description: "IA de alta precisão para diagnósticos médicos em hospitais de referência. Se fizemos na saúde, imagine no seu negócio.",
+    description: "IA de alta precisão para diagnósticos médicos em hospitais de referência.",
     icon: Brain,
     metric: "99%",
     metricLabel: "precisão",
@@ -38,82 +38,77 @@ const cases = [
 
 const CasesSection = () => {
   return (
-    <section className="py-32 px-6 md:px-12 relative overflow-hidden" id="cases">
-      <div className="absolute inset-0 grid-pattern opacity-20" />
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
-      <div className="absolute bottom-1/3 right-0 w-[500px] h-[500px] bg-primary/4 blur-[200px] rounded-full pointer-events-none" />
+    <section className="py-28 md:py-36 px-6 md:px-12 relative overflow-hidden" id="cases">
+      <div className="absolute inset-0 grid-pattern opacity-15" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
       <div className="max-w-7xl mx-auto relative z-10">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
-          className="mb-20"
+          className="mb-16"
         >
-          <p className="text-primary tracking-[0.3em] uppercase text-xs mb-4 font-body flex items-center gap-3">
-            <span className="w-12 h-px bg-primary" />
-            Cases em Produção
+          <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center gap-3">
+            <span className="w-10 h-px bg-primary/50" />
+            Cases
           </p>
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1]">
-            Resultados que{" "}
-            <span className="text-gradient-intense">falam sozinhos.</span>
+          <h2 className="font-display text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
+            Resultados<br />
+            <span className="font-extralight text-foreground/60">que falam sozinhos.</span>
           </h2>
         </motion.div>
 
-        {/* Editorial stacked cards with alternating layout */}
-        <div className="space-y-4">
+        {/* Number-driven case cards */}
+        <div className="space-y-3">
           {cases.map((item, i) => (
             <motion.div
               key={item.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group border border-border/30 hover:border-primary/40 transition-all duration-500 bg-background relative overflow-hidden"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-30px" }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              className="group flex items-stretch border border-border/20 hover:border-primary/30 transition-all duration-500 bg-background relative overflow-hidden"
             >
-              <div className="absolute bottom-0 left-0 w-0 h-px bg-primary group-hover:w-full transition-all duration-700" />
+              {/* Accent bar */}
+              <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-primary transition-all duration-500" />
 
-              <div className="grid grid-cols-1 md:grid-cols-12 items-center">
-                {/* Category + Icon */}
-                <div className="md:col-span-1 p-6 md:p-8 flex md:justify-center border-b md:border-b-0 md:border-r border-border/20">
-                  <div className="w-10 h-10 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all duration-300">
-                    <item.icon className="w-4 h-4 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
-                  </div>
-                </div>
-
-                {/* Title + Category */}
-                <div className="md:col-span-4 p-6 md:p-8 border-b md:border-b-0 md:border-r border-border/20">
-                  <span className="text-[10px] text-primary tracking-[0.25em] uppercase font-body font-semibold block mb-1">
-                    {item.category}
-                  </span>
-                  <h3 className="font-display text-xl md:text-2xl font-extrabold group-hover:text-primary transition-colors duration-300 leading-tight">
-                    {item.title}
-                  </h3>
-                </div>
-
-                {/* Description */}
-                <div className="md:col-span-4 p-6 md:p-8 border-b md:border-b-0 md:border-r border-border/20">
-                  <p className="text-muted-foreground font-body text-sm leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-
-                {/* Metric */}
-                <div className="md:col-span-2 p-6 md:p-8 border-b md:border-b-0 md:border-r border-border/20 text-center">
-                  <span className="font-display text-3xl md:text-4xl font-extrabold text-gradient-intense leading-none block">
+              {/* Big metric */}
+              <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/15 bg-card/20 group-hover:bg-primary/5 transition-all duration-500">
+                <div className="text-center">
+                  <span className="font-display text-4xl font-black text-gradient-intense block leading-none">
                     {item.metric}
                   </span>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1 block">
+                  <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-1 block">
                     {item.metricLabel}
                   </span>
                 </div>
+              </div>
 
-                {/* Arrow */}
-                <div className="md:col-span-1 p-6 md:p-8 flex justify-center">
-                  <div className="w-10 h-10 rounded-full border border-border/40 flex items-center justify-center group-hover:border-primary group-hover:bg-primary transition-all duration-300">
-                    <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground transition-colors duration-300" />
+              {/* Content */}
+              <div className="flex-1 p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+                <div className="flex items-center gap-3 md:w-56 shrink-0">
+                  <item.icon className="w-4 h-4 text-primary/60" strokeWidth={1.5} />
+                  <div>
+                    <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
+                      {item.category}
+                    </span>
+                    <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight">
+                      {item.title}
+                    </h3>
                   </div>
+                </div>
+
+                <p className="text-muted-foreground/60 font-body text-xs leading-relaxed flex-1">
+                  {item.description}
+                </p>
+
+                {/* Mobile metric */}
+                <div className="md:hidden flex items-center gap-2">
+                  <span className="font-display text-xl font-black text-gradient-intense">{item.metric}</span>
+                  <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-wider">{item.metricLabel}</span>
                 </div>
               </div>
             </motion.div>
