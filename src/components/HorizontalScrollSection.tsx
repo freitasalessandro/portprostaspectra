@@ -1,87 +1,65 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Cpu, Shield, Target, Zap, Globe, Brain } from "lucide-react";
 
 const cards = [
   {
     icon: Target,
     number: "01",
-    title: "Diagnóstico\nEstratégico",
+    title: "Diagnóstico Estratégico",
     subtitle: "Cada linha de código justificada pelo ROI.",
     accent: true,
   },
   {
     icon: Cpu,
     number: "02",
-    title: "Arquitetura\nde Escala",
+    title: "Arquitetura de Escala",
     subtitle: "Sistemas que crescem sem quebrar.",
     accent: false,
   },
   {
     icon: Shield,
     number: "03",
-    title: "Soberania\nDigital",
+    title: "Soberania Digital",
     subtitle: "Infraestrutura proprietária. Sem dependência.",
     accent: true,
   },
   {
     icon: Brain,
     number: "04",
-    title: "IA Aplicada\nao Lucro",
+    title: "IA Aplicada ao Lucro",
     subtitle: "Machine Learning que gera margem real.",
     accent: false,
   },
   {
     icon: Zap,
     number: "05",
-    title: "Automação\nInteligente",
+    title: "Automação Inteligente",
     subtitle: "Processos que rodam sozinhos.",
     accent: true,
   },
   {
     icon: Globe,
     number: "06",
-    title: "Domínio\nde Mercado",
+    title: "Domínio de Mercado",
     subtitle: "Tecnologia + Design + Tráfego integrados.",
     accent: false,
   },
 ];
 
 const HorizontalScrollSection = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [scrollRange, setScrollRange] = useState(0);
-
-  useEffect(() => {
-    const measure = () => {
-      if (trackRef.current) {
-        const trackWidth = trackRef.current.scrollWidth;
-        const viewportWidth = window.innerWidth;
-        setScrollRange(trackWidth - viewportWidth);
-      }
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, []);
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const x = useTransform(scrollYProgress, [0, 1], [0, -scrollRange]);
-  const progressScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
   return (
-    <section ref={containerRef} className="relative h-[300vh]" id="arsenal">
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 grid-pattern opacity-40" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[250px] rounded-full pointer-events-none" />
+    <section className="py-24 md:py-32 relative" id="arsenal">
+      <div className="absolute inset-0 grid-pattern opacity-40" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[250px] rounded-full pointer-events-none" />
 
-        {/* Section header */}
-        <div className="px-6 md:px-12 mb-8 md:mb-10 relative z-10">
+      <div className="px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mb-12 md:mb-16"
+        >
           <p className="text-primary tracking-[0.3em] uppercase text-xs md:text-sm mb-3 font-body flex items-center gap-3">
             <span className="w-12 h-px bg-primary" />
             Arsenal Spectra
@@ -90,28 +68,27 @@ const HorizontalScrollSection = () => {
             Ferramentas de{" "}
             <span className="text-gradient-intense">guerra.</span>
           </h2>
-        </div>
+        </motion.div>
 
-        {/* Horizontal scroll track */}
-        <motion.div
-          ref={trackRef}
-          style={{ x }}
-          className="flex gap-6 md:gap-8 pl-6 md:pl-12 pr-6 md:pr-12 will-change-transform"
-        >
-          {cards.map((card) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cards.map((card, i) => (
             <motion.div
               key={card.number}
-              className={`group relative flex-shrink-0 w-[300px] md:w-[380px] h-[340px] md:h-[420px] rounded-2xl border overflow-hidden cursor-default transition-all duration-500 ${
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              whileHover={{ y: -8, transition: { duration: 0.4 } }}
+              className={`group relative rounded-2xl border overflow-hidden cursor-default transition-all duration-500 ${
                 card.accent
                   ? "border-primary/30 bg-primary/5 hover:border-primary/60"
                   : "border-border/40 bg-card/20 hover:border-primary/40"
               }`}
-              whileHover={{ y: -8, transition: { duration: 0.4 } }}
             >
               <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full bg-primary/0 group-hover:bg-primary/10 blur-[80px] transition-all duration-700 pointer-events-none" />
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/50 to-transparent transition-all duration-700" />
 
-              <div className="relative z-10 flex flex-col justify-between h-full p-8 md:p-10">
+              <div className="relative z-10 flex flex-col justify-between h-full p-8 md:p-10 min-h-[280px] md:min-h-[320px]">
                 <div>
                   <div className="flex items-center justify-between mb-8">
                     <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:shadow-[0_0_25px_hsl(220_100%_55%/0.2)] transition-all duration-500">
@@ -121,11 +98,11 @@ const HorizontalScrollSection = () => {
                       {card.number}
                     </span>
                   </div>
-                  <h3 className="font-display text-2xl md:text-3xl font-extrabold leading-tight whitespace-pre-line group-hover:text-primary transition-colors duration-300">
+                  <h3 className="font-display text-2xl md:text-3xl font-extrabold leading-tight group-hover:text-primary transition-colors duration-300">
                     {card.title}
                   </h3>
                 </div>
-                <p className="text-muted-foreground font-body text-sm md:text-base leading-relaxed">
+                <p className="text-muted-foreground font-body text-sm md:text-base leading-relaxed mt-4">
                   {card.subtitle}
                 </p>
               </div>
@@ -135,16 +112,6 @@ const HorizontalScrollSection = () => {
               </div>
             </motion.div>
           ))}
-        </motion.div>
-
-        {/* Scroll progress bar */}
-        <div className="px-6 md:px-12 mt-8 md:mt-10 relative z-10">
-          <div className="max-w-md h-px bg-border/30 relative overflow-hidden">
-            <motion.div
-              style={{ scaleX: progressScale }}
-              className="absolute inset-y-0 left-0 w-full bg-primary origin-left"
-            />
-          </div>
         </div>
       </div>
     </section>
