@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, Send, Copy } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check } from "lucide-react";
 import spectraLogo from "@/assets/spectra-logo.svg";
+import { ProposalType, getSectionsForType, SPECTRA_CASES } from "@/lib/proposal-templates";
 
 interface ProposalItem {
   id?: string;
@@ -17,6 +18,14 @@ interface ProposalItem {
   unit_price: number;
 }
 
+interface SocialProofCase {
+  case_title: string;
+  case_category: string;
+  case_description: string;
+  case_metric: string;
+  case_metric_label: string;
+}
+
 const ProposalEditor = () => {
   const { id } = useParams();
   const isNew = id === "nova";
@@ -24,6 +33,7 @@ const ProposalEditor = () => {
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [proposalType, setProposalType] = useState<ProposalType>("cto");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -31,10 +41,19 @@ const ProposalEditor = () => {
   const [description, setDescription] = useState("");
   const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [status, setStatus] = useState("draft");
   const [items, setItems] = useState<ProposalItem[]>([
     { service_name: "", description: "", quantity: 1, unit_price: 0 },
   ]);
+
+  // Sections content: { sectionKey: { itemKey: text } }
+  const [sectionsContent, setSectionsContent] = useState<Record<string, Record<string, string>>>({});
+
+  // Social proof
+  const [selectedCases, setSelectedCases] = useState<SocialProofCase[]>([]);
+
+  const sections = getSectionsForType(proposalType);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -66,7 +85,10 @@ const ProposalEditor = () => {
     setValidUntil(proposal.valid_until || "");
     setNotes(proposal.notes || "");
     setStatus(proposal.status);
+    setProposalType((proposal as any).type || "cto");
+    setWhatsappNumber((proposal as any).whatsapp_number || "");
 
+    // Load items
     const { data: itemsData } = await supabase
       .from("proposal_items")
       .select("*")
@@ -82,6 +104,39 @@ const ProposalEditor = () => {
         unit_price: Number(i.unit_price),
       })));
     }
+
+    // Load sections
+    const { data: sectionsData } = await supabase
+      .from("proposal_sections")
+      .select("*")
+      .eq("proposal_id", id)
+      .order("sort_order");
+
+    if (sectionsData) {
+      const content: Record<string, Record<string, string>> = {};
+      sectionsData.forEach((s: any) => {
+        content[s.section_key] = s.content as Record<string, string>;
+      });
+      setSectionsContent(content);
+    }
+
+    // Load social proof
+    const { data: proofData } = await supabase
+      .from("proposal_social_proof")
+      .select("*")
+      .eq("proposal_id", id)
+      .order("sort_order");
+
+    if (proofData) {
+      setSelectedCases(proofData.map((p: any) => ({
+        case_title: p.case_title,
+        case_category: p.case_category,
+        case_description: p.case_description,
+        case_metric: p.case_metric || "",
+        case_metric_label: p.case_metric_label || "",
+      })));
+    }
+
     setLoading(false);
   };
 
@@ -91,16 +146,36 @@ const ProposalEditor = () => {
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
   const addItem = () => setItems([...items, { service_name: "", description: "", quantity: 1, unit_price: 0 }]);
-
   const removeItem = (index: number) => {
     if (items.length <= 1) return;
     setItems(items.filter((_, i) => i !== index));
   };
-
   const updateItem = (index: number, field: keyof ProposalItem, value: string | number) => {
     const updated = [...items];
     (updated[index] as any)[field] = value;
     setItems(updated);
+  };
+
+  const updateSectionContent = (sectionKey: string, itemKey: string, value: string) => {
+    setSectionsContent((prev) => ({
+      ...prev,
+      [sectionKey]: { ...(prev[sectionKey] || {}), [itemKey]: value },
+    }));
+  };
+
+  const toggleCase = (c: typeof SPECTRA_CASES[0]) => {
+    const exists = selectedCases.find((sc) => sc.case_title === c.title);
+    if (exists) {
+      setSelectedCases(selectedCases.filter((sc) => sc.case_title !== c.title));
+    } else {
+      setSelectedCases([...selectedCases, {
+        case_title: c.title,
+        case_category: c.category,
+        case_description: c.description,
+        case_metric: c.metric,
+        case_metric_label: c.metricLabel,
+      }]);
+    }
   };
 
   const handleSave = async (newStatus?: string) => {
@@ -124,6 +199,8 @@ const ProposalEditor = () => {
       status: newStatus || status,
       valid_until: validUntil || null,
       notes: notes.trim() || null,
+      type: proposalType,
+      whatsapp_number: whatsappNumber.trim() || null,
     };
 
     let proposalId = id;
@@ -135,24 +212,45 @@ const ProposalEditor = () => {
     } else {
       const { error } = await supabase.from("proposals").update(proposalData).eq("id", id);
       if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); setSaving(false); return; }
-      // Delete old items
       await supabase.from("proposal_items").delete().eq("proposal_id", id!);
+      await supabase.from("proposal_sections").delete().eq("proposal_id", id!);
+      await supabase.from("proposal_social_proof").delete().eq("proposal_id", id!);
     }
 
     // Insert items
-    const itemsToInsert = items
-      .filter((i) => i.service_name.trim())
-      .map((i) => ({
-        proposal_id: proposalId!,
-        service_name: i.service_name.trim(),
-        description: i.description.trim() || null,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
-      }));
-
+    const itemsToInsert = items.filter((i) => i.service_name.trim()).map((i) => ({
+      proposal_id: proposalId!,
+      service_name: i.service_name.trim(),
+      description: i.description.trim() || null,
+      quantity: i.quantity,
+      unit_price: i.unit_price,
+    }));
     if (itemsToInsert.length > 0) {
-      const { error } = await supabase.from("proposal_items").insert(itemsToInsert);
-      if (error) { toast({ title: "Erro nos itens", description: error.message, variant: "destructive" }); }
+      await supabase.from("proposal_items").insert(itemsToInsert);
+    }
+
+    // Insert sections
+    const sectionsToInsert = sections.map((s, i) => ({
+      proposal_id: proposalId!,
+      section_key: s.key,
+      title: s.title,
+      content: sectionsContent[s.key] || {},
+      sort_order: i,
+    }));
+    await supabase.from("proposal_sections").insert(sectionsToInsert);
+
+    // Insert social proof
+    if (selectedCases.length > 0) {
+      const proofToInsert = selectedCases.map((c, i) => ({
+        proposal_id: proposalId!,
+        case_title: c.case_title,
+        case_category: c.case_category,
+        case_description: c.case_description,
+        case_metric: c.case_metric,
+        case_metric_label: c.case_metric_label,
+        sort_order: i,
+      }));
+      await supabase.from("proposal_social_proof").insert(proofToInsert);
     }
 
     setSaving(false);
@@ -204,6 +302,35 @@ const ProposalEditor = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+        {/* Proposal Type */}
+        <section className="glass-card p-6 space-y-4">
+          <h2 className="font-display font-bold text-lg">Tipo de Proposta</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setProposalType("cto")}
+              className={`p-4 border rounded-sm text-left transition-all duration-300 ${
+                proposalType === "cto"
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/30 hover:border-border/60"
+              }`}
+            >
+              <span className="font-display font-bold text-base block">CTO as a Service</span>
+              <span className="text-xs text-muted-foreground">Engenharia, IA, arquitetura e automações</span>
+            </button>
+            <button
+              onClick={() => setProposalType("design")}
+              className={`p-4 border rounded-sm text-left transition-all duration-300 ${
+                proposalType === "design"
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/30 hover:border-border/60"
+              }`}
+            >
+              <span className="font-display font-bold text-base block">Design</span>
+              <span className="text-xs text-muted-foreground">Branding, tráfego, redes sociais e sites</span>
+            </button>
+          </div>
+        </section>
+
         {/* Client Info */}
         <section className="glass-card p-6 space-y-4">
           <h2 className="font-display font-bold text-lg">Dados do Cliente</h2>
@@ -227,9 +354,15 @@ const ProposalEditor = () => {
         <section className="glass-card p-6 space-y-4">
           <h2 className="font-display font-bold text-lg">Projeto</h2>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Título do Projeto *</Label>
-              <Input value={projectTitle} onChange={(e) => setProjectTitle(e.target.value)} placeholder="Redesign do Website" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Título do Projeto *</Label>
+                <Input value={projectTitle} onChange={(e) => setProjectTitle(e.target.value)} placeholder="Redesign do Sistema" />
+              </div>
+              <div className="space-y-2">
+                <Label>WhatsApp para contato</Label>
+                <Input value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="5511999999999" />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Descrição</Label>
@@ -248,10 +381,34 @@ const ProposalEditor = () => {
           </div>
         </section>
 
-        {/* Services / Items */}
+        {/* Template Sections */}
+        {sections.map((section) => (
+          <section key={section.key} className="glass-card p-6 space-y-4">
+            <h2 className="font-display font-bold text-lg flex items-center gap-2">
+              <span className="text-primary text-xs tracking-[0.3em] uppercase">{section.key === "scenario" ? "01" : section.key === "solution" ? "02" : section.key === "delivery" ? "03" : "04"}</span>
+              {section.title}
+            </h2>
+            {section.items.map((item) => (
+              <div key={item.key} className="space-y-2">
+                <Label>{item.label}</Label>
+                <Textarea
+                  value={sectionsContent[section.key]?.[item.key] || ""}
+                  onChange={(e) => updateSectionContent(section.key, item.key, e.target.value)}
+                  placeholder={item.placeholder}
+                  rows={3}
+                />
+              </div>
+            ))}
+          </section>
+        ))}
+
+        {/* Services / Investment Items */}
         <section className="glass-card p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-display font-bold text-lg">Serviços</h2>
+            <h2 className="font-display font-bold text-lg">
+              <span className="text-primary text-xs tracking-[0.3em] uppercase mr-2">04</span>
+              Itens do Investimento
+            </h2>
             <Button variant="outline" size="sm" onClick={addItem}>
               <Plus className="w-4 h-4 mr-2" /> Adicionar
             </Button>
@@ -266,7 +423,7 @@ const ProposalEditor = () => {
                     <Input
                       value={item.service_name}
                       onChange={(e) => updateItem(index, "service_name", e.target.value)}
-                      placeholder="Ex: Design de Landing Page"
+                      placeholder="Ex: Arquitetura de Sistemas"
                     />
                   </div>
                   {items.length > 1 && (
@@ -286,22 +443,11 @@ const ProposalEditor = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>Qtd</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={item.quantity}
-                      onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
-                    />
+                    <Input type="number" min={1} value={item.quantity} onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)} />
                   </div>
                   <div className="space-y-2">
                     <Label>Valor Unit.</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      value={item.unit_price}
-                      onChange={(e) => updateItem(index, "unit_price", parseFloat(e.target.value) || 0)}
-                    />
+                    <Input type="number" min={0} step={0.01} value={item.unit_price} onChange={(e) => updateItem(index, "unit_price", parseFloat(e.target.value) || 0)} />
                   </div>
                   <div className="space-y-2">
                     <Label>Subtotal</Label>
@@ -319,6 +465,39 @@ const ProposalEditor = () => {
               <p className="text-sm text-muted-foreground">Total</p>
               <p className="text-2xl font-display font-extrabold text-primary">{formatCurrency(totalValue)}</p>
             </div>
+          </div>
+        </section>
+
+        {/* Social Proof Selection */}
+        <section className="glass-card p-6 space-y-4">
+          <h2 className="font-display font-bold text-lg">
+            <span className="text-primary text-xs tracking-[0.3em] uppercase mr-2">05</span>
+            Prova Social — Selecione os Cases
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {SPECTRA_CASES.map((c) => {
+              const isSelected = selectedCases.some((sc) => sc.case_title === c.title);
+              return (
+                <button
+                  key={c.title}
+                  onClick={() => toggleCase(c)}
+                  className={`p-4 border rounded-sm text-left transition-all duration-300 relative ${
+                    isSelected
+                      ? "border-primary bg-primary/10"
+                      : "border-border/30 hover:border-border/60"
+                  }`}
+                >
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </div>
+                  )}
+                  <span className="text-[9px] text-primary tracking-[0.25em] uppercase font-semibold block mb-1">{c.category}</span>
+                  <span className="font-display font-bold text-sm block">{c.title}</span>
+                  <span className="text-xs text-muted-foreground block mt-1">{c.description}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
       </main>

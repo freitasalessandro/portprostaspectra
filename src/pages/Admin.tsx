@@ -12,6 +12,7 @@ interface Proposal {
   project_title: string;
   total_value: number;
   status: string;
+  type: string;
   created_at: string;
 }
 
@@ -90,8 +91,8 @@ const Admin = () => {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={spectraLogo} alt="Spectra" className="w-7 h-5" />
-            <span className="font-display text-lg font-extrabold tracking-tight">
-              SPECTR<span className="text-primary">A</span>
+            <span className="font-display text-lg font-extrabold tracking-tight text-foreground">
+              SPECTRA
             </span>
             <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">/ Propostas</span>
           </div>
@@ -127,6 +128,9 @@ const Admin = () => {
                     <h3 className="font-display font-bold text-lg truncate">{p.project_title}</h3>
                     <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm font-bold ${statusColors[p.status]}`}>
                       {statusLabels[p.status]}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm font-bold bg-secondary text-secondary-foreground">
+                      {(p as any).type === "design" ? "Design" : "CTO"}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">{p.client_name}</p>
