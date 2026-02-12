@@ -1,9 +1,10 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import MarqueeBar from "@/components/MarqueeBar";
-import ServicesSection from "@/components/ServicesSection";
+import TextRevealSection from "@/components/TextRevealSection";
+import HorizontalScrollSection from "@/components/HorizontalScrollSection";
+import DiagonalShowcase from "@/components/DiagonalShowcase";
 import StatsSection from "@/components/StatsSection";
-import PortfolioSection from "@/components/PortfolioSection";
 import CTASection from "@/components/CTASection";
 
 const Index = () => {
@@ -12,9 +13,10 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <MarqueeBar />
-      <ServicesSection />
+      <TextRevealSection />
+      <HorizontalScrollSection />
+      <DiagonalShowcase />
       <StatsSection />
-      <PortfolioSection />
       <CTASection />
     </main>
   );

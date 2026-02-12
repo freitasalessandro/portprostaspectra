@@ -52,7 +52,8 @@ const CTASection = () => {
             href="mailto:contato@spectra.dev"
             whileHover={{ scale: 1.03, boxShadow: "0 0 40px hsl(220 100% 55% / 0.5), 0 0 100px hsl(220 100% 55% / 0.2)" }}
             whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-3 px-10 py-5 font-display font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 glow-box-intense tracking-wide uppercase text-sm group relative overflow-hidden"
+              className="inline-flex items-center gap-3 px-10 py-5 font-display font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 tracking-wide uppercase text-sm group relative overflow-hidden"
+              style={{ boxShadow: "0 0 20px hsl(220 100% 55% / 0.4), 0 0 60px hsl(220 100% 55% / 0.2), 0 0 100px hsl(220 100% 55% / 0.1)" }}
           >
             <span className="relative z-10 flex items-center gap-3">
               Solicitar Diagnóstico Estratégico
