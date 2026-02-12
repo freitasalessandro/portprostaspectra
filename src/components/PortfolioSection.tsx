@@ -118,7 +118,7 @@ const PortfolioSection = () => {
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
                 <div className="absolute -inset-4 blur-xl bg-primary/20 rounded-full animate-breathe" />
-                <img src={spectraLogo} alt="Spectra" className="w-10 h-8 md:w-14 md:h-10 relative z-10" style={{ filter: "drop-shadow(0 0 20px hsl(82 85% 50% / 0.5))" }} />
+                <img src={spectraLogo} alt="Spectra" className="w-10 h-8 md:w-14 md:h-10 relative z-10" style={{ filter: "drop-shadow(0 0 20px hsl(220 100% 55% / 0.5))" }} />
               </motion.div>
               <div className="flex-1 h-px bg-gradient-to-r from-primary via-primary/60 to-muted-foreground/40 relative">
                 <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" style={{ animation: "shimmer 3s ease-in-out infinite 0.5s" }} />

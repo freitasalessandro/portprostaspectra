@@ -147,7 +147,7 @@ const HeroSection = () => {
           >
             <motion.a
               href="#contato"
-              whileHover={{ scale: 1.03, boxShadow: "0 0 30px hsl(82 85% 50% / 0.5), 0 0 80px hsl(82 85% 50% / 0.2)" }}
+              whileHover={{ scale: 1.03, boxShadow: "0 0 30px hsl(220 100% 55% / 0.5), 0 0 80px hsl(220 100% 55% / 0.2)" }}
               whileTap={{ scale: 0.97 }}
               className="inline-flex items-center justify-center px-8 py-4 font-display font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 glow-box-intense tracking-wide uppercase text-sm relative overflow-hidden group"
             >
@@ -156,7 +156,7 @@ const HeroSection = () => {
             </motion.a>
             <motion.a
               href="#arsenal"
-              whileHover={{ scale: 1.03, borderColor: "hsl(82 85% 50% / 0.6)" }}
+              whileHover={{ scale: 1.03, borderColor: "hsl(220 100% 55% / 0.6)" }}
               whileTap={{ scale: 0.97 }}
               className="inline-flex items-center justify-center px-8 py-4 font-display font-bold text-foreground border border-border hover:border-primary/50 transition-all duration-300 tracking-wide uppercase text-sm backdrop-blur-sm"
             >
@@ -191,7 +191,7 @@ const HeroSection = () => {
             style={{
               rotateX: logoRotateX,
               rotateY: logoRotateY,
-              filter: "drop-shadow(0 0 60px hsl(82 85% 50% / 0.3)) drop-shadow(0 0 120px hsl(82 85% 50% / 0.15))",
+              filter: "drop-shadow(0 0 60px hsl(220 100% 55% / 0.3)) drop-shadow(0 0 120px hsl(220 100% 55% / 0.15))",
             }}
           />
         </motion.div>

@@ -27,7 +27,7 @@ const CTASection = () => {
               src={spectraLogo}
               alt="Spectra"
               className="w-16 h-12 animate-float"
-              style={{ filter: "drop-shadow(0 0 30px hsl(82 85% 50% / 0.4))" }}
+              style={{ filter: "drop-shadow(0 0 30px hsl(220 100% 55% / 0.4))" }}
             />
           </motion.div>
 
@@ -50,7 +50,7 @@ const CTASection = () => {
 
           <motion.a
             href="mailto:contato@spectra.dev"
-            whileHover={{ scale: 1.03, boxShadow: "0 0 40px hsl(82 85% 50% / 0.5), 0 0 100px hsl(82 85% 50% / 0.2)" }}
+            whileHover={{ scale: 1.03, boxShadow: "0 0 40px hsl(220 100% 55% / 0.5), 0 0 100px hsl(220 100% 55% / 0.2)" }}
             whileTap={{ scale: 0.97 }}
             className="inline-flex items-center gap-3 px-10 py-5 font-display font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 glow-box-intense tracking-wide uppercase text-sm group relative overflow-hidden"
           >
