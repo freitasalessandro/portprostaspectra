@@ -14,7 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      proposal_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          proposal_id: string
+          quantity: number
+          service_name: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          proposal_id: string
+          quantity?: number
+          service_name: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          proposal_id?: string
+          quantity?: number
+          service_name?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_items_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposals: {
+        Row: {
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          notes: string | null
+          project_title: string
+          status: string
+          total_value: number
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+        }
+        Insert: {
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          project_title: string
+          status?: string
+          total_value?: number
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+        }
+        Update: {
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          project_title?: string
+          status?: string
+          total_value?: number
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
