@@ -54,35 +54,25 @@ const HorizontalScrollSection = () => {
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["5%", "-65%"]);
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]);
+  const x = useTransform(scrollYProgress, [0, 1], ["2%", "-55%"]);
 
   return (
-    <section ref={containerRef} className="relative h-[400vh]" id="arsenal">
+    <section ref={containerRef} className="relative h-[200vh]" id="arsenal">
       <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
         {/* Background */}
-        <motion.div
-          style={{ opacity: bgOpacity }}
-          className="absolute inset-0 grid-pattern opacity-40"
-        />
+        <div className="absolute inset-0 grid-pattern opacity-40" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[250px] rounded-full pointer-events-none" />
 
         {/* Section header */}
-        <div className="px-6 md:px-12 mb-8 md:mb-12 relative z-10">
-          <motion.p
-            style={{ opacity: bgOpacity }}
-            className="text-primary tracking-[0.3em] uppercase text-xs md:text-sm mb-3 font-body flex items-center gap-3"
-          >
+        <div className="px-6 md:px-12 mb-8 md:mb-10 relative z-10">
+          <p className="text-primary tracking-[0.3em] uppercase text-xs md:text-sm mb-3 font-body flex items-center gap-3">
             <span className="w-12 h-px bg-primary" />
             Arsenal Spectra
-          </motion.p>
-          <motion.h2
-            style={{ opacity: bgOpacity }}
-            className="font-display text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight"
-          >
+          </p>
+          <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
             Ferramentas de{" "}
             <span className="text-gradient-intense">guerra.</span>
-          </motion.h2>
+          </h2>
         </div>
 
         {/* Horizontal scroll track */}
@@ -90,10 +80,10 @@ const HorizontalScrollSection = () => {
           style={{ x }}
           className="flex gap-6 md:gap-8 pl-6 md:pl-12 will-change-transform"
         >
-          {cards.map((card, i) => (
+          {cards.map((card) => (
             <motion.div
               key={card.number}
-              className={`group relative flex-shrink-0 w-[320px] md:w-[420px] h-[380px] md:h-[460px] rounded-2xl border overflow-hidden cursor-default transition-all duration-500 ${
+              className={`group relative flex-shrink-0 w-[300px] md:w-[380px] h-[340px] md:h-[420px] rounded-2xl border overflow-hidden cursor-default transition-all duration-500 ${
                 card.accent
                   ? "border-primary/30 bg-primary/5 hover:border-primary/60"
                   : "border-border/40 bg-card/20 hover:border-primary/40"
@@ -133,7 +123,7 @@ const HorizontalScrollSection = () => {
         </motion.div>
 
         {/* Scroll progress bar */}
-        <div className="px-6 md:px-12 mt-8 md:mt-12 relative z-10">
+        <div className="px-6 md:px-12 mt-8 md:mt-10 relative z-10">
           <div className="max-w-md h-px bg-border/30 relative overflow-hidden">
             <motion.div
               style={{ scaleX: scrollYProgress }}
