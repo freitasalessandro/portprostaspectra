@@ -42,6 +42,13 @@ const CasesSection = () => {
       <div className="absolute inset-0 grid-pattern opacity-15" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
+      {/* Animated glow */}
+      <motion.div
+        className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-primary/4 blur-[180px] rounded-full pointer-events-none"
+        animate={{ y: [0, -30, 0], x: [0, -20, 0] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <motion.div
@@ -52,7 +59,13 @@ const CasesSection = () => {
           className="mb-16"
         >
           <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center gap-3">
-            <span className="w-10 h-px bg-primary/50" />
+            <motion.span
+              className="w-10 h-px bg-primary/50"
+              initial={{ width: 0 }}
+              whileInView={{ width: 40 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            />
             Cases
           </p>
           <h2 className="font-display text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
@@ -61,7 +74,7 @@ const CasesSection = () => {
           </h2>
         </motion.div>
 
-        {/* Number-driven case cards */}
+        {/* Case cards */}
         <div className="space-y-3">
           {cases.map((item, i) => (
             <motion.div
@@ -70,6 +83,7 @@ const CasesSection = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-30px" }}
               transition={{ duration: 0.5, delay: i * 0.08 }}
+              whileHover={{ x: 6, transition: { duration: 0.3 } }}
               className="group flex items-stretch border border-border/20 hover:border-primary/30 transition-all duration-500 bg-background relative overflow-hidden"
             >
               {/* Accent bar */}
@@ -78,9 +92,13 @@ const CasesSection = () => {
               {/* Big metric */}
               <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/15 bg-card/20 group-hover:bg-primary/5 transition-all duration-500">
                 <div className="text-center">
-                  <span className="font-display text-4xl font-black text-gradient-intense block leading-none">
+                  <motion.span
+                    className="font-display text-4xl font-black text-gradient-intense block leading-none"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.3 }}
+                  >
                     {item.metric}
-                  </span>
+                  </motion.span>
                   <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-1 block">
                     {item.metricLabel}
                   </span>
@@ -90,7 +108,12 @@ const CasesSection = () => {
               {/* Content */}
               <div className="flex-1 p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                 <div className="flex items-center gap-3 md:w-56 shrink-0">
-                  <item.icon className="w-4 h-4 text-primary/60" strokeWidth={1.5} />
+                  <motion.div
+                    whileHover={{ rotate: 15 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <item.icon className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
+                  </motion.div>
                   <div>
                     <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
                       {item.category}

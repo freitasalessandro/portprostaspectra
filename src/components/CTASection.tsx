@@ -10,7 +10,35 @@ const CTASection = () => {
 
       <div className="py-32 md:py-44 px-6 md:px-12 relative">
         <div className="absolute inset-0 grid-pattern opacity-15" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/5 blur-[180px] rounded-full pointer-events-none" />
+
+        {/* Animated central glow */}
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/5 blur-[180px] rounded-full pointer-events-none"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* Floating particles */}
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-primary/30 pointer-events-none"
+            style={{
+              left: `${20 + i * 12}%`,
+              top: `${30 + (i % 3) * 15}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              opacity: [0, 0.6, 0],
+            }}
+            transition={{
+              duration: 5 + i,
+              delay: i * 0.8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
 
         <div className="max-w-5xl mx-auto relative z-10">
           <motion.div
@@ -25,9 +53,10 @@ const CTASection = () => {
               alt=""
               className="w-10 h-8 mb-10 opacity-40"
               style={{ filter: "drop-shadow(0 0 15px hsl(220 100% 55% / 0.3))" }}
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* Headline — weight contrast */}
             <h2 className="font-display text-4xl md:text-6xl lg:text-7xl tracking-tight mb-8 leading-[0.92]">
               <span className="font-extralight text-foreground/70 block">Você foca no jogo.</span>
               <span className="font-black text-gradient-intense block">Nós cuidamos do estádio.</span>
@@ -42,7 +71,7 @@ const CTASection = () => {
 
             <motion.a
               href="mailto:contato@spectra.dev"
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center gap-3 px-8 py-4 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
             >
@@ -50,7 +79,7 @@ const CTASection = () => {
                 Solicitar Diagnóstico
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             </motion.a>
           </motion.div>
         </div>

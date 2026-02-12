@@ -14,7 +14,18 @@ const ArsenalSection = () => {
   return (
     <section className="py-28 md:py-36 px-6 md:px-12 relative" id="arsenal">
       <div className="absolute inset-0 grid-pattern opacity-20" />
-      <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-primary/4 blur-[200px] rounded-full pointer-events-none" />
+
+      {/* Animated orbs */}
+      <motion.div
+        className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-primary/4 blur-[200px] rounded-full pointer-events-none"
+        animate={{ x: [0, 30, 0], scale: [1, 1.1, 1] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-primary/3 blur-[150px] rounded-full pointer-events-none"
+        animate={{ y: [0, -40, 0] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+      />
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
@@ -26,7 +37,13 @@ const ArsenalSection = () => {
           className="mb-16"
         >
           <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center gap-3">
-            <span className="w-10 h-px bg-primary/50" />
+            <motion.span
+              className="w-10 h-px bg-primary/50"
+              initial={{ width: 0 }}
+              whileInView={{ width: 40 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            />
             Arsenal
           </p>
           <h2 className="font-display text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
@@ -40,18 +57,27 @@ const ArsenalSection = () => {
           {services.map((service, i) => (
             <motion.div
               key={service.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.07 }}
+              whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.3 } }}
               className={`group ${service.span} relative bg-card/30 border border-border/20 p-7 md:p-8 hover:border-primary/30 hover:bg-card/50 transition-all duration-500 cursor-default overflow-hidden`}
             >
               {/* Bottom accent */}
               <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-600" />
 
+              {/* Hover glow */}
+              <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-primary/0 group-hover:bg-primary/10 blur-3xl transition-all duration-700 pointer-events-none" />
+
               <div className="flex items-center justify-between mb-5">
-                <service.icon className="w-5 h-5 text-primary/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
-                <span className="font-display text-[10px] text-muted-foreground/20 tracking-[0.2em]">
+                <motion.div
+                  whileHover={{ rotate: 10, scale: 1.1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <service.icon className="w-5 h-5 text-primary/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
+                </motion.div>
+                <span className="font-display text-[10px] text-muted-foreground/20 tracking-[0.2em] group-hover:text-primary/20 transition-colors duration-300">
                   0{i + 1}
                 </span>
               </div>

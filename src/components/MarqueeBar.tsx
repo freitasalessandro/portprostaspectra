@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 const items = [
   "ENGENHARIA",
   "INTELIGÊNCIA",
@@ -21,10 +23,14 @@ const MarqueeBar = () => {
         {[...items, ...items, ...items].map((item, i) => (
           <span
             key={i}
-            className="font-display text-[10px] tracking-[0.4em] text-muted-foreground/15 uppercase mx-6 flex items-center gap-6"
+            className="font-display text-[10px] tracking-[0.4em] text-muted-foreground/20 uppercase mx-6 flex items-center gap-6"
           >
             {item}
-            <span className="w-1 h-1 rounded-full bg-primary/15" />
+            <motion.span
+              className="w-1.5 h-1.5 rounded-full bg-primary/20"
+              animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 3, delay: i * 0.3, repeat: Infinity }}
+            />
           </span>
         ))}
       </div>
