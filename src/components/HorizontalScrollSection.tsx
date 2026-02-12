@@ -54,11 +54,11 @@ const HorizontalScrollSection = () => {
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["5%", "-55%"]);
+  const x = useTransform(scrollYProgress, [0, 1], ["2%", "-72%"]);
   const progressScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
-    <section ref={containerRef} className="relative h-[200vh]" id="arsenal">
+    <section ref={containerRef} className="relative h-[350vh]" id="arsenal">
       <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 grid-pattern opacity-40" />
