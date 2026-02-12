@@ -86,13 +86,13 @@ const HeroSection = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="absolute bottom-12 left-6 z-10"
+        className="absolute bottom-12 right-6 z-10 hidden md:flex"
       >
         <div className="flex flex-col items-center gap-2">
-          <span className="text-muted-foreground text-xs tracking-[0.2em] uppercase rotate-90 origin-center translate-y-8">
+          <span className="text-muted-foreground text-xs tracking-[0.2em] uppercase origin-center">
             Scroll
           </span>
-          <div className="w-px h-16 bg-gradient-to-b from-primary/60 to-transparent mt-12 animate-pulse-glow" />
+          <div className="w-px h-12 bg-gradient-to-b from-primary/60 to-transparent animate-pulse-glow" />
         </div>
       </motion.div>
     </section>
