@@ -1,3 +1,4 @@
+import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import MarqueeBar from "@/components/MarqueeBar";
 import ServicesSection from "@/components/ServicesSection";
@@ -8,6 +9,7 @@ import CTASection from "@/components/CTASection";
 const Index = () => {
   return (
     <main className="bg-background text-foreground overflow-x-hidden">
+      <Navbar />
       <HeroSection />
       <MarqueeBar />
       <ServicesSection />
