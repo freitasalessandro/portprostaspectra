@@ -202,7 +202,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_proposal: {
+        Args: {
+          _accepted_by_email: string
+          _accepted_by_name: string
+          _proposal_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
