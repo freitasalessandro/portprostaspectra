@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Cpu, Shield, Target, Zap, Globe, Brain } from "lucide-react";
 
 const cards = [
@@ -49,16 +49,32 @@ const cards = [
 
 const HorizontalScrollSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [scrollRange, setScrollRange] = useState(0);
+
+  useEffect(() => {
+    const measure = () => {
+      if (trackRef.current) {
+        const trackWidth = trackRef.current.scrollWidth;
+        const viewportWidth = window.innerWidth;
+        setScrollRange(trackWidth - viewportWidth);
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["2%", "-68%"]);
+  const x = useTransform(scrollYProgress, [0, 1], [0, -scrollRange]);
   const progressScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
-    <section ref={containerRef} className="relative h-[250vh]" id="arsenal">
+    <section ref={containerRef} className="relative h-[300vh]" id="arsenal">
       <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 grid-pattern opacity-40" />
@@ -78,8 +94,9 @@ const HorizontalScrollSection = () => {
 
         {/* Horizontal scroll track */}
         <motion.div
+          ref={trackRef}
           style={{ x }}
-          className="flex gap-6 md:gap-8 pl-6 md:pl-12 will-change-transform"
+          className="flex gap-6 md:gap-8 pl-6 md:pl-12 pr-6 md:pr-12 will-change-transform"
         >
           {cards.map((card) => (
             <motion.div
