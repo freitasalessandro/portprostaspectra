@@ -30,7 +30,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
             {item.comingSoon ? (
               <>
                 <span className="text-3xl block leading-none">{item.metric}</span>
-                <span className="font-body text-[9px] text-primary uppercase tracking-widest mt-2 block font-semibold">
+                <span className="font-body text-xs text-primary uppercase tracking-widest mt-2 block font-semibold">
                   {item.metricLabel}
                 </span>
               </>
@@ -43,7 +43,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
                 >
                   {item.metric}
                 </motion.span>
-                <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-1 block">
+                <span className="font-body text-xs text-muted-foreground/50 uppercase tracking-widest mt-1 block">
                   {item.metricLabel}
                 </span>
               </>
@@ -58,14 +58,14 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
               <item.icon className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
             </motion.div>
             <div>
-              <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
+              <span className="text-xs text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
                 {item.category}
               </span>
               <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight">
                 {item.title}
               </h3>
               {item.comingSoon && (
-                <span className="text-[8px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 uppercase tracking-widest font-body font-semibold inline-block mt-1 w-fit">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 uppercase tracking-widest font-body font-semibold inline-block mt-1 w-fit">
                   Em desenvolvimento
                 </span>
               )}
@@ -81,12 +81,12 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
             {item.comingSoon ? (
               <>
                 <span className="text-lg">{item.metric}</span>
-                <span className="font-body text-[9px] text-primary uppercase tracking-wider font-semibold">{item.metricLabel}</span>
+                <span className="font-body text-xs text-primary uppercase tracking-wider font-semibold">{item.metricLabel}</span>
               </>
             ) : (
               <>
                 <span className="font-display text-xl font-black text-gradient-intense">{item.metric}</span>
-                <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-wider">{item.metricLabel}</span>
+                <span className="font-body text-xs text-muted-foreground/50 uppercase tracking-wider">{item.metricLabel}</span>
               </>
             )}
           </div>
