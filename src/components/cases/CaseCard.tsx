@@ -72,7 +72,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
             </div>
           </div>
 
-          <p className="text-muted-foreground/60 font-body text-xs leading-relaxed flex-1">
+          <p className="text-muted-foreground/60 font-body text-sm leading-relaxed flex-1">
             {item.description}
           </p>
 
