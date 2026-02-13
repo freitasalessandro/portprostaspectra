@@ -1,12 +1,25 @@
 import { motion } from "framer-motion";
 
+import logo2k20 from "@/assets/brands/2k20.png";
+import logoConnectg2 from "@/assets/brands/connectg2.png";
+import logoHospitalSP from "@/assets/brands/hospital-sao-paulo.png";
+import logoInfobr from "@/assets/brands/infobr.png";
+import logoHug from "@/assets/brands/hug.png";
+import logoPaulista from "@/assets/brands/paulista.png";
+import logoJumpNetwork from "@/assets/brands/jump-network.png";
+import logoNgt from "@/assets/brands/ngt.png";
+import logoTheFiber from "@/assets/brands/the-fiber.png";
+
 const brands = [
-  "Marca 1",
-  "Marca 2",
-  "Marca 3",
-  "Marca 4",
-  "Marca 5",
-  "Marca 6",
+  { name: "2K20", logo: logo2k20 },
+  { name: "ConnectG2", logo: logoConnectg2 },
+  { name: "Hospital São Paulo", logo: logoHospitalSP },
+  { name: "InfoBR Telecom", logo: logoInfobr },
+  { name: "HUG", logo: logoHug },
+  { name: "Prefeitura de Paulista", logo: logoPaulista },
+  { name: "Jump Network", logo: logoJumpNetwork },
+  { name: "New Group Telecom", logo: logoNgt },
+  { name: "The Fiber", logo: logoTheFiber },
 ];
 
 const TrustedBrandsSection = () => {
@@ -45,33 +58,25 @@ const TrustedBrandsSection = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
           {brands.map((brand, i) => (
             <motion.div
-              key={brand}
+              key={brand.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.06 }}
-              className="group flex items-center justify-center h-24 md:h-28 border border-border/20 hover:border-primary/30 bg-card/10 hover:bg-primary/5 transition-all duration-500 relative overflow-hidden"
+              className="group flex items-center justify-center h-28 md:h-32 border border-border/20 hover:border-primary/30 bg-card/10 hover:bg-primary/5 transition-all duration-500 relative overflow-hidden p-6"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b from-primary/5 to-transparent" />
-              <span className="font-body text-xs text-muted-foreground/40 group-hover:text-muted-foreground/70 tracking-widest uppercase transition-colors duration-300">
-                {brand}
-              </span>
+              <img
+                src={brand.logo}
+                alt={brand.name}
+                className="max-h-16 md:max-h-20 max-w-[80%] object-contain relative z-10 opacity-70 group-hover:opacity-100 transition-opacity duration-500 brightness-0 invert dark:brightness-0 dark:invert group-hover:filter-none group-hover:brightness-100 group-hover:invert-0 dark:group-hover:brightness-100 dark:group-hover:invert-0"
+              />
             </motion.div>
           ))}
         </div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center text-muted-foreground/30 font-body text-xs tracking-widest uppercase mt-8"
-        >
-          Envie seus logos para personalizar esta seção
-        </motion.p>
       </div>
     </section>
   );
