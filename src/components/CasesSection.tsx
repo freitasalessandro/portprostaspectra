@@ -28,6 +28,7 @@ export type CaseItem = {
   metricLabel: string;
   screenshots: string[];
   comingSoon?: boolean;
+  link?: string;
 };
 
 const saasProducts: CaseItem[] = [
@@ -39,6 +40,7 @@ const saasProducts: CaseItem[] = [
     metric: "3x",
     metricLabel: "conversão",
     screenshots: [contrato1, contrato2, contrato3, contrato4, contrato5],
+    link: "https://piloto.contratoonline.tec.br/",
   },
   {
     title: "FlowList",
@@ -48,6 +50,7 @@ const saasProducts: CaseItem[] = [
     metric: "360°",
     metricLabel: "visão total",
     screenshots: [flowlist1, flowlist2, flowlist4, flowlist5, flowlist6],
+    link: "https://flowlist.com.br/",
   },
   {
     title: "Forms",

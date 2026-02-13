@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { ExternalLink } from "lucide-react";
 import type { CaseItem } from "../CasesSection";
 
 type Props = {
@@ -75,6 +76,18 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
           <p className="text-muted-foreground/60 font-body text-base leading-relaxed flex-1">
             {item.description}
           </p>
+
+          {item.link && (
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 inline-flex items-center gap-2 px-4 py-2 text-xs font-body font-semibold uppercase tracking-widest text-primary border border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 rounded-sm"
+            >
+              Ver projeto
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
 
           {/* Mobile metric */}
           <div className="md:hidden flex items-center gap-2">
