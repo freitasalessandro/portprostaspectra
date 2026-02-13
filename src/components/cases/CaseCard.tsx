@@ -78,15 +78,20 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
           </p>
 
           {item.link && (
-            <a
+            <motion.a
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-2 px-4 py-2 text-xs font-body font-semibold uppercase tracking-widest text-primary border border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 rounded-sm"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              className="shrink-0 inline-flex items-center gap-2 px-6 py-3 text-xs font-display font-bold uppercase tracking-widest text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 relative overflow-hidden group/btn glow-box-intense"
             >
-              Ver projeto
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+              <span className="relative z-10 flex items-center gap-2">
+                Ver projeto
+                <ExternalLink className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform duration-300" />
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+            </motion.a>
           )}
 
           {/* Mobile metric */}
