@@ -58,6 +58,16 @@ const saasProducts: CaseItem[] = [
     metricLabel: "mais dados",
     screenshots: [forms1, forms2, forms3, forms4],
   },
+  {
+    title: "Spectra Sign",
+    category: "SaaS · Assinaturas",
+    description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados.",
+    icon: PenTool,
+    metric: "🛠️",
+    metricLabel: "em dev",
+    screenshots: [],
+    comingSoon: true,
+  },
 ];
 
 const customDev: CaseItem[] = [
@@ -75,16 +85,6 @@ const customDev: CaseItem[] = [
     category: "EdTech · Plataforma",
     description: "Ambiente virtual de aprendizagem personalizado, desenvolvido sob medida para otimizar a experiência de ensino e gestão educacional.",
     icon: Code2,
-    metric: "🛠️",
-    metricLabel: "em dev",
-    screenshots: [],
-    comingSoon: true,
-  },
-  {
-    title: "Spectra Sign",
-    category: "SaaS · Assinaturas",
-    description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados.",
-    icon: PenTool,
     metric: "🛠️",
     metricLabel: "em dev",
     screenshots: [],
