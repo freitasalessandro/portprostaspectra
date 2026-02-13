@@ -115,7 +115,7 @@ const CasesSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-16"
         >
-          <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center gap-3">
+           <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
             <motion.span
               className="w-10 h-px bg-primary/50"
               initial={{ width: 0 }}
@@ -151,7 +151,7 @@ const CasesSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-16"
         >
-          <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center gap-3">
+          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
             <motion.span
               className="w-10 h-px bg-primary/50"
               initial={{ width: 0 }}

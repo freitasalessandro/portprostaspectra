@@ -114,7 +114,7 @@ const HeroSection = () => {
               animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="font-body text-[10px] md:text-xs text-primary tracking-[0.4em] uppercase font-semibold">
+            <span className="font-body text-xs md:text-sm text-primary tracking-[0.4em] uppercase font-semibold">
               Spectra — CTO as a Service
             </span>
           </div>
@@ -200,7 +200,7 @@ const HeroSection = () => {
               <span className="font-display text-2xl md:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-300">
                 {stat.value}
               </span>
-              <p className="font-body text-[10px] md:text-xs text-muted-foreground/60 tracking-wider uppercase mt-1">
+              <p className="font-body text-xs md:text-sm text-muted-foreground/60 tracking-wider uppercase mt-1">
                 {stat.label}
               </p>
             </motion.div>

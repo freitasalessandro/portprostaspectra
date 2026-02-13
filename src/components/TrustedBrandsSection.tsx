@@ -22,7 +22,7 @@ const TrustedBrandsSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center justify-center gap-3">
+          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center justify-center gap-3">
             <motion.span
               className="w-10 h-px bg-primary/50"
               initial={{ width: 0 }}
@@ -68,7 +68,7 @@ const TrustedBrandsSection = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center text-muted-foreground/30 font-body text-[10px] tracking-widest uppercase mt-8"
+          className="text-center text-muted-foreground/30 font-body text-xs tracking-widest uppercase mt-8"
         >
           Envie seus logos para personalizar esta seção
         </motion.p>

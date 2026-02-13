@@ -82,14 +82,14 @@ const ManifestoSection = () => {
                 <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-primary transition-all duration-300" />
 
                 <div className="flex items-baseline gap-4 mb-2">
-                  <span className="font-display text-[10px] text-primary/60 tracking-[0.3em] uppercase">
+                  <span className="font-display text-xs text-primary/60 tracking-[0.3em] uppercase">
                     {item.num}
                   </span>
                   <h3 className="font-display text-base font-bold group-hover:text-primary transition-colors duration-300">
                     {item.title}
                   </h3>
                 </div>
-                <p className="font-body text-muted-foreground text-xs leading-relaxed pl-10">
+                <p className="font-body text-muted-foreground text-sm leading-relaxed pl-10">
                   {item.text}
                 </p>
               </motion.div>

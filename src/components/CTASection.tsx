@@ -81,7 +81,7 @@ const CTASection = () => {
             <p className="text-muted-foreground/70 text-sm md:text-base max-w-xl mb-4 font-body leading-relaxed">
               Software, IA, design e tráfego integrados. Do diagnóstico estratégico à escala — sem risco, sem desenvolvimento cego.
             </p>
-            <p className="text-muted-foreground/40 text-xs max-w-md mb-12 font-body">
+            <p className="text-muted-foreground/40 text-sm max-w-md mb-12 font-body">
               O diagnóstico é remunerado e 100% revertido no setup do projeto. Você só investe se fizer sentido.
             </p>
 
@@ -106,13 +106,13 @@ const CTASection = () => {
       {/* Footer */}
       <div className="px-6 md:px-12 pb-8">
         <div className="max-w-7xl mx-auto pt-6 border-t border-border/15 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-muted-foreground/30 text-[10px] tracking-[0.2em] uppercase font-body">
+          <p className="text-muted-foreground/30 text-xs tracking-[0.2em] uppercase font-body">
             © 2026 Spectra — Engenharia & Inteligência de Negócios
           </p>
           <div className="flex gap-6">
-            <a href="#arsenal" className="text-muted-foreground/30 text-[10px] tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Arsenal</a>
-            <a href="#cases" className="text-muted-foreground/30 text-[10px] tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Cases</a>
-            <a href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra." target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 text-[10px] tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Contato</a>
+            <a href="#arsenal" className="text-muted-foreground/30 text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Arsenal</a>
+            <a href="#cases" className="text-muted-foreground/30 text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Cases</a>
+            <a href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra." target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Contato</a>
           </div>
         </div>
       </div>
