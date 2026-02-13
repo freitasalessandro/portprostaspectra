@@ -8,10 +8,14 @@ import forms3 from "@/assets/cases/forms-3.png";
 import forms4 from "@/assets/cases/forms-4.png";
 import flowlist1 from "@/assets/cases/flowlist-1.png";
 import flowlist2 from "@/assets/cases/flowlist-2.png";
-
 import flowlist4 from "@/assets/cases/flowlist-4.png";
 import flowlist5 from "@/assets/cases/flowlist-5.png";
 import flowlist6 from "@/assets/cases/flowlist-6.png";
+import contrato1 from "@/assets/cases/contrato-1.png";
+import contrato2 from "@/assets/cases/contrato-2.png";
+import contrato3 from "@/assets/cases/contrato-3.png";
+import contrato4 from "@/assets/cases/contrato-4.png";
+import contrato5 from "@/assets/cases/contrato-5.png";
 
 const cases = [
   {
@@ -21,7 +25,7 @@ const cases = [
     icon: FileText,
     metric: "3x",
     metricLabel: "conversão",
-    screenshots: [] as string[],
+    screenshots: [contrato1, contrato2, contrato3, contrato4, contrato5],
   },
   {
     title: "FlowList",
