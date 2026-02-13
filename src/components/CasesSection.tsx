@@ -55,8 +55,8 @@ const cases = [
     category: "SaaS · Assinaturas",
     description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados — simplificando contratos e eliminando burocracia.",
     icon: PenTool,
-    metric: "Em desenvolvimento",
-    metricLabel: "desenvolvimento",
+    metric: "🚧",
+    metricLabel: "em desenvolvimento",
     screenshots: [] as string[],
     comingSoon: true,
   },
@@ -161,7 +161,7 @@ const CasesSection = () => {
                   {/* Mobile metric */}
                   <div className="md:hidden flex items-center gap-2">
                     <span className="font-display text-xl font-black text-gradient-intense">{item.metric}</span>
-                    <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-wider">{item.metricLabel}</span>
+                    <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-wider leading-tight">{item.metricLabel}</span>
                   </div>
                 </div>
               </div>
