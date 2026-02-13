@@ -55,8 +55,8 @@ const cases = [
     category: "SaaS · Assinaturas",
     description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados — simplificando contratos e eliminando burocracia.",
     icon: PenTool,
-    metric: "🚧",
-    metricLabel: "em desenvolvimento",
+    metric: "🛠️",
+    metricLabel: "em dev",
     screenshots: [] as string[],
     comingSoon: true,
   },
@@ -117,16 +117,27 @@ const CasesSection = () => {
                 {/* Big metric */}
                 <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/15 bg-card/20 group-hover:bg-primary/5 transition-all duration-500">
                   <div className="text-center">
-                    <motion.span
-                      className="font-display text-4xl font-black text-gradient-intense block leading-none"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {item.metric}
-                    </motion.span>
-                    <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-1 block">
-                      {item.metricLabel}
-                    </span>
+                    {'comingSoon' in item && item.comingSoon ? (
+                      <>
+                        <span className="text-3xl block leading-none">{item.metric}</span>
+                        <span className="font-body text-[9px] text-primary uppercase tracking-widest mt-2 block font-semibold">
+                          {item.metricLabel}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <motion.span
+                          className="font-display text-4xl font-black text-gradient-intense block leading-none"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {item.metric}
+                        </motion.span>
+                        <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-1 block">
+                          {item.metricLabel}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -160,8 +171,17 @@ const CasesSection = () => {
 
                   {/* Mobile metric */}
                   <div className="md:hidden flex items-center gap-2">
-                    <span className="font-display text-xl font-black text-gradient-intense">{item.metric}</span>
-                    <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-wider leading-tight">{item.metricLabel}</span>
+                    {'comingSoon' in item && item.comingSoon ? (
+                      <>
+                        <span className="text-lg">{item.metric}</span>
+                        <span className="font-body text-[9px] text-primary uppercase tracking-wider font-semibold">{item.metricLabel}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-display text-xl font-black text-gradient-intense">{item.metric}</span>
+                        <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-wider">{item.metricLabel}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
