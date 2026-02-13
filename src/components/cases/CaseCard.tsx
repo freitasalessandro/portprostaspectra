@@ -61,14 +61,14 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
               <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
                 {item.category}
               </span>
-              <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight flex items-center gap-2">
+              <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight">
                 {item.title}
-                {item.comingSoon && (
-                  <span className="text-[8px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 uppercase tracking-widest font-body font-semibold">
-                    Em desenvolvimento
-                  </span>
-                )}
               </h3>
+              {item.comingSoon && (
+                <span className="text-[8px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 uppercase tracking-widest font-body font-semibold inline-block mt-1 w-fit">
+                  Em desenvolvimento
+                </span>
+              )}
             </div>
           </div>
 
