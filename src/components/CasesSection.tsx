@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ListChecks, ClipboardList, Brain, PenTool } from "lucide-react";
+import { FileText, ListChecks, ClipboardList, Brain, PenTool, Code2 } from "lucide-react";
 import { useState } from "react";
 
 import forms1 from "@/assets/cases/forms-1.png";
@@ -17,7 +17,20 @@ import contrato3 from "@/assets/cases/contrato-3.png";
 import contrato4 from "@/assets/cases/contrato-4.png";
 import contrato5 from "@/assets/cases/contrato-5.png";
 
-const cases = [
+import CaseCard from "./cases/CaseCard";
+
+export type CaseItem = {
+  title: string;
+  category: string;
+  description: string;
+  icon: React.ElementType;
+  metric: string;
+  metricLabel: string;
+  screenshots: string[];
+  comingSoon?: boolean;
+};
+
+const saasProducts: CaseItem[] = [
   {
     title: "Contrato Online + Boleto Fácil",
     category: "SaaS · Fintech",
@@ -45,29 +58,42 @@ const cases = [
     metricLabel: "mais dados",
     screenshots: [forms1, forms2, forms3, forms4],
   },
+];
+
+const customDev: CaseItem[] = [
   {
     title: "Calculadora de Linfedema",
     category: "HealthTech · IA",
-    description: "Sistema de inteligência artificial desenvolvido para hospitais de referência, capaz de calcular volumes e graus de linfedema com precisão clínica. Utiliza modelos de machine learning treinados com dados reais para auxiliar médicos no diagnóstico, acompanhamento e tomada de decisão terapêutica — eliminando subjetividade e acelerando o fluxo de atendimento.",
+    description: "Sistema de inteligência artificial desenvolvido para hospitais de referência, capaz de calcular volumes e graus de linfedema com precisão clínica. Utiliza modelos de machine learning treinados com dados reais para auxiliar médicos no diagnóstico, acompanhamento e tomada de decisão terapêutica.",
     icon: Brain,
     metric: "99%",
     metricLabel: "precisão",
-    screenshots: [] as string[],
+    screenshots: [],
+  },
+  {
+    title: "AVA",
+    category: "EdTech · Plataforma",
+    description: "Ambiente virtual de aprendizagem personalizado, desenvolvido sob medida para otimizar a experiência de ensino e gestão educacional.",
+    icon: Code2,
+    metric: "🛠️",
+    metricLabel: "em dev",
+    screenshots: [],
+    comingSoon: true,
   },
   {
     title: "Spectra Sign",
     category: "SaaS · Assinaturas",
-    description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados — simplificando contratos e eliminando burocracia.",
+    description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados.",
     icon: PenTool,
     metric: "🛠️",
     metricLabel: "em dev",
-    screenshots: [] as string[],
+    screenshots: [],
     comingSoon: true,
   },
 ];
 
 const CasesSection = () => {
-  const [activeScreenshot, setActiveScreenshot] = useState<Record<number, number>>({});
+  const [activeScreenshot, setActiveScreenshot] = useState<Record<string, number>>({});
 
   return (
     <section className="py-28 md:py-36 px-6 md:px-12 relative overflow-hidden" id="cases">
@@ -81,6 +107,7 @@ const CasesSection = () => {
       />
 
       <div className="max-w-7xl mx-auto relative z-10">
+        {/* SaaS Products */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -104,134 +131,55 @@ const CasesSection = () => {
           </h2>
         </motion.div>
 
-        <div className="space-y-3">
-          {cases.map((item, i) => (
-            <motion.div
+        <div className="space-y-3 mb-24">
+          {saasProducts.map((item, i) => (
+            <CaseCard
               key={item.title}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-30px" }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              whileHover={{ x: 6, transition: { duration: 0.3 } }}
-              className="group flex flex-col border border-border/20 hover:border-primary/30 transition-all duration-500 bg-background relative overflow-hidden"
-            >
-              <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-primary transition-all duration-500" />
+              item={item}
+              index={i}
+              activeScreenshot={activeScreenshot}
+              setActiveScreenshot={setActiveScreenshot}
+            />
+          ))}
+        </div>
 
-              <div className="flex items-stretch">
-                {/* Big metric */}
-                <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/15 bg-card/20 group-hover:bg-primary/5 transition-all duration-500">
-                  <div className="text-center">
-                    {'comingSoon' in item && item.comingSoon ? (
-                      <>
-                        <span className="text-3xl block leading-none">{item.metric}</span>
-                        <span className="font-body text-[9px] text-primary uppercase tracking-widest mt-2 block font-semibold">
-                          {item.metricLabel}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <motion.span
-                          className="font-display text-4xl font-black text-gradient-intense block leading-none"
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {item.metric}
-                        </motion.span>
-                        <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-1 block">
-                          {item.metricLabel}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
+        {/* Custom Development */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="mb-16"
+        >
+          <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center gap-3">
+            <motion.span
+              className="w-10 h-px bg-primary/50"
+              initial={{ width: 0 }}
+              whileInView={{ width: 40 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            />
+            Sob Demanda
+          </p>
+          <h2 className="font-display text-3xl md:text-5xl font-black tracking-tight leading-[0.95]">
+            Desenvolvimento<br />
+            <span className="font-extralight text-foreground/60">sob medida.</span>
+          </h2>
+          <p className="text-muted-foreground/60 font-body text-sm mt-4 max-w-xl">
+            Projetos exclusivos desenvolvidos para resolver desafios específicos de cada cliente, com tecnologia de ponta e entrega personalizada.
+          </p>
+        </motion.div>
 
-                {/* Content */}
-                <div className="flex-1 p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-                  <div className="flex items-center gap-3 md:w-56 shrink-0">
-                    <motion.div
-                      whileHover={{ rotate: 15 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <item.icon className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
-                    </motion.div>
-                    <div>
-                      <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
-                        {item.category}
-                      </span>
-                      <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight flex items-center gap-2">
-                        {item.title}
-                        {'comingSoon' in item && item.comingSoon && (
-                          <span className="text-[8px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 uppercase tracking-widest font-body font-semibold">
-                            Em desenvolvimento
-                          </span>
-                        )}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <p className="text-muted-foreground/60 font-body text-xs leading-relaxed flex-1">
-                    {item.description}
-                  </p>
-
-                  {/* Mobile metric */}
-                  <div className="md:hidden flex items-center gap-2">
-                    {'comingSoon' in item && item.comingSoon ? (
-                      <>
-                        <span className="text-lg">{item.metric}</span>
-                        <span className="font-body text-[9px] text-primary uppercase tracking-wider font-semibold">{item.metricLabel}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-display text-xl font-black text-gradient-intense">{item.metric}</span>
-                        <span className="font-body text-[9px] text-muted-foreground/50 uppercase tracking-wider">{item.metricLabel}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Screenshots gallery */}
-              {item.screenshots.length > 0 && (
-                <div className="border-t border-border/15 p-4 md:p-6">
-                  <div className="flex flex-col gap-4">
-                    {/* Main preview */}
-                    <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden bg-card/30 border border-border/20">
-                      <AnimatePresence mode="wait">
-                        <motion.img
-                          key={activeScreenshot[i] ?? 0}
-                          src={item.screenshots[activeScreenshot[i] ?? 0]}
-                          alt={`${item.title} screenshot`}
-                          className="w-full h-full object-cover object-top"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Thumbnails */}
-                    {item.screenshots.length > 1 && (
-                      <div className="flex gap-2 overflow-x-auto pb-1">
-                        {item.screenshots.map((src, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setActiveScreenshot(prev => ({ ...prev, [i]: idx }))}
-                            className={`shrink-0 w-20 h-12 md:w-28 md:h-16 rounded-md overflow-hidden border-2 transition-all duration-300 ${
-                              (activeScreenshot[i] ?? 0) === idx
-                                ? "border-primary shadow-[0_0_10px_hsl(220_100%_55%/0.3)]"
-                                : "border-border/20 opacity-50 hover:opacity-80"
-                            }`}
-                          >
-                            <img src={src} alt="" className="w-full h-full object-cover object-top" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </motion.div>
+        <div className="space-y-3">
+          {customDev.map((item, i) => (
+            <CaseCard
+              key={item.title}
+              item={item}
+              index={i}
+              indexKey={`custom-${i}`}
+              activeScreenshot={activeScreenshot}
+              setActiveScreenshot={setActiveScreenshot}
+            />
           ))}
         </div>
       </div>
