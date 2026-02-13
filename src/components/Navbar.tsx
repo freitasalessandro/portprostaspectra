@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import spectraLogo from "@/assets/spectra-logo.svg";
 
+const WHATSAPP_URL = "https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra.";
+
 const navLinks = [
   { label: "Arsenal", href: "#arsenal" },
   { label: "Cases", href: "#cases" },
-  { label: "Contato", href: "#contato" },
+  { label: "Contato", href: WHATSAPP_URL, external: true },
 ];
 
 const Navbar = () => {
@@ -76,6 +78,7 @@ const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
+              {...('external' in link && link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               className="font-body text-sm text-muted-foreground hover:text-primary transition-colors duration-300 uppercase tracking-widest relative group"
             >
               {link.label}
@@ -143,6 +146,7 @@ const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
+              {...('external' in link && link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               onClick={() => setOpen(false)}
               className="font-body text-sm text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest"
             >
