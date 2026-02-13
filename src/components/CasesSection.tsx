@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ListChecks, ClipboardList, Brain } from "lucide-react";
+import { FileText, ListChecks, ClipboardList, Brain, PenTool } from "lucide-react";
 import { useState } from "react";
 
 import forms1 from "@/assets/cases/forms-1.png";
@@ -49,6 +49,16 @@ const cases = [
     metric: "99%",
     metricLabel: "precisão",
     screenshots: [] as string[],
+  },
+  {
+    title: "Spectra Sign",
+    category: "SaaS · Assinaturas",
+    description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados — simplificando contratos e eliminando burocracia.",
+    icon: PenTool,
+    metric: "Em breve",
+    metricLabel: "lançamento",
+    screenshots: [] as string[],
+    comingSoon: true,
   },
 ];
 
@@ -133,8 +143,13 @@ const CasesSection = () => {
                       <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
                         {item.category}
                       </span>
-                      <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight">
+                      <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight flex items-center gap-2">
                         {item.title}
+                        {'comingSoon' in item && item.comingSoon && (
+                          <span className="text-[8px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 uppercase tracking-widest font-body font-semibold">
+                            Em breve
+                          </span>
+                        )}
                       </h3>
                     </div>
                   </div>
