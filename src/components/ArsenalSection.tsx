@@ -36,7 +36,7 @@ const ArsenalSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-16"
         >
-          <p className="text-primary tracking-[0.4em] uppercase text-[10px] md:text-xs mb-4 font-body flex items-center gap-3">
+          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
             <motion.span
               className="w-10 h-px bg-primary/50"
               initial={{ width: 0 }}
@@ -77,7 +77,7 @@ const ArsenalSection = () => {
                 >
                   <service.icon className="w-5 h-5 text-primary/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
                 </motion.div>
-                <span className="font-display text-[10px] text-muted-foreground/20 tracking-[0.2em] group-hover:text-primary/20 transition-colors duration-300">
+                <span className="font-display text-xs text-muted-foreground/20 tracking-[0.2em] group-hover:text-primary/20 transition-colors duration-300">
                   0{i + 1}
                 </span>
               </div>
@@ -85,7 +85,7 @@ const ArsenalSection = () => {
               <h3 className="font-display text-base md:text-lg font-bold mb-2 group-hover:text-primary transition-colors duration-300 leading-tight">
                 {service.title}
               </h3>
-              <p className="text-muted-foreground/70 font-body text-xs leading-relaxed">
+              <p className="text-muted-foreground/70 font-body text-sm leading-relaxed">
                 {service.description}
               </p>
             </motion.div>
