@@ -44,7 +44,7 @@ const cases = [
   {
     title: "Calculadora de Linfedema",
     category: "HealthTech · IA",
-    description: "IA de alta precisão para diagnósticos médicos em hospitais de referência.",
+    description: "Sistema de inteligência artificial desenvolvido para hospitais de referência, capaz de calcular volumes e graus de linfedema com precisão clínica. Utiliza modelos de machine learning treinados com dados reais para auxiliar médicos no diagnóstico, acompanhamento e tomada de decisão terapêutica — eliminando subjetividade e acelerando o fluxo de atendimento.",
     icon: Brain,
     metric: "99%",
     metricLabel: "precisão",
