@@ -55,8 +55,8 @@ const cases = [
     category: "SaaS · Assinaturas",
     description: "Plataforma de assinatura digital com validade jurídica, integrada ao ecossistema Spectra. Fluxos automatizados de envio, acompanhamento e armazenamento seguro de documentos assinados — simplificando contratos e eliminando burocracia.",
     icon: PenTool,
-    metric: "Em breve",
-    metricLabel: "lançamento",
+    metric: "Em desenvolvimento",
+    metricLabel: "desenvolvimento",
     screenshots: [] as string[],
     comingSoon: true,
   },
@@ -147,7 +147,7 @@ const CasesSection = () => {
                         {item.title}
                         {'comingSoon' in item && item.comingSoon && (
                           <span className="text-[8px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 uppercase tracking-widest font-body font-semibold">
-                            Em breve
+                            Em desenvolvimento
                           </span>
                         )}
                       </h3>
