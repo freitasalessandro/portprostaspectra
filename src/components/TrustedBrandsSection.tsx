@@ -24,10 +24,10 @@ const brands = [
 
 const TrustedBrandsSection = () => {
   return (
-    <section className="py-20 md:py-28 px-6 md:px-12 relative overflow-hidden">
+    <section className="py-20 md:py-28 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative z-10 px-6 md:px-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -57,25 +57,32 @@ const TrustedBrandsSection = () => {
             <span className="font-extralight text-foreground/60">confiam na gente.</span>
           </h2>
         </motion.div>
+      </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
-          {brands.map((brand, i) => (
-            <motion.div
-              key={brand.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.06 }}
-              className="group flex items-center justify-center h-28 md:h-32 border border-border/20 hover:border-primary/30 bg-card/10 hover:bg-primary/5 transition-all duration-500 relative overflow-hidden p-6"
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b from-primary/5 to-transparent" />
-              <img
-                src={brand.logo}
-                alt={brand.name}
-                className="max-h-16 md:max-h-20 max-w-[80%] object-contain relative z-10 opacity-70 group-hover:opacity-100 transition-opacity duration-500 brightness-0 invert dark:brightness-0 dark:invert group-hover:filter-none group-hover:brightness-100 group-hover:invert-0 dark:group-hover:brightness-100 dark:group-hover:invert-0"
-              />
-            </motion.div>
-          ))}
+      {/* Marquee infinite scroll */}
+      <div className="relative">
+        <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-r from-background to-transparent z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-l from-background to-transparent z-10" />
+
+        <div className="flex overflow-hidden">
+          <motion.div
+            className="flex shrink-0 gap-12 md:gap-16 items-center py-8"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          >
+            {[...brands, ...brands].map((brand, i) => (
+              <div
+                key={`${brand.name}-${i}`}
+                className="shrink-0 flex items-center justify-center h-16 md:h-20 w-36 md:w-44 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+              >
+                <img
+                  src={brand.logo}
+                  alt={brand.name}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>
