@@ -21,7 +21,7 @@ const cases = [
     icon: FileText,
     metric: "3x",
     metricLabel: "conversão",
-    screenshots: [flowlist1, flowlist2, flowlist4, flowlist5, flowlist6],
+    screenshots: [] as string[],
   },
   {
     title: "FlowList",
@@ -30,7 +30,7 @@ const cases = [
     icon: ListChecks,
     metric: "360°",
     metricLabel: "visão total",
-    screenshots: [] as string[],
+    screenshots: [flowlist1, flowlist2, flowlist4, flowlist5, flowlist6],
   },
   {
     title: "Forms",
