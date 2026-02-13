@@ -86,7 +86,9 @@ const CTASection = () => {
             </p>
 
             <motion.a
-              href="mailto:contato@spectra.dev"
+              href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20estrat%C3%A9gico."
+              target="_blank"
+              rel="noopener noreferrer"
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center gap-3 px-8 py-4 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
@@ -110,7 +112,7 @@ const CTASection = () => {
           <div className="flex gap-6">
             <a href="#arsenal" className="text-muted-foreground/30 text-[10px] tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Arsenal</a>
             <a href="#cases" className="text-muted-foreground/30 text-[10px] tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Cases</a>
-            <a href="#contato" className="text-muted-foreground/30 text-[10px] tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Contato</a>
+            <a href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra." target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 text-[10px] tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Contato</a>
           </div>
         </div>
       </div>

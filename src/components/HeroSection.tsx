@@ -159,7 +159,9 @@ const HeroSection = () => {
 
           <div className="flex gap-3 shrink-0">
             <motion.a
-              href="#contato"
+              href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20estrat%C3%A9gico."
+              target="_blank"
+              rel="noopener noreferrer"
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="px-7 py-3.5 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
