@@ -46,13 +46,10 @@ const emptySettings: CompanySettings = {
 };
 
 const calcBdiFactor = (s: CompanySettings) => {
-  const tax = s.bdi_tax / 100;
-  const admin = s.bdi_admin / 100;
-  const risk = s.bdi_risk / 100;
-  const profit = s.bdi_profit / 100;
-  const denominator = 1 - (tax + admin + risk + profit);
+  const sum = s.bdi_tax + s.bdi_admin + s.bdi_risk + s.bdi_profit;
+  const denominator = 1 - (sum / 100);
   if (denominator <= 0) return null;
-  return (1 / denominator);
+  return 1 / denominator;
 };
 
 const AdminConfiguracoes = () => {
