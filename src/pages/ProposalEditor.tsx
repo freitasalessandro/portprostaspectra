@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search, Eye, Download } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search, Eye } from "lucide-react";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { ProposalType, getSectionsForType } from "@/lib/proposal-templates";
 import { Switch } from "@/components/ui/switch";
@@ -363,9 +363,6 @@ const ProposalEditor = () => {
               <>
                 <Button variant="ghost" size="sm" onClick={() => window.open(`/proposta/${slug}`, "_blank")}>
                   <Eye className="w-4 h-4 mr-2" /> Visualizar
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => window.open(`/proposta/${slug}?print=true`, "_blank")}>
-                  <Download className="w-4 h-4 mr-2" /> PDF
                 </Button>
                 <Button variant="ghost" size="sm" onClick={copyLink}>
                   <Copy className="w-4 h-4 mr-2" /> Link
