@@ -27,6 +27,7 @@ interface SocialProofCase {
   case_description: string;
   case_metric: string;
   case_metric_label: string;
+  case_link: string;
 }
 
 interface ServiceRecord {
@@ -37,6 +38,7 @@ interface ServiceRecord {
   is_case: boolean;
   metric: string | null;
   metric_label: string | null;
+  link: string | null;
 }
 
 interface BdiSettings {
@@ -197,7 +199,7 @@ const ProposalEditor = () => {
     if (proofRes.data) {
       setSelectedCases(proofRes.data.map((p: any) => ({
         case_title: p.case_title, case_category: p.case_category, case_description: p.case_description,
-        case_metric: p.case_metric || "", case_metric_label: p.case_metric_label || "",
+        case_metric: p.case_metric || "", case_metric_label: p.case_metric_label || "", case_link: p.case_link || "",
       })));
     }
 
@@ -246,6 +248,7 @@ const ProposalEditor = () => {
         case_description: svc.description,
         case_metric: svc.metric || "",
         case_metric_label: svc.metric_label || "",
+        case_link: svc.link || "",
       }]);
     }
   };
@@ -317,7 +320,7 @@ const ProposalEditor = () => {
       const proofToInsert = selectedCases.map((c, i) => ({
         proposal_id: proposalId!, case_title: c.case_title, case_category: c.case_category,
         case_description: c.case_description, case_metric: c.case_metric,
-        case_metric_label: c.case_metric_label, sort_order: i,
+        case_metric_label: c.case_metric_label, case_link: c.case_link || null, sort_order: i,
       }));
       await supabase.from("proposal_social_proof").insert(proofToInsert);
     }
@@ -634,6 +637,28 @@ const ProposalEditor = () => {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {/* Link fields for selected cases */}
+          {selectedCases.length > 0 && (
+            <div className="space-y-3 mt-4">
+              <h3 className="text-xs font-display font-bold text-muted-foreground uppercase tracking-wider">Links dos Cases Selecionados</h3>
+              {selectedCases.map((sc, idx) => (
+                <div key={sc.case_title} className="flex items-center gap-3">
+                  <span className="text-sm font-body text-foreground/80 min-w-[120px] truncate">{sc.case_title}</span>
+                  <input
+                    value={sc.case_link}
+                    onChange={(e) => {
+                      const updated = [...selectedCases];
+                      updated[idx] = { ...updated[idx], case_link: e.target.value };
+                      setSelectedCases(updated);
+                    }}
+                    placeholder="https://..."
+                    className="flex-1 bg-background border border-border/30 rounded-sm px-3 py-2 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50 focus:outline-none transition-colors"
+                  />
+                </div>
+              ))}
             </div>
           )}
         </ModuleBlock>
