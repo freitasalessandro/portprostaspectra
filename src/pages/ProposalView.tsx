@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Check, MessageCircle, ArrowRight, Sun, Moon } from "lucide-react";
@@ -50,6 +50,7 @@ interface SocialProof {
 
 const ProposalView = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [items, setItems] = useState<ProposalItem[]>([]);
   const [sections, setSections] = useState<ProposalSection[]>([]);
@@ -65,6 +66,8 @@ const ProposalView = () => {
   const [acceptEmail, setAcceptEmail] = useState("");
   const [accepting, setAccepting] = useState(false);
 
+  const isPrint = searchParams.get("print") === "true";
+
   // Default to light theme on mount
   useEffect(() => {
     const root = document.documentElement;
@@ -74,6 +77,14 @@ const ProposalView = () => {
       root.classList.remove("light");
     };
   }, []);
+
+  // Auto-trigger print dialog when ?print=true
+  useEffect(() => {
+    if (isPrint && !loading && proposal) {
+      const timer = setTimeout(() => window.print(), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isPrint, loading, proposal]);
 
   const toggleTheme = () => {
     const root = document.documentElement;

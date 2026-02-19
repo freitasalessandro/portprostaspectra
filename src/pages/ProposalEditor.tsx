@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,6 @@ const ProposalEditor = () => {
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [proposalType, setProposalType] = useState<ProposalType>("cto");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -343,59 +342,6 @@ const ProposalEditor = () => {
     s.description.toLowerCase().includes(autocompleteQuery.toLowerCase())
   );
 
-  const handleDownloadPdf = useCallback(async () => {
-    if (!slug) return;
-    setGeneratingPdf(true);
-    try {
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
-
-      // Open proposal in a hidden iframe
-      const iframe = document.createElement("iframe");
-      iframe.style.position = "fixed";
-      iframe.style.left = "-9999px";
-      iframe.style.top = "0";
-      iframe.style.width = "1024px";
-      iframe.style.height = "100vh";
-      iframe.style.border = "none";
-      document.body.appendChild(iframe);
-
-      iframe.src = `/proposta/${slug}`;
-
-      await new Promise<void>((resolve) => {
-        iframe.onload = () => setTimeout(resolve, 2500);
-      });
-
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) throw new Error("Não foi possível acessar o conteúdo");
-
-      const body = iframeDoc.body;
-      const canvas = await html2canvas(body, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        width: 1024,
-        windowWidth: 1024,
-      });
-
-      document.body.removeChild(iframe);
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdfWidth = 210; // A4 mm
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      const pdf = new jsPDF({ unit: "mm", format: [pdfWidth, pdfHeight] });
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-
-      const fileName = `proposta-${projectTitle.toLowerCase().replace(/\s+/g, "-") || "spectra"}.pdf`;
-      pdf.save(fileName);
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Erro ao gerar PDF", description: "Tente novamente", variant: "destructive" });
-    } finally {
-      setGeneratingPdf(false);
-    }
-  }, [slug, projectTitle]);
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Carregando...</div>;
 
@@ -418,8 +364,8 @@ const ProposalEditor = () => {
                 <Button variant="ghost" size="sm" onClick={() => window.open(`/proposta/${slug}`, "_blank")}>
                   <Eye className="w-4 h-4 mr-2" /> Visualizar
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handleDownloadPdf} disabled={generatingPdf}>
-                  <Download className="w-4 h-4 mr-2" /> {generatingPdf ? "Gerando..." : "PDF"}
+                <Button variant="ghost" size="sm" onClick={() => window.open(`/proposta/${slug}?print=true`, "_blank")}>
+                  <Download className="w-4 h-4 mr-2" /> PDF
                 </Button>
                 <Button variant="ghost" size="sm" onClick={copyLink}>
                   <Copy className="w-4 h-4 mr-2" /> Link
