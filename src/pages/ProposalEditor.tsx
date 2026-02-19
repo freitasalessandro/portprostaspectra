@@ -296,6 +296,18 @@ const ProposalEditor = () => {
       if (result.suggested_description && !description) {
         setDescription(result.suggested_description);
       }
+      // Fill suggested investment items
+      if (result.suggested_items && Array.isArray(result.suggested_items) && result.suggested_items.length > 0) {
+        const newItems = result.suggested_items.map((si: any) => ({
+          service_name: si.service_name || "",
+          description: si.description || "",
+          quantity: si.quantity || 1,
+          unit_price: si.estimated_price || 0,
+          payment_type: si.payment_type === "recurring" ? "recurring" as const : "setup" as const,
+          payment_terms: "",
+        }));
+        setItems(newItems);
+      }
 
       toast({ title: "Proposta gerada com IA!", description: "Revise as seções e ajuste o conteúdo antes de salvar." });
     } catch (e) {
