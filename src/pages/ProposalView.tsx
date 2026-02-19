@@ -254,19 +254,11 @@ const ProposalView = () => {
 
             <div className="border border-border/20 overflow-hidden">
               {items.map((item, i) => (
-                <div key={item.id} className={`flex items-start justify-between p-5 ${i < items.length - 1 ? "border-b border-border/15" : ""}`}>
+                <div key={item.id} className={`flex items-start p-5 ${i < items.length - 1 ? "border-b border-border/15" : ""}`}>
                   <div className="flex-1">
                     <h3 className="font-display font-bold text-base">{item.service_name}</h3>
                     {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
-                    {item.quantity > 1 && (
-                      <p className="text-xs text-muted-foreground/50 mt-1 font-body">
-                        {item.quantity}x {formatCurrency(Number(item.unit_price))}
-                      </p>
-                    )}
                   </div>
-                  <span className="font-display font-bold text-primary ml-4 text-lg">
-                    {formatCurrency(item.quantity * Number(item.unit_price))}
-                  </span>
                 </div>
               ))}
 
