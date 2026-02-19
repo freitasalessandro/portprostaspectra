@@ -538,14 +538,37 @@ const ProposalView = () => {
         </motion.section>
 
         {/* Footer */}
-        <footer className="pt-8 border-t border-border/15 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <img src={spectraLogo} alt="Spectra" className="w-5 h-4" style={{ filter: "drop-shadow(0 0 8px hsl(220 100% 55% / 0.2))" }} />
-            <span className="font-display text-sm font-bold tracking-tight text-foreground">SPECTRA</span>
+        <footer className="pt-10 border-t border-border/15">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <img src={spectraLogo} alt="Spectra" className="w-7 h-5" style={{ filter: "drop-shadow(0 0 8px hsl(220 100% 55% / 0.2))" }} />
+              <div>
+                <span className="font-display text-sm font-bold tracking-tight text-foreground block">SPECTRA</span>
+                <span className="text-[10px] text-muted-foreground/40 tracking-[0.15em] uppercase font-body">Engenharia & Inteligência de Negócios</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              <a
+                href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground/50 hover:text-primary transition-colors font-body tracking-widest uppercase"
+              >
+                WhatsApp
+              </a>
+              <span className="text-muted-foreground/20">|</span>
+              <a
+                href="mailto:contato@spectra.dev"
+                className="text-xs text-muted-foreground/50 hover:text-primary transition-colors font-body tracking-widest uppercase"
+              >
+                E-mail
+              </a>
+              <span className="text-muted-foreground/20">|</span>
+              <span className="text-[10px] text-muted-foreground/30 font-body tracking-widest uppercase">
+                © 2026 Spectra
+              </span>
+            </div>
           </div>
-          <p className="text-[10px] text-muted-foreground/40 tracking-[0.15em] uppercase font-body">
-            Engenharia & Inteligência de Negócios
-          </p>
         </footer>
       </main>
     </div>
