@@ -220,158 +220,195 @@ const ProposalView = () => {
     );
   }
 
+  const visibleSections = sections.filter(s => Object.values(s.content || {}).some(v => v && (v as string).trim()));
+  const sectionNumberOffset = visibleSections.length;
+
   return (
-    <div ref={contentRef} className="min-h-screen bg-background pb-16 md:pb-0">
-      {/* Hero Header */}
-      <header className="relative overflow-hidden border-b border-border/20">
-        <div className="absolute inset-0 grid-pattern opacity-20" />
-        <motion.div
-          className="absolute top-1/2 right-0 w-[300px] h-[300px] bg-primary/5 blur-[150px] rounded-full pointer-events-none"
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 6, repeat: Infinity }}
-        />
+    <div ref={contentRef} className="min-h-screen bg-background pb-20 md:pb-0 antialiased">
+      {/* Sticky minimal navbar */}
+      <nav className="sticky top-0 z-40 backdrop-blur-2xl bg-background/70 border-b border-border/10">
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <img src={spectraLogo} alt="Spectra" className="w-6 h-4.5 opacity-80" />
+            <span className="font-display text-sm font-extrabold tracking-tight text-foreground/80">SPECTRA</span>
+          </div>
+          <div className="hidden md:flex items-center gap-1">
+            {[
+              { id: "overview", label: "Proposta" },
+              { id: "investment", label: "Investimento" },
+              ...(socialProof.length > 0 ? [{ id: "cases", label: "Cases" }] : []),
+              { id: "next-steps", label: "Próximos Passos" },
+            ].map((nav) => (
+              <button
+                key={nav.id}
+                onClick={() => scrollToSection(nav.id)}
+                className={`px-3 py-1.5 text-xs font-body font-medium rounded-full transition-all duration-300 ${
+                  activeTab === nav.id
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {nav.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleDownloadPdf}
+              disabled={generatingPdf}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 transition-all duration-300 disabled:opacity-40"
+              aria-label="Baixar PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 transition-all duration-300"
+              aria-label="Alternar tema"
+            >
+              {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        </div>
+      </nav>
 
-        <div className="max-w-4xl mx-auto px-6 py-8 md:py-10 relative z-10">
+      {/* Hero — Apple-style centered, massive type */}
+      <header className="relative overflow-hidden">
+        {/* Gradient orb */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="max-w-3xl mx-auto px-6 pt-16 md:pt-24 pb-12 md:pb-16 relative z-10 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <img src={spectraLogo} alt="Spectra" className="w-8 h-6" style={{ filter: "drop-shadow(0 0 10px hsl(220 100% 55% / 0.3))" }} />
-                <span className="font-display text-xl font-extrabold tracking-tight text-foreground">SPECTRA</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <motion.button
-                  onClick={handleDownloadPdf}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  disabled={generatingPdf}
-                  className="w-8 h-8 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-all duration-300 disabled:opacity-50"
-                  aria-label="Baixar PDF"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                </motion.button>
-                <motion.button
-                  onClick={toggleTheme}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-8 h-8 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-all duration-300"
-                  aria-label="Alternar tema"
-                >
-                  {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-                </motion.button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-[10px] text-primary tracking-[0.3em] uppercase font-body font-semibold px-2 py-1 border border-primary/30 rounded-sm">
+            <div className="inline-flex items-center gap-2 mb-6">
+              <span className="text-[10px] text-primary/80 tracking-[0.3em] uppercase font-body font-semibold px-3 py-1 border border-primary/20 rounded-full bg-primary/[0.04]">
                 {proposal.type === "cto" ? "CTO as a Service" : "Design"}
               </span>
               {isAccepted && (
-                <span className="text-[10px] tracking-[0.3em] uppercase font-body font-semibold px-2 py-1 bg-green-500/20 text-green-400 rounded-sm flex items-center gap-1">
+                <span className="text-[10px] tracking-[0.3em] uppercase font-body font-semibold px-3 py-1 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">
                   <Check className="w-3 h-3" /> Aceita
                 </span>
               )}
             </div>
 
-            <h1 className="font-display text-3xl md:text-5xl font-extrabold tracking-tight leading-[1] mb-2">
+            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[0.95] mb-5 text-foreground">
               {proposal.project_title}
             </h1>
 
-            <p className="text-muted-foreground font-body text-base">
+            <p className="text-muted-foreground font-body text-lg md:text-xl max-w-xl mx-auto">
               Proposta para <span className="text-foreground font-medium">{proposal.client_name}</span>
             </p>
 
-            <div className="flex gap-6 mt-2 text-sm text-muted-foreground/60 font-body">
-              <span>Criada em {formatDate(proposal.created_at)}</span>
-              {proposal.valid_until && <span>Válida até {formatDate(proposal.valid_until)}</span>}
+            <div className="flex items-center justify-center gap-4 mt-5 text-xs text-muted-foreground/50 font-body">
+              <span>{formatDate(proposal.created_at)}</span>
+              {proposal.valid_until && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                  <span>Válida até {formatDate(proposal.valid_until)}</span>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
+        {/* Subtle divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-6 space-y-8">
-        {/* Description */}
+      <main className="max-w-3xl mx-auto px-6 py-12 md:py-16">
+        {/* Description — clean editorial blockquote */}
         {proposal.description && (
           <motion.section
             id="overview"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="font-body text-muted-foreground text-base leading-relaxed border-l-2 border-primary/30 pl-6"
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-16 md:mb-20"
           >
-            {proposal.description}
+            <p className="font-body text-muted-foreground text-lg md:text-xl leading-relaxed">
+              {proposal.description}
+            </p>
           </motion.section>
         )}
 
-        {/* Template Sections */}
-        {sections.map((section, sIdx) => {
-          const template = templateSections.find((t) => t.key === section.section_key);
-          const sectionContent = section.content || {};
-          const hasContent = Object.values(sectionContent).some((v) => v && v.trim());
-          if (!hasContent) return null;
+        {/* Template Sections — clean, spacious, typographic */}
+        <div className="space-y-14 md:space-y-20 mb-16 md:mb-20">
+          {visibleSections.map((section, sIdx) => {
+            const template = templateSections.find((t) => t.key === section.section_key);
+            const sectionContent = section.content || {};
 
-          return (
-            <motion.section
-              key={section.section_key}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: sIdx * 0.05 }}
-              className="space-y-4"
-            >
-              <div className="flex items-baseline gap-3">
-                <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">0{sIdx + 1}</span>
-                <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">{section.title}</h2>
-              </div>
+            return (
+              <motion.section
+                key={section.section_key}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="mb-6">
+                  <span className="font-body text-[11px] text-primary/60 tracking-[0.25em] uppercase font-medium">
+                    {String(sIdx + 1).padStart(2, "0")}
+                  </span>
+                  <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight mt-1 text-foreground">
+                    {section.title}
+                  </h2>
+                </div>
 
-              <div className="space-y-4 pl-6 border-l border-border/20">
-                {template?.items.map((item) => {
-                  const text = sectionContent[item.key];
-                  if (!text || !text.trim()) return null;
-                  return (
-                    <div key={item.key}>
-                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-2">{item.label}</h3>
-                      <p className="font-body text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.section>
-          );
-        })}
+                <div className="space-y-6">
+                  {template?.items.map((item) => {
+                    const text = sectionContent[item.key];
+                    if (!text || !text.trim()) return null;
+                    return (
+                      <div key={item.key} className="group">
+                        <h3 className="font-display text-xs font-bold text-foreground/50 uppercase tracking-[0.15em] mb-1.5">
+                          {item.label}
+                        </h3>
+                        <p className="font-body text-foreground/80 text-[15px] leading-[1.7] whitespace-pre-wrap">
+                          {text}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.section>
+            );
+          })}
+        </div>
 
-        {/* Investment / Services */}
+        {/* Investment — Stripe-style pricing cards */}
         {items.length > 0 && (
           <motion.section
             id="investment"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="space-y-4"
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-16 md:mb-20"
           >
-            <div className="flex items-baseline gap-3">
-              <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">
-                0{sections.filter((s) => Object.values(s.content || {}).some((v) => v && (v as string).trim())).length + 1}
+            <div className="mb-8">
+              <span className="font-body text-[11px] text-primary/60 tracking-[0.25em] uppercase font-medium">
+                {String(sectionNumberOffset + 1).padStart(2, "0")}
               </span>
-              <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">Investimento</h2>
+              <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight mt-1 text-foreground">
+                Investimento
+              </h2>
             </div>
 
             {(() => {
               const setupItems = items.filter(i => i.payment_type === "setup");
               const recurringItems = items.filter(i => i.payment_type === "recurring");
               return (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {setupItems.length > 0 && (
                     <div>
-                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-2">Setup — Investimento Único</h3>
-                      <div className="border border-border/20 overflow-hidden rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
+                      <h3 className="font-body text-xs font-bold text-foreground/50 uppercase tracking-[0.15em] mb-3">
+                        Setup — Investimento Único
+                      </h3>
+                      <div className="rounded-xl border border-border/15 bg-card/30 overflow-hidden">
                         {setupItems.map((item, i) => {
-                          // Parse payment_terms like "Entrada: 50% | 2ª parcela: 25% | 3ª parcela: 25%"
                           const parsedInstallments = item.payment_terms
                             ? item.payment_terms.split("|").map(part => {
                                 const match = part.trim().match(/^(.+?):\s*(\d+(?:\.\d+)?)%$/);
@@ -381,25 +418,30 @@ const ProposalView = () => {
                           const setupValue = Number((proposal as any).setup_total) || 0;
 
                           return (
-                            <div key={item.id} className={`p-4 ${i < setupItems.length - 1 ? "border-b border-border/15" : ""}`}>
-                              <h4 className="font-display font-bold text-base">{item.service_name}</h4>
-                              {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
+                            <div key={item.id} className={`px-5 py-4 ${i < setupItems.length - 1 ? "border-b border-border/10" : ""}`}>
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-display font-bold text-[15px] text-foreground">{item.service_name}</h4>
+                                  {item.description && (
+                                    <p className="text-sm text-muted-foreground/60 mt-0.5 font-body">{item.description}</p>
+                                  )}
+                                </div>
+                              </div>
                               {parsedInstallments.length > 0 && setupValue > 0 && (
-                                <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
                                   {parsedInstallments.map((inst, idx) => (
-                                    <div key={idx} className="border border-border/15 bg-card/30 p-2 rounded-sm text-center shadow-[0_1px_4px_hsl(0_0%_0%/0.2)]">
-                                      <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider block font-body">{inst.label}</span>
-                                      <span className="font-display font-bold text-primary text-lg">
+                                    <div key={idx} className="bg-background/50 border border-border/10 rounded-lg px-3 py-2.5 text-center">
+                                      <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider block font-body mb-0.5">{inst.label}</span>
+                                      <span className="font-display font-bold text-primary text-base">
                                         {formatCurrency(setupValue * inst.percent / 100)}
                                       </span>
-                                      <span className="text-[9px] text-muted-foreground/40 block">{inst.percent}%</span>
                                     </div>
                                   ))}
                                 </div>
                               )}
                               {item.payment_terms && parsedInstallments.length === 0 && (
-                                <p className="text-xs text-primary/70 mt-2 font-body">
-                                  <span className="font-semibold">Condições:</span> {item.payment_terms}
+                                <p className="text-xs text-muted-foreground/50 mt-2 font-body">
+                                  <span className="font-medium text-foreground/60">Condições:</span> {item.payment_terms}
                                 </p>
                               )}
                             </div>
@@ -411,51 +453,49 @@ const ProposalView = () => {
 
                   {recurringItems.length > 0 && (
                     <div>
-                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-2">Recorrente — Investimento Mensal</h3>
-                      <div className="border border-border/20 overflow-hidden rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
+                      <h3 className="font-body text-xs font-bold text-foreground/50 uppercase tracking-[0.15em] mb-3">
+                        Recorrente — Investimento Mensal
+                      </h3>
+                      <div className="rounded-xl border border-border/15 bg-card/30 overflow-hidden">
                         {recurringItems.map((item, i) => (
-                          <div key={item.id} className={`p-4 ${i < recurringItems.length - 1 ? "border-b border-border/15" : ""}`}>
-                            <h4 className="font-display font-bold text-base">{item.service_name}</h4>
-                            {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
+                          <div key={item.id} className={`px-5 py-4 ${i < recurringItems.length - 1 ? "border-b border-border/10" : ""}`}>
+                            <h4 className="font-display font-bold text-[15px] text-foreground">{item.service_name}</h4>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground/60 mt-0.5 font-body">{item.description}</p>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  <div className="bg-card/40 p-4 space-y-2 border border-border/20 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
-                    {Number((proposal as any).setup_total) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="font-body text-sm text-muted-foreground">Setup (único)</span>
-                        <span className="font-display text-xl font-extrabold text-foreground">
-                          {formatCurrency(Number((proposal as any).setup_total))}
-                        </span>
-                      </div>
-                    )}
-                    {Number((proposal as any).recurring_total) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="font-body text-sm text-muted-foreground">Recorrente (mensal)</span>
-                        <span className="font-display text-xl font-extrabold text-foreground">
-                          {formatCurrency(Number((proposal as any).recurring_total))}
-                        </span>
-                      </div>
-                    )}
-                    {(Number((proposal as any).setup_total) > 0 && Number((proposal as any).recurring_total) > 0) && (
-                      <div className="flex justify-between items-center pt-3 border-t border-border/15">
-                        <span className="font-body text-sm text-muted-foreground">Investimento Total</span>
-                        <span className="font-display text-3xl font-extrabold text-gradient-intense">
+                  {/* Total — hero pricing block */}
+                  <div className="rounded-xl bg-gradient-to-b from-card/60 to-card/30 border border-border/15 p-6 md:p-8">
+                    <div className="space-y-3">
+                      {Number((proposal as any).setup_total) > 0 && (
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-body text-sm text-muted-foreground/60">Setup (único)</span>
+                          <span className="font-display text-lg font-bold text-foreground/80">
+                            {formatCurrency(Number((proposal as any).setup_total))}
+                          </span>
+                        </div>
+                      )}
+                      {Number((proposal as any).recurring_total) > 0 && (
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-body text-sm text-muted-foreground/60">Recorrente (mensal)</span>
+                          <span className="font-display text-lg font-bold text-foreground/80">
+                            {formatCurrency(Number((proposal as any).recurring_total))}
+                          </span>
+                        </div>
+                      )}
+                      <div className="h-px bg-border/10 my-2" />
+                      <div className="flex justify-between items-baseline">
+                        <span className="font-body text-sm text-foreground/70 font-medium">Investimento Total</span>
+                        <span className="font-display text-3xl md:text-4xl font-extrabold text-foreground">
                           {formatCurrency(Number(proposal.total_value))}
                         </span>
                       </div>
-                    )}
-                    {!(Number((proposal as any).setup_total) > 0 && Number((proposal as any).recurring_total) > 0) && (
-                      <div className="flex justify-between items-center">
-                        <span className="font-body text-sm text-muted-foreground">Investimento Total</span>
-                        <span className="font-display text-3xl font-extrabold text-gradient-intense">
-                          {formatCurrency(Number(proposal.total_value))}
-                        </span>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               );
@@ -463,22 +503,26 @@ const ProposalView = () => {
           </motion.section>
         )}
 
-        {/* Social Proof */}
+        {/* Social Proof — minimal cards */}
         {socialProof.length > 0 && (
           <motion.section
             id="cases"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="space-y-4"
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-16 md:mb-20"
           >
-            <div className="flex items-baseline gap-3">
-              <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">05</span>
-              <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">Cases Semelhantes</h2>
+            <div className="mb-8">
+              <span className="font-body text-[11px] text-primary/60 tracking-[0.25em] uppercase font-medium">
+                {String(sectionNumberOffset + 2).padStart(2, "0")}
+              </span>
+              <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight mt-1 text-foreground">
+                Cases Semelhantes
+              </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {socialProof.map((proof, i) => (
                 <motion.a
                   key={i}
@@ -488,26 +532,28 @@ const ProposalView = () => {
                   initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className={`border border-border/20 p-4 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)] hover:border-primary/30 transition-all duration-300 group block ${proof.case_link ? "cursor-pointer" : ""}`}
+                  transition={{ duration: 0.5, delay: i * 0.06 }}
+                  className={`rounded-xl border border-border/15 bg-card/20 p-5 group block transition-all duration-300 hover:border-border/30 hover:bg-card/40 ${proof.case_link ? "cursor-pointer" : ""}`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold">
+                    <span className="text-[10px] text-primary/60 tracking-[0.2em] uppercase font-body font-medium">
                       {proof.case_category}
                     </span>
                     {proof.case_metric && (
                       <div className="text-right">
-                        <span className="font-display text-xl font-black text-gradient-intense leading-none">{proof.case_metric}</span>
+                        <span className="font-display text-xl font-extrabold text-foreground leading-none">{proof.case_metric}</span>
                         {proof.case_metric_label && (
-                          <span className="text-[8px] text-muted-foreground/50 uppercase tracking-wider block mt-0.5">{proof.case_metric_label}</span>
+                          <span className="text-[9px] text-muted-foreground/40 uppercase tracking-wider block mt-0.5">{proof.case_metric_label}</span>
                         )}
                       </div>
                     )}
                   </div>
-                  <h3 className="font-display font-bold text-base group-hover:text-primary transition-colors duration-300">{proof.case_title}</h3>
-                  <p className="text-xs text-muted-foreground/60 mt-2 font-body leading-relaxed">{proof.case_description}</p>
+                  <h3 className="font-display font-bold text-[15px] text-foreground group-hover:text-primary transition-colors duration-300 mb-1">
+                    {proof.case_title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground/50 font-body leading-relaxed">{proof.case_description}</p>
                   {proof.case_link && (
-                    <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary/70 font-body tracking-wider uppercase group-hover:text-primary transition-colors">
+                    <span className="inline-flex items-center gap-1 mt-3 text-[10px] text-primary/60 font-body font-medium tracking-wider uppercase group-hover:text-primary group-hover:gap-2 transition-all duration-300">
                       Ver projeto <ArrowRight className="w-3 h-3" />
                     </span>
                   )}
@@ -517,26 +563,30 @@ const ProposalView = () => {
           </motion.section>
         )}
 
-        {/* Next Steps / Acceptance */}
+        {/* Next Steps / Acceptance — clean CTA */}
         <motion.section
           id="next-steps"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-            className="space-y-4"
-          >
-            <div className="flex items-baseline gap-3">
-              <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">06</span>
-              <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">Próximos Passos</h2>
-            </div>
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-12"
+        >
+          <div className="mb-8">
+            <span className="font-body text-[11px] text-primary/60 tracking-[0.25em] uppercase font-medium">
+              {String(sectionNumberOffset + (socialProof.length > 0 ? 3 : 2)).padStart(2, "0")}
+            </span>
+            <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight mt-1 text-foreground">
+              Próximos Passos
+            </h2>
+          </div>
 
           {isAccepted ? (
-            <div className="border border-green-500/30 bg-green-500/5 p-6 text-center rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
-              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                <Check className="w-6 h-6 text-green-400" />
+            <div className="rounded-xl border border-green-500/20 bg-green-500/[0.03] p-8 text-center">
+              <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="w-7 h-7 text-green-500" />
               </div>
-              <h3 className="font-display text-xl font-bold text-green-400 mb-2">Proposta Aceita</h3>
+              <h3 className="font-display text-xl font-bold text-green-500 mb-2">Proposta Aceita</h3>
               <p className="text-muted-foreground font-body text-sm">
                 Aceita por <span className="text-foreground font-medium">{proposal.accepted_by_name}</span>
                 {proposal.accepted_at && <> em {formatDate(proposal.accepted_at)}</>}
@@ -547,16 +597,14 @@ const ProposalView = () => {
               {!showAcceptForm ? (
                 <div className="flex flex-col sm:flex-row gap-3">
                   <motion.button
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={() => setShowAcceptForm(true)}
-                    className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-3 font-display font-bold text-primary-foreground bg-gradient-to-b from-primary to-primary/90 text-xs tracking-widest uppercase relative overflow-hidden group rounded-md shadow-[inset_0_1px_0_hsl(220_100%_70%/0.3),0_2px_8px_hsl(220_100%_55%/0.3)]"
+                    className="flex-1 inline-flex items-center justify-center gap-2.5 h-12 px-6 font-display font-bold text-primary-foreground bg-primary rounded-xl text-sm tracking-wide relative overflow-hidden group transition-all duration-300 hover:shadow-[0_4px_24px_hsl(var(--primary)/0.3)]"
                   >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <Check className="w-4 h-4" />
-                      Aprovar Proposta
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                    <Check className="w-4 h-4" />
+                    Aprovar Proposta
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   </motion.button>
 
                   {whatsappUrl && (
@@ -564,9 +612,9 @@ const ProposalView = () => {
                       href={whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-3 font-display font-bold text-foreground border border-border/40 text-xs tracking-widest uppercase rounded-md shadow-[inset_0_1px_0_hsl(0_0%_100%/0.05),0_2px_6px_hsl(0_0%_0%/0.2)] hover:border-green-500/50 hover:text-green-400 transition-all duration-300"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      className="flex-1 inline-flex items-center justify-center gap-2.5 h-12 px-6 font-display font-bold text-foreground border border-border/30 rounded-xl text-sm tracking-wide hover:border-border/50 hover:bg-muted/30 transition-all duration-300"
                     >
                       <MessageCircle className="w-4 h-4" />
                       Falar no WhatsApp
@@ -574,43 +622,41 @@ const ProposalView = () => {
                   )}
                 </div>
               ) : (
-                <div className="border border-primary/30 p-5 space-y-3 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
-                  <h3 className="font-display font-bold text-lg">Confirmar Aceite</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-body text-muted-foreground">Seu nome *</label>
+                <div className="rounded-xl border border-border/20 bg-card/20 p-6 space-y-4">
+                  <h3 className="font-display font-bold text-lg text-foreground">Confirmar Aceite</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-body font-medium text-muted-foreground/70">Seu nome *</label>
                       <input
                         value={acceptName}
                         onChange={(e) => setAcceptName(e.target.value)}
                         placeholder="Nome completo"
-                        className="w-full bg-background border border-border/30 px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none transition-colors"
+                        className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-body text-muted-foreground">Seu e-mail</label>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-body font-medium text-muted-foreground/70">Seu e-mail</label>
                       <input
                         value={acceptEmail}
                         onChange={(e) => setAcceptEmail(e.target.value)}
                         placeholder="email@empresa.com"
                         type="email"
-                        className="w-full bg-background border border-border/30 px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none transition-colors"
+                        className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
                       />
                     </div>
                   </div>
-                  <div className="flex gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                  <div className="flex gap-3 pt-1">
+                    <button
                       onClick={handleAccept}
                       disabled={accepting}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 font-display font-bold text-primary-foreground bg-gradient-to-b from-primary to-primary/90 text-xs tracking-widest uppercase rounded-md shadow-[inset_0_1px_0_hsl(220_100%_70%/0.3),0_2px_8px_hsl(220_100%_55%/0.3)] disabled:opacity-50"
+                      className="inline-flex items-center gap-2 h-10 px-5 font-display font-bold text-primary-foreground bg-primary rounded-lg text-xs tracking-wide transition-all duration-300 hover:shadow-[0_4px_24px_hsl(var(--primary)/0.3)] disabled:opacity-50"
                     >
-                      <Check className="w-4 h-4" />
+                      <Check className="w-3.5 h-3.5" />
                       {accepting ? "Enviando..." : "Confirmar Aceite"}
-                    </motion.button>
+                    </button>
                     <button
                       onClick={() => setShowAcceptForm(false)}
-                      className="px-6 py-3 font-display font-bold text-muted-foreground text-xs tracking-widest uppercase hover:text-foreground transition-colors"
+                      className="h-10 px-5 font-display font-bold text-muted-foreground text-xs tracking-wide hover:text-foreground transition-colors rounded-lg"
                     >
                       Cancelar
                     </button>
@@ -621,35 +667,35 @@ const ProposalView = () => {
           )}
         </motion.section>
 
-        {/* Footer */}
-        <footer className="pt-6 border-t border-border/15">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <img src={spectraLogo} alt="Spectra" className="w-7 h-5" style={{ filter: "drop-shadow(0 0 8px hsl(220 100% 55% / 0.2))" }} />
+        {/* Footer — ultra minimal */}
+        <footer className="pt-8 border-t border-border/10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <img src={spectraLogo} alt="Spectra" className="w-5 h-4 opacity-60" />
               <div>
-                <span className="font-display text-sm font-bold tracking-tight text-foreground block">SPECTRA</span>
-                <span className="text-[10px] text-muted-foreground/40 tracking-[0.15em] uppercase font-body">Engenharia & Inteligência de Negócios</span>
+                <span className="font-display text-xs font-bold tracking-tight text-foreground/60 block">SPECTRA</span>
+                <span className="text-[9px] text-muted-foreground/30 tracking-[0.15em] uppercase font-body">
+                  Engenharia & Inteligência de Negócios
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <a
                 href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-muted-foreground/50 hover:text-primary transition-colors font-body tracking-widest uppercase"
+                className="text-[10px] text-muted-foreground/40 hover:text-foreground/60 transition-colors font-body tracking-widest uppercase"
               >
                 WhatsApp
               </a>
-              <span className="text-muted-foreground/20">|</span>
               <a
                 href="mailto:contato@spectra.dev"
-                className="text-xs text-muted-foreground/50 hover:text-primary transition-colors font-body tracking-widest uppercase"
+                className="text-[10px] text-muted-foreground/40 hover:text-foreground/60 transition-colors font-body tracking-widest uppercase"
               >
                 E-mail
               </a>
-              <span className="text-muted-foreground/20">|</span>
-              <span className="text-[10px] text-muted-foreground/30 font-body tracking-widest uppercase">
-                © 2026 Spectra
+              <span className="text-[9px] text-muted-foreground/20 font-body">
+                © 2026
               </span>
             </div>
           </div>
@@ -659,33 +705,33 @@ const ProposalView = () => {
       {/* Mobile Bottom Tab Bar */}
       {isMobile && (
         <>
-          <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/30 shadow-[0_-2px_12px_hsl(0_0%_0%/0.3)]">
-            <div className="flex items-center justify-around h-14">
+          <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-2xl bg-background/80 border-t border-border/10">
+            <div className="flex items-center justify-around h-14 max-w-md mx-auto">
               {[
                 { id: "overview", icon: FileText, label: "Proposta" },
                 { id: "investment", icon: DollarSign, label: "Investimento" },
-                { id: "cases", icon: Briefcase, label: "Cases" },
+                ...(socialProof.length > 0 ? [{ id: "cases", icon: Briefcase, label: "Cases" }] : []),
                 { id: "next-steps", icon: Check, label: "Aceitar" },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => scrollToSection(tab.id)}
-                  className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-200 ${
+                  className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all duration-200 ${
                     activeTab === tab.id
                       ? "text-primary"
-                      : "text-muted-foreground"
+                      : "text-muted-foreground/50"
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
-                  <span className="text-[9px] font-display font-bold tracking-wider uppercase">{tab.label}</span>
+                  <span className="text-[8px] font-body font-medium tracking-wider uppercase">{tab.label}</span>
                 </button>
               ))}
               <button
                 onClick={() => setShowMobileMenu(true)}
-                className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-muted-foreground transition-colors duration-200"
+                className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-muted-foreground/50 transition-all duration-200"
               >
                 <Menu className="w-4 h-4" />
-                <span className="text-[9px] font-display font-bold tracking-wider uppercase">Menu</span>
+                <span className="text-[8px] font-body font-medium tracking-wider uppercase">Menu</span>
               </button>
             </div>
           </nav>
@@ -698,39 +744,39 @@ const ProposalView = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[60] bg-background/60 backdrop-blur-sm"
+                  className="fixed inset-0 z-[60] bg-background/50 backdrop-blur-sm"
                   onClick={() => setShowMobileMenu(false)}
                 />
                 <motion.div
                   initial={{ y: "100%" }}
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="fixed bottom-0 left-0 right-0 z-[70] bg-card border-t border-border/30 rounded-t-2xl shadow-[0_-4px_20px_hsl(0_0%_0%/0.4)] max-h-[70vh] overflow-y-auto"
+                  transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                  className="fixed bottom-0 left-0 right-0 z-[70] bg-card border-t border-border/15 rounded-t-2xl max-h-[60vh] overflow-y-auto"
                 >
                   <div className="flex justify-center pt-3 pb-1">
-                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                    <div className="w-8 h-1 rounded-full bg-muted-foreground/20" />
                   </div>
-                  <div className="p-4 space-y-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-display text-sm font-bold tracking-wider uppercase text-foreground">Navegação</h3>
-                      <button onClick={() => setShowMobileMenu(false)} className="text-muted-foreground hover:text-foreground">
-                        <X className="w-5 h-5" />
+                  <div className="p-5 space-y-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-display text-sm font-bold text-foreground">Menu</h3>
+                      <button onClick={() => setShowMobileMenu(false)} className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                     {[
                       { id: "overview", label: "Visão Geral", icon: FileText },
                       { id: "investment", label: "Investimento", icon: DollarSign },
-                      { id: "cases", label: "Cases Semelhantes", icon: Briefcase },
+                      ...(socialProof.length > 0 ? [{ id: "cases", label: "Cases Semelhantes", icon: Briefcase }] : []),
                       { id: "next-steps", label: "Próximos Passos", icon: ChevronRight },
                     ].map((item) => (
                       <button
                         key={item.id}
                         onClick={() => scrollToSection(item.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-all duration-200 ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
                           activeTab === item.id
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            ? "bg-primary/8 text-primary"
+                            : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
                         }`}
                       >
                         <item.icon className="w-4 h-4 shrink-0" />
@@ -738,18 +784,18 @@ const ProposalView = () => {
                       </button>
                     ))}
 
-                    <div className="border-t border-border/20 mt-3 pt-3 space-y-1">
+                    <div className="border-t border-border/10 mt-3 pt-3 space-y-1">
                       <button
                         onClick={() => { handleDownloadPdf(); setShowMobileMenu(false); }}
                         disabled={generatingPdf}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-200"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200"
                       >
                         <Download className="w-4 h-4 shrink-0" />
                         <span className="font-body text-sm">{generatingPdf ? "Gerando PDF..." : "Baixar PDF"}</span>
                       </button>
                       <button
                         onClick={() => { toggleTheme(); setShowMobileMenu(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-200"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200"
                       >
                         {isDark ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
                         <span className="font-body text-sm">{isDark ? "Modo Claro" : "Modo Escuro"}</span>
@@ -759,7 +805,7 @@ const ProposalView = () => {
                           href={whatsappUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-200"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200"
                         >
                           <MessageCircle className="w-4 h-4 shrink-0" />
                           <span className="font-body text-sm">Falar no WhatsApp</span>
