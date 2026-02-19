@@ -1,11 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
-import { Check, MessageCircle, ArrowRight, Sun, Moon, Download } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, MessageCircle, ArrowRight, Sun, Moon, Download, FileText, DollarSign, Briefcase, ChevronRight, Menu, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { getSectionsForType, type ProposalType } from "@/lib/proposal-templates";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Proposal {
   id: string;
@@ -58,14 +59,25 @@ const ProposalView = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
-
   const [isDark, setIsDark] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const isMobile = useIsMobile();
 
   // Accept form
   const [showAcceptForm, setShowAcceptForm] = useState(false);
   const [acceptName, setAcceptName] = useState("");
   const [acceptEmail, setAcceptEmail] = useState("");
   const [accepting, setAccepting] = useState(false);
+
+  const scrollToSection = useCallback((sectionId: string) => {
+    setActiveTab(sectionId);
+    setShowMobileMenu(false);
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   // Default to light theme on mount
   useEffect(() => {
@@ -208,7 +220,7 @@ const ProposalView = () => {
   }
 
   return (
-    <div ref={contentRef} className="min-h-screen bg-background">
+    <div ref={contentRef} className="min-h-screen bg-background pb-16 md:pb-0">
       {/* Hero Header */}
       <header className="relative overflow-hidden border-b border-border/20">
         <div className="absolute inset-0 grid-pattern opacity-20" />
@@ -283,6 +295,7 @@ const ProposalView = () => {
         {/* Description */}
         {proposal.description && (
           <motion.section
+            id="overview"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -333,6 +346,7 @@ const ProposalView = () => {
         {/* Investment / Services */}
         {items.length > 0 && (
           <motion.section
+            id="investment"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -451,6 +465,7 @@ const ProposalView = () => {
         {/* Social Proof */}
         {socialProof.length > 0 && (
           <motion.section
+            id="cases"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -495,6 +510,7 @@ const ProposalView = () => {
 
         {/* Next Steps / Acceptance */}
         <motion.section
+          id="next-steps"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -630,6 +646,124 @@ const ProposalView = () => {
           </div>
         </footer>
       </main>
+
+      {/* Mobile Bottom Tab Bar */}
+      {isMobile && (
+        <>
+          <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/30 shadow-[0_-2px_12px_hsl(0_0%_0%/0.3)]">
+            <div className="flex items-center justify-around h-14">
+              {[
+                { id: "overview", icon: FileText, label: "Proposta" },
+                { id: "investment", icon: DollarSign, label: "Investimento" },
+                { id: "cases", icon: Briefcase, label: "Cases" },
+                { id: "next-steps", icon: Check, label: "Aceitar" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => scrollToSection(tab.id)}
+                  className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-200 ${
+                    activeTab === tab.id
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span className="text-[9px] font-display font-bold tracking-wider uppercase">{tab.label}</span>
+                </button>
+              ))}
+              <button
+                onClick={() => setShowMobileMenu(true)}
+                className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-muted-foreground transition-colors duration-200"
+              >
+                <Menu className="w-4 h-4" />
+                <span className="text-[9px] font-display font-bold tracking-wider uppercase">Menu</span>
+              </button>
+            </div>
+          </nav>
+
+          {/* Mobile Drawer */}
+          <AnimatePresence>
+            {showMobileMenu && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[60] bg-background/60 backdrop-blur-sm"
+                  onClick={() => setShowMobileMenu(false)}
+                />
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="fixed bottom-0 left-0 right-0 z-[70] bg-card border-t border-border/30 rounded-t-2xl shadow-[0_-4px_20px_hsl(0_0%_0%/0.4)] max-h-[70vh] overflow-y-auto"
+                >
+                  <div className="flex justify-center pt-3 pb-1">
+                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                  </div>
+                  <div className="p-4 space-y-1">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-display text-sm font-bold tracking-wider uppercase text-foreground">Navegação</h3>
+                      <button onClick={() => setShowMobileMenu(false)} className="text-muted-foreground hover:text-foreground">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    {[
+                      { id: "overview", label: "Visão Geral", icon: FileText },
+                      { id: "investment", label: "Investimento", icon: DollarSign },
+                      { id: "cases", label: "Cases Semelhantes", icon: Briefcase },
+                      { id: "next-steps", label: "Próximos Passos", icon: ChevronRight },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => scrollToSection(item.id)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-all duration-200 ${
+                          activeTab === item.id
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4 shrink-0" />
+                        <span className="font-body text-sm">{item.label}</span>
+                      </button>
+                    ))}
+
+                    <div className="border-t border-border/20 mt-3 pt-3 space-y-1">
+                      <button
+                        onClick={() => { handleDownloadPdf(); setShowMobileMenu(false); }}
+                        disabled={generatingPdf}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-200"
+                      >
+                        <Download className="w-4 h-4 shrink-0" />
+                        <span className="font-body text-sm">{generatingPdf ? "Gerando PDF..." : "Baixar PDF"}</span>
+                      </button>
+                      <button
+                        onClick={() => { toggleTheme(); setShowMobileMenu(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-200"
+                      >
+                        {isDark ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
+                        <span className="font-body text-sm">{isDark ? "Modo Claro" : "Modo Escuro"}</span>
+                      </button>
+                      {whatsappUrl && (
+                        <a
+                          href={whatsappUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-200"
+                        >
+                          <MessageCircle className="w-4 h-4 shrink-0" />
+                          <span className="font-body text-sm">Falar no WhatsApp</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </>
+      )}
     </div>
   );
 };
