@@ -205,6 +205,7 @@ export type Database = {
           accepted_at: string | null
           accepted_by_email: string | null
           accepted_by_name: string | null
+          bdi_factor: number | null
           client_email: string | null
           client_name: string
           client_phone: string | null
@@ -213,6 +214,7 @@ export type Database = {
           id: string
           notes: string | null
           project_title: string
+          slug: string | null
           status: string
           total_value: number
           type: string
@@ -225,6 +227,7 @@ export type Database = {
           accepted_at?: string | null
           accepted_by_email?: string | null
           accepted_by_name?: string | null
+          bdi_factor?: number | null
           client_email?: string | null
           client_name: string
           client_phone?: string | null
@@ -233,6 +236,7 @@ export type Database = {
           id?: string
           notes?: string | null
           project_title: string
+          slug?: string | null
           status?: string
           total_value?: number
           type?: string
@@ -245,6 +249,7 @@ export type Database = {
           accepted_at?: string | null
           accepted_by_email?: string | null
           accepted_by_name?: string | null
+          bdi_factor?: number | null
           client_email?: string | null
           client_name?: string
           client_phone?: string | null
@@ -253,6 +258,7 @@ export type Database = {
           id?: string
           notes?: string | null
           project_title?: string
+          slug?: string | null
           status?: string
           total_value?: number
           type?: string
