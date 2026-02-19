@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import {
   FileText, ListChecks, ClipboardList, Brain, PenTool, Code2,
-  Palette, Share2, Globe, Megaphone, ExternalLink, Plus, Pencil, Trash2, GripVertical,
+  Palette, Share2, Globe, Megaphone, ExternalLink, Plus, Pencil, Trash2, Briefcase,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 const iconMap: Record<string, React.ElementType> = {
   FileText, ListChecks, ClipboardList, Brain, PenTool, Code2,
@@ -53,6 +54,7 @@ interface Service {
   section: string;
   sort_order: number;
   user_id: string;
+  is_case: boolean;
 }
 
 const emptyForm = {
@@ -63,6 +65,7 @@ const emptyForm = {
   status: "production",
   link: "",
   section: "saas",
+  is_case: false,
 };
 
 interface Category {
@@ -117,6 +120,7 @@ const AdminServicos = () => {
       status: s.status,
       link: s.link || "",
       section: s.section,
+      is_case: s.is_case,
     });
     setDialogOpen(true);
   };
@@ -133,6 +137,7 @@ const AdminServicos = () => {
       status: form.status,
       link: form.link || null,
       section: form.section,
+      is_case: form.is_case,
       user_id: session.user.id,
     };
 
@@ -202,6 +207,11 @@ const AdminServicos = () => {
                             <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm font-bold ${st.color}`}>
                               {st.label}
                             </span>
+                            {s.is_case && (
+                              <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm font-bold bg-accent/20 text-accent-foreground flex items-center gap-1">
+                                <Briefcase className="w-3 h-3" /> Case
+                              </span>
+                            )}
                           </div>
                           <p className="text-[11px] uppercase tracking-widest text-primary/60 mb-1">{s.category}</p>
                           <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
@@ -300,6 +310,13 @@ const AdminServicos = () => {
             <div>
               <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Link externo (opcional)</label>
               <Input value={form.link} onChange={e => setForm(f => ({ ...f, link: e.target.value }))} placeholder="https://..." />
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border/50 p-3">
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-widest block">Case</label>
+                <p className="text-xs text-muted-foreground/60 mt-0.5">Exibir como case na landing page e no módulo Cases</p>
+              </div>
+              <Switch checked={form.is_case} onCheckedChange={v => setForm(f => ({ ...f, is_case: v }))} />
             </div>
             <Button onClick={handleSave} className="w-full font-display uppercase tracking-widest text-xs" disabled={!form.title || !form.category || !form.description}>
               {editingId ? "Salvar alterações" : "Criar serviço"}
