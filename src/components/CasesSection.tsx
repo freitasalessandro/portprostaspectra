@@ -37,14 +37,13 @@ const iconMap: Record<string, React.ElementType> = {
   Palette, Share2, Globe, Megaphone,
 };
 
-// Screenshots mapped by service title (static assets)
-const screenshotMap: Record<string, string[]> = {
+// Fallback static screenshots (used when no DB files exist)
+const staticScreenshotMap: Record<string, string[]> = {
   "Contrato Online + Boleto Fácil": [contrato1, contrato2, contrato3, contrato4, contrato5],
   "FlowList": [flowlist1, flowlist2, flowlist4, flowlist5, flowlist6],
   "Forms": [forms1, forms2, forms3, forms4],
 };
 
-// Metrics mapped by service title
 const metricMap: Record<string, { metric: string; metricLabel: string }> = {
   "Contrato Online + Boleto Fácil": { metric: "3x", metricLabel: "conversão" },
   "FlowList": { metric: "360°", metricLabel: "visão total" },
@@ -66,17 +65,36 @@ interface DbService {
   sort_order: number;
 }
 
-const toCaseItem = (s: DbService): CaseItem => ({
-  title: s.title,
-  category: s.category,
-  description: s.description,
-  icon: iconMap[s.icon] || FileText,
-  metric: metricMap[s.title]?.metric || "—",
-  metricLabel: metricMap[s.title]?.metricLabel || "",
-  screenshots: screenshotMap[s.title] || [],
-  comingSoon: s.status === "development",
-  link: s.link || undefined,
-});
+interface DbFile {
+  service_id: string;
+  file_path: string;
+  file_type: string;
+  sort_order: number;
+}
+
+const getPublicUrl = (path: string) => {
+  const { data } = supabase.storage.from("service-files").getPublicUrl(path);
+  return data.publicUrl;
+};
+
+const toCaseItem = (s: DbService, dbFiles: DbFile[]): CaseItem => {
+  const uploadedImages = dbFiles
+    .filter(f => f.service_id === s.id && f.file_type === "image")
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(f => getPublicUrl(f.file_path));
+
+  return {
+    title: s.title,
+    category: s.category,
+    description: s.description,
+    icon: iconMap[s.icon] || FileText,
+    metric: metricMap[s.title]?.metric || "—",
+    metricLabel: metricMap[s.title]?.metricLabel || "",
+    screenshots: uploadedImages.length > 0 ? uploadedImages : (staticScreenshotMap[s.title] || []),
+    comingSoon: s.status === "development",
+    link: s.link || undefined,
+  };
+};
 
 const CasesSection = () => {
   const [activeScreenshot, setActiveScreenshot] = useState<Record<string, number>>({});
@@ -86,22 +104,21 @@ const CasesSection = () => {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("services")
-        .select("*")
-        .eq("is_case", true)
-        .order("sort_order");
+    const fetchAll = async () => {
+      const [servicesRes, filesRes] = await Promise.all([
+        supabase.from("services").select("*").eq("is_case", true).order("sort_order"),
+        supabase.from("service_files").select("*").order("sort_order"),
+      ]);
 
-      if (data) {
-        const services = data as DbService[];
-        setSaasProducts(services.filter(s => s.section === "saas").map(toCaseItem));
-        setCustomDev(services.filter(s => s.section === "custom").map(toCaseItem));
-        setDesignServices(services.filter(s => s.section === "design").map(toCaseItem));
-      }
+      const services = (servicesRes.data as DbService[]) || [];
+      const files = (filesRes.data as DbFile[]) || [];
+
+      setSaasProducts(services.filter(s => s.section === "saas").map(s => toCaseItem(s, files)));
+      setCustomDev(services.filter(s => s.section === "custom").map(s => toCaseItem(s, files)));
+      setDesignServices(services.filter(s => s.section === "design").map(s => toCaseItem(s, files)));
       setLoaded(true);
     };
-    fetch();
+    fetchAll();
   }, []);
 
   if (!loaded) return null;

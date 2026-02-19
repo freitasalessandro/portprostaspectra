@@ -227,6 +227,41 @@ export type Database = {
         }
         Relationships: []
       }
+      service_files: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_type: string
+          id: string
+          service_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_type?: string
+          id?: string
+          service_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          service_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_files_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           category: string
