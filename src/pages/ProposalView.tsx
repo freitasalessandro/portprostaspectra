@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Check, MessageCircle, ArrowRight } from "lucide-react";
+import { Check, MessageCircle, ArrowRight, Sun, Moon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { getSectionsForType, type ProposalType } from "@/lib/proposal-templates";
@@ -57,11 +57,33 @@ const ProposalView = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
+  const [isDark, setIsDark] = useState(false);
+
   // Accept form
   const [showAcceptForm, setShowAcceptForm] = useState(false);
   const [acceptName, setAcceptName] = useState("");
   const [acceptEmail, setAcceptEmail] = useState("");
   const [accepting, setAccepting] = useState(false);
+
+  // Default to light theme on mount
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("light");
+    setIsDark(false);
+    return () => {
+      root.classList.remove("light");
+    };
+  }, []);
+
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add("light");
+    } else {
+      root.classList.remove("light");
+    }
+    setIsDark(!isDark);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -155,9 +177,20 @@ const ProposalView = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="flex items-center gap-3 mb-8">
-              <img src={spectraLogo} alt="Spectra" className="w-8 h-6" style={{ filter: "drop-shadow(0 0 10px hsl(220 100% 55% / 0.3))" }} />
-              <span className="font-display text-xl font-extrabold tracking-tight text-foreground">SPECTRA</span>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <img src={spectraLogo} alt="Spectra" className="w-8 h-6" style={{ filter: "drop-shadow(0 0 10px hsl(220 100% 55% / 0.3))" }} />
+                <span className="font-display text-xl font-extrabold tracking-tight text-foreground">SPECTRA</span>
+              </div>
+              <motion.button
+                onClick={toggleTheme}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="w-8 h-8 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-all duration-300"
+                aria-label="Alternar tema"
+              >
+                {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+              </motion.button>
             </div>
 
             <div className="flex items-center gap-3 mb-4">
