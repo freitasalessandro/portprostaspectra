@@ -259,6 +259,8 @@ export type Database = {
           id: string
           notes: string | null
           project_title: string
+          recurring_total: number
+          setup_total: number
           slug: string | null
           status: string
           total_value: number
@@ -281,6 +283,8 @@ export type Database = {
           id?: string
           notes?: string | null
           project_title: string
+          recurring_total?: number
+          setup_total?: number
           slug?: string | null
           status?: string
           total_value?: number
@@ -303,6 +307,8 @@ export type Database = {
           id?: string
           notes?: string | null
           project_title?: string
+          recurring_total?: number
+          setup_total?: number
           slug?: string | null
           status?: string
           total_value?: number

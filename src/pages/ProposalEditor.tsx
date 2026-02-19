@@ -204,9 +204,13 @@ const ProposalEditor = () => {
     setLoading(false);
   };
 
-  const directTotal = items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+  const setupDirect = items.filter(i => i.payment_type === "setup").reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+  const recurringDirect = items.filter(i => i.payment_type === "recurring").reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+  const directTotal = setupDirect + recurringDirect;
   const bdiFactor = calcBdiFactor(bdi);
-  const totalWithBdi = bdiFactor ? directTotal * bdiFactor : directTotal;
+  const setupTotal = bdiFactor ? setupDirect * bdiFactor : setupDirect;
+  const recurringTotal = bdiFactor ? recurringDirect * bdiFactor : recurringDirect;
+  const totalWithBdi = setupTotal + recurringTotal;
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -266,6 +270,8 @@ const ProposalEditor = () => {
       project_title: projectTitle.trim(),
       description: description.trim() || null,
       total_value: totalWithBdi,
+      setup_total: setupTotal,
+      recurring_total: recurringTotal,
       status: newStatus || status,
       valid_until: validUntil || null,
       notes: notes.trim() || null,
@@ -567,9 +573,23 @@ const ProposalEditor = () => {
                 <span className="font-display font-bold text-primary/70">+{formatCurrency(totalWithBdi - directTotal)}</span>
               </div>
             )}
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Total Final</span>
-              <span className="text-2xl font-display font-extrabold text-primary">{formatCurrency(totalWithBdi)}</span>
+            <div className="border-t border-border/20 pt-3 space-y-2">
+              {setupTotal > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Setup (único)</span>
+                  <span className="font-display font-bold text-foreground">{formatCurrency(setupTotal)}</span>
+                </div>
+              )}
+              {recurringTotal > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Recorrente (mensal)</span>
+                  <span className="font-display font-bold text-foreground">{formatCurrency(recurringTotal)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Total Final</span>
+                <span className="text-2xl font-display font-extrabold text-primary">{formatCurrency(totalWithBdi)}</span>
+              </div>
             </div>
           </div>
         </ModuleBlock>
