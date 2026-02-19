@@ -17,6 +17,8 @@ interface ProposalItem {
   description: string;
   quantity: number;
   unit_price: number;
+  payment_type: "setup" | "recurring";
+  payment_terms: string;
 }
 
 interface SocialProofCase {
@@ -79,7 +81,7 @@ const ProposalEditor = () => {
   const [status, setStatus] = useState("draft");
   const [slug, setSlug] = useState<string | null>(null);
   const [items, setItems] = useState<ProposalItem[]>([
-    { service_name: "", description: "", quantity: 1, unit_price: 0 },
+    { service_name: "", description: "", quantity: 1, unit_price: 0, payment_type: "setup", payment_terms: "" },
   ]);
 
   // Sections content
@@ -172,9 +174,10 @@ const ProposalEditor = () => {
     ]);
 
     if (itemsRes.data && itemsRes.data.length > 0) {
-      setItems(itemsRes.data.map((i) => ({
+      setItems(itemsRes.data.map((i: any) => ({
         id: i.id, service_name: i.service_name, description: i.description || "",
         quantity: i.quantity, unit_price: Number(i.unit_price),
+        payment_type: i.payment_type || "setup", payment_terms: i.payment_terms || "",
       })));
     }
 
@@ -201,7 +204,7 @@ const ProposalEditor = () => {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-  const addItem = () => setItems([...items, { service_name: "", description: "", quantity: 1, unit_price: 0 }]);
+  const addItem = () => setItems([...items, { service_name: "", description: "", quantity: 1, unit_price: 0, payment_type: "setup", payment_terms: "" }]);
   const removeItem = (index: number) => { if (items.length <= 1) return; setItems(items.filter((_, i) => i !== index)); };
   const updateItem = (index: number, field: keyof ProposalItem, value: string | number) => {
     const updated = [...items];
@@ -285,6 +288,7 @@ const ProposalEditor = () => {
     const itemsToInsert = items.filter((i) => i.service_name.trim()).map((i) => ({
       proposal_id: proposalId!, service_name: i.service_name.trim(),
       description: i.description.trim() || null, quantity: i.quantity, unit_price: i.unit_price,
+      payment_type: i.payment_type, payment_terms: i.payment_terms.trim() || null,
     }));
     if (itemsToInsert.length > 0) await supabase.from("proposal_items").insert(itemsToInsert);
 
@@ -478,6 +482,25 @@ const ProposalEditor = () => {
                 </div>
                 <div className="space-y-2"><Label>Descrição</Label>
                   <Input value={item.description} onChange={(e) => updateItem(index, "description", e.target.value)} placeholder="Detalhes do serviço..." /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Tipo</Label>
+                    <div className="flex gap-2">
+                      <button onClick={() => updateItem(index, "payment_type", "setup")}
+                        className={`flex-1 px-3 py-2 text-xs font-display font-bold uppercase tracking-wider border rounded-sm transition-all ${item.payment_type === "setup" ? "border-primary bg-primary/10 text-primary" : "border-border/30 text-muted-foreground hover:border-border/60"}`}>
+                        Setup
+                      </button>
+                      <button onClick={() => updateItem(index, "payment_type", "recurring")}
+                        className={`flex-1 px-3 py-2 text-xs font-display font-bold uppercase tracking-wider border rounded-sm transition-all ${item.payment_type === "recurring" ? "border-primary bg-primary/10 text-primary" : "border-border/30 text-muted-foreground hover:border-border/60"}`}>
+                        Recorrente
+                      </button>
+                    </div>
+                  </div>
+                  {item.payment_type === "setup" && (
+                    <div className="space-y-2"><Label>Condições de Pagamento</Label>
+                      <Input value={item.payment_terms} onChange={(e) => updateItem(index, "payment_terms", e.target.value)} placeholder="Ex: 3x sem juros, 50% entrada..." /></div>
+                  )}
+                </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2"><Label>Qtd</Label>
                     <Input type="number" min={1} value={item.quantity} onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)} /></div>
