@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -185,7 +186,13 @@ const AdminConfiguracoes = () => {
   return (
     <AdminLayout>
       <div className="max-w-2xl">
-        <h1 className="font-display text-2xl font-bold mb-8">Configurações</h1>
+         <motion.div className="mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <p className="text-primary/60 tracking-[0.3em] uppercase text-[11px] mb-1.5 font-body flex items-center gap-2">
+              <span className="w-6 h-px bg-primary/40" />
+              Sistema
+            </p>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight">Configurações</h1>
+          </motion.div>
 
         {/* Logo */}
         <section className="glass-card p-6 mb-6">
