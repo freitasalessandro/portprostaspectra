@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,17 +164,22 @@ const AdminPagamentos = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <motion.div className="flex items-center justify-between" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div>
-            <h1 className="font-display text-2xl font-extrabold tracking-tight">Condições de Pagamento</h1>
-            <p className="text-sm text-muted-foreground mt-1">Configure planos de parcelamento para propostas de setup</p>
+            <p className="text-primary/60 tracking-[0.3em] uppercase text-[11px] mb-1.5 font-body flex items-center gap-2">
+              <span className="w-6 h-px bg-primary/40" />
+              Financeiro
+            </p>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight">Condições de Pagamento</h1>
+            <p className="text-sm text-muted-foreground/50 mt-2 font-body">Configure planos de parcelamento para propostas de setup</p>
           </div>
           {!editingPlan && (
-            <Button onClick={startNew} className="font-display uppercase tracking-widest text-xs">
-              <Plus className="w-4 h-4 mr-2" /> Novo Plano
+            <Button onClick={startNew} className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box">
+              <span className="relative z-10 flex items-center gap-2"><Plus className="w-4 h-4" /> Novo Plano</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             </Button>
           )}
-        </div>
+        </motion.div>
 
         {/* Editor */}
         {editingPlan && (

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import { staggerContainer, fadeUp } from "@/lib/motion";
 import {
   FileText, ListChecks, ClipboardList, Brain, PenTool, Code2,
   Palette, Share2, Globe, Megaphone, ExternalLink,
@@ -76,12 +78,16 @@ const AdminCases = () => {
   return (
     <AdminLayout>
       <div className="max-w-4xl">
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-bold">Cases</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Serviços marcados como case. Para alterar, edite o serviço em <button onClick={() => navigate("/admin/servicos")} className="text-primary hover:underline">Serviços</button>.
+        <motion.div className="mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <p className="text-primary/60 tracking-[0.3em] uppercase text-[11px] mb-1.5 font-body flex items-center gap-2">
+            <span className="w-6 h-px bg-primary/40" />
+            Portfólio
           </p>
-        </div>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight">Cases</h1>
+          <p className="text-sm text-muted-foreground/50 mt-2 font-body">
+            Serviços marcados como case. Para alterar, edite o serviço em <button onClick={() => navigate("/admin/servicos")} className="text-primary/80 hover:text-primary transition-colors">Serviços</button>.
+          </p>
+        </motion.div>
 
         {loading ? (
           <div className="text-center text-muted-foreground py-20">Carregando...</div>
@@ -95,12 +101,12 @@ const AdminCases = () => {
             <div key={group.section} className="mb-10">
               <h2 className="font-display text-lg font-bold mb-1">{group.label}</h2>
               <p className="text-sm text-muted-foreground mb-4">{group.items.length} case{group.items.length !== 1 ? "s" : ""}</p>
-              <div className="grid gap-3">
+                <motion.div className="grid gap-3" variants={staggerContainer} initial="hidden" animate="visible">
                 {group.items.map(s => {
-                  const Icon = iconMap[s.icon] || FileText;
-                  const st = statusConfig[s.status] || statusConfig.production;
-                  return (
-                    <div key={s.id} className="glass-card p-4 flex items-start gap-4 group hover:border-primary/40 transition-all duration-300">
+                   const Icon = iconMap[s.icon] || FileText;
+                   const st = statusConfig[s.status] || statusConfig.production;
+                   return (
+                     <motion.div key={s.id} variants={fadeUp} className="glass-card-premium p-5 flex items-start gap-4 group hover:border-primary/30 transition-all duration-500 relative overflow-hidden">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                         <Icon className="w-4 h-4 text-primary" />
                       </div>
@@ -120,10 +126,10 @@ const AdminCases = () => {
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
+                     </motion.div>
+                   );
+                 })}
+               </motion.div>
             </div>
           ))
         )}
