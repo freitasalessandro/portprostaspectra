@@ -46,10 +46,9 @@ const emptySettings: CompanySettings = {
 };
 
 const calcBdiFactor = (s: CompanySettings) => {
-  const sum = s.bdi_tax + s.bdi_admin + s.bdi_risk + s.bdi_profit;
-  const denominator = 1 - (sum / 100);
-  if (denominator <= 0) return null;
-  return 1 / denominator;
+  const denom = (1 - s.bdi_tax / 100) * (1 - s.bdi_admin / 100) * (1 - s.bdi_risk / 100) * (1 - s.bdi_profit / 100);
+  if (denom <= 0) return null;
+  return 1 / denom;
 };
 
 const AdminConfiguracoes = () => {
@@ -311,15 +310,15 @@ const AdminConfiguracoes = () => {
           <div className="rounded-md border border-border/50 p-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Fator BDI</p>
-              <p className="text-xs text-muted-foreground/60 mt-0.5">Fórmula: 1 / (1 − Σ percentuais)</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">1 / ((1−I) × (1−A) × (1−R) × (1−L))</p>
             </div>
             {bdiFactor ? (
               <div className="text-right">
                 <p className="font-display text-2xl font-bold text-primary">{bdiFactor.toFixed(4)}</p>
-                <p className="text-xs text-muted-foreground">+{bdiPercent}% sobre custo direto</p>
+                <p className="text-xs text-muted-foreground">Total BDI: +{bdiPercent}%</p>
               </div>
             ) : (
-              <p className="text-sm text-destructive font-medium">Percentuais inválidos (soma ≥ 100%)</p>
+              <p className="text-sm text-destructive font-medium">Percentuais inválidos</p>
             )}
           </div>
         </section>
