@@ -234,6 +234,7 @@ export type Database = {
           description: string
           icon: string
           id: string
+          is_case: boolean
           link: string | null
           section: string
           sort_order: number
@@ -248,6 +249,7 @@ export type Database = {
           description: string
           icon?: string
           id?: string
+          is_case?: boolean
           link?: string | null
           section?: string
           sort_order?: number
@@ -262,6 +264,7 @@ export type Database = {
           description?: string
           icon?: string
           id?: string
+          is_case?: boolean
           link?: string | null
           section?: string
           sort_order?: number
