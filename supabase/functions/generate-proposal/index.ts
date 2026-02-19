@@ -139,6 +139,16 @@ RESPONDA EXCLUSIVAMENTE em JSON válido com a estrutura:
 Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
     }
 
+    const requestBody = {
+      model: "google/gemini-2.5-flash-lite",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Briefing do cliente:\n\n${briefing}` },
+      ],
+    };
+
+    console.log("Sending request to AI gateway, model:", requestBody.model, "messages length:", requestBody.messages.length);
+
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -147,13 +157,7 @@ Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Briefing do cliente:\n\n${briefing}` },
-          ],
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
