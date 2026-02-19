@@ -90,6 +90,7 @@ const CasesSection = () => {
       const { data } = await supabase
         .from("services")
         .select("*")
+        .eq("is_case", true)
         .order("sort_order");
 
       if (data) {
