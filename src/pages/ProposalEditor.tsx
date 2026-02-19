@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search, Eye } from "lucide-react";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { ProposalType, getSectionsForType } from "@/lib/proposal-templates";
 import { Switch } from "@/components/ui/switch";
@@ -359,9 +359,14 @@ const ProposalEditor = () => {
           </div>
           <div className="flex items-center gap-2">
             {!isNew && slug && (
-              <Button variant="ghost" size="sm" onClick={copyLink}>
-                <Copy className="w-4 h-4 mr-2" /> Link
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={() => window.open(`/proposta/${slug}`, "_blank")}>
+                  <Eye className="w-4 h-4 mr-2" /> Visualizar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={copyLink}>
+                  <Copy className="w-4 h-4 mr-2" /> Link
+                </Button>
+              </>
             )}
             <Button variant="outline" size="sm" onClick={() => handleSave()} disabled={saving}>
               <Save className="w-4 h-4 mr-2" /> Salvar
