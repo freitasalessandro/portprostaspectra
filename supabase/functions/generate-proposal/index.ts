@@ -103,10 +103,18 @@ REGRAS:
 - Use linguagem de consultoria premium, sem ser genérico
 - Cada campo deve ter 2-4 parágrafos concisos
 - Personalize com base no briefing fornecido
-- NÃO invente números, métricas ou valores financeiros
+- NÃO invente números, métricas ou valores financeiros nas seções de texto
 - Foque em diagnóstico, estratégia e entregáveis
 
 ${structure}
+
+Além das seções, sugira itens de investimento realistas para o escopo descrito.
+Cada item deve ter:
+- service_name: nome do serviço
+- description: descrição curta do entregável
+- payment_type: "setup" (pagamento único) ou "recurring" (mensal)
+- estimated_price: valor estimado em reais (número, sem formatação). Use valores realistas de mercado brasileiro para serviços de tecnologia/design.
+- quantity: quantidade (geralmente 1)
 
 RESPONDA EXCLUSIVAMENTE em JSON válido com a estrutura:
 {
@@ -116,7 +124,16 @@ RESPONDA EXCLUSIVAMENTE em JSON válido com a estrutura:
     }
   },
   "suggested_title": "Título sugerido para o projeto",
-  "suggested_description": "Descrição curta do escopo"
+  "suggested_description": "Descrição curta do escopo",
+  "suggested_items": [
+    {
+      "service_name": "Nome do serviço",
+      "description": "Descrição do entregável",
+      "payment_type": "setup",
+      "estimated_price": 5000,
+      "quantity": 1
+    }
+  ]
 }
 
 Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
