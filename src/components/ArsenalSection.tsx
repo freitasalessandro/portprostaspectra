@@ -53,7 +53,7 @@ const ArsenalSection = () => {
         </motion.div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {services.map((service, i) => (
             <motion.div
               key={service.title}
@@ -82,10 +82,10 @@ const ArsenalSection = () => {
                 </span>
               </div>
 
-              <h3 className="font-display text-base md:text-lg font-bold mb-2 group-hover:text-primary transition-colors duration-300 leading-tight">
+              <h3 className="font-display text-lg md:text-xl font-bold mb-3 group-hover:text-primary transition-colors duration-300 leading-tight">
                 {service.title}
               </h3>
-              <p className="text-muted-foreground/70 font-body text-sm leading-relaxed">
+              <p className="text-muted-foreground/70 font-body text-base leading-relaxed">
                 {service.description}
               </p>
             </motion.div>
