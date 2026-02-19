@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search, Eye, Sparkles, Loader2 } from "lucide-react";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { ProposalType, getSectionsForType } from "@/lib/proposal-templates";
 import { Switch } from "@/components/ui/switch";
@@ -103,6 +103,10 @@ const ProposalEditor = () => {
 
   // Payment plans
   const [paymentPlans, setPaymentPlans] = useState<{ id: string; name: string; description: string | null; installments: { label: string; percent: number }[] }[]>([]);
+
+  // AI Briefing
+  const [aiBriefing, setAiBriefing] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   // Modular sections
   const [enabledSections, setEnabledSections] = useState<Record<string, boolean>>({});
@@ -253,6 +257,54 @@ const ProposalEditor = () => {
     }
   };
 
+  const handleAiGenerate = async () => {
+    if (!aiBriefing.trim()) {
+      toast({ title: "Escreva um briefing antes de gerar", variant: "destructive" });
+      return;
+    }
+    setAiGenerating(true);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-proposal`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ briefing: aiBriefing.trim(), proposalType }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Erro desconhecido" }));
+        toast({ title: err.error || "Erro ao gerar proposta", variant: "destructive" });
+        return;
+      }
+
+      const result = await resp.json();
+
+      // Fill sections content
+      if (result.sections) {
+        setSectionsContent(result.sections);
+      }
+      // Fill suggested title/description if empty
+      if (result.suggested_title && !projectTitle) {
+        setProjectTitle(result.suggested_title);
+      }
+      if (result.suggested_description && !description) {
+        setDescription(result.suggested_description);
+      }
+
+      toast({ title: "Proposta gerada com IA!", description: "Revise as seções e ajuste o conteúdo antes de salvar." });
+    } catch (e) {
+      console.error("AI generation error:", e);
+      toast({ title: "Erro de conexão com IA", variant: "destructive" });
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   const handleSave = async (newStatus?: string) => {
     if (!clientName.trim() || !projectTitle.trim()) {
       toast({ title: "Preencha nome do cliente e título do projeto", variant: "destructive" });
@@ -397,6 +449,37 @@ const ProposalEditor = () => {
               <span className="font-display font-bold text-base block">Design</span>
               <span className="text-xs text-muted-foreground">Branding, tráfego, redes sociais e sites</span>
             </button>
+          </div>
+        </ModuleBlock>
+
+        {/* AI Briefing */}
+        <ModuleBlock title="Gerar com IA" alwaysOn collapsed={!!collapsedBlocks["ai"]}
+          onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, ai: !p["ai"] }))}>
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground font-body">
+              Descreva o cliente, contexto e necessidades. A IA preencherá automaticamente todas as seções da proposta.
+            </p>
+            <Textarea
+              value={aiBriefing}
+              onChange={(e) => setAiBriefing(e.target.value)}
+              placeholder="Ex: Clínica de estética em SP, 3 unidades, precisa de site novo, gestão de redes sociais e tráfego pago. Atualmente não tem presença digital forte. Faturamento de R$ 500k/mês..."
+              rows={5}
+              disabled={aiGenerating}
+            />
+            <Button
+              onClick={handleAiGenerate}
+              disabled={aiGenerating || !aiBriefing.trim()}
+              className="w-full font-display uppercase tracking-[0.2em] text-[10px] py-5 relative overflow-hidden group glow-box"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                {aiGenerating ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Gerando proposta...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" /> Gerar Proposta com IA</>
+                )}
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            </Button>
           </div>
         </ModuleBlock>
 
