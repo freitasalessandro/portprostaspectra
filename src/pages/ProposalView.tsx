@@ -292,11 +292,39 @@ const ProposalView = () => {
                     </div>
                   )}
 
-                  <div className="bg-card/40 p-5 flex justify-between items-center border border-border/20">
-                    <span className="font-body text-sm text-muted-foreground">Investimento Total</span>
-                    <span className="font-display text-3xl font-extrabold text-gradient-intense">
-                      {formatCurrency(Number(proposal.total_value))}
-                    </span>
+                  <div className="bg-card/40 p-5 space-y-3 border border-border/20">
+                    {Number((proposal as any).setup_total) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="font-body text-sm text-muted-foreground">Setup (único)</span>
+                        <span className="font-display text-xl font-extrabold text-foreground">
+                          {formatCurrency(Number((proposal as any).setup_total))}
+                        </span>
+                      </div>
+                    )}
+                    {Number((proposal as any).recurring_total) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="font-body text-sm text-muted-foreground">Recorrente (mensal)</span>
+                        <span className="font-display text-xl font-extrabold text-foreground">
+                          {formatCurrency(Number((proposal as any).recurring_total))}
+                        </span>
+                      </div>
+                    )}
+                    {(Number((proposal as any).setup_total) > 0 && Number((proposal as any).recurring_total) > 0) && (
+                      <div className="flex justify-between items-center pt-3 border-t border-border/15">
+                        <span className="font-body text-sm text-muted-foreground">Investimento Total</span>
+                        <span className="font-display text-3xl font-extrabold text-gradient-intense">
+                          {formatCurrency(Number(proposal.total_value))}
+                        </span>
+                      </div>
+                    )}
+                    {!(Number((proposal as any).setup_total) > 0 && Number((proposal as any).recurring_total) > 0) && (
+                      <div className="flex justify-between items-center">
+                        <span className="font-body text-sm text-muted-foreground">Investimento Total</span>
+                        <span className="font-display text-3xl font-extrabold text-gradient-intense">
+                          {formatCurrency(Number(proposal.total_value))}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
