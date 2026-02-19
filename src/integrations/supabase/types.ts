@@ -17,6 +17,7 @@ export type Database = {
       company_settings: {
         Row: {
           address: string | null
+          ai_provider: string
           bdi_admin: number
           bdi_profit: number
           bdi_risk: number
@@ -38,6 +39,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          ai_provider?: string
           bdi_admin?: number
           bdi_profit?: number
           bdi_risk?: number
@@ -59,6 +61,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          ai_provider?: string
           bdi_admin?: number
           bdi_profit?: number
           bdi_risk?: number
