@@ -48,7 +48,7 @@ serve(async (req) => {
   }
 
   try {
-    const { briefing, proposalType } = await req.json();
+    const { briefing, proposalType, sectionKey, sectionTitle, sectionItems, existingContent } = await req.json();
 
     if (!briefing || !proposalType) {
       return new Response(
@@ -62,7 +62,39 @@ serve(async (req) => {
 
     const structure = proposalType === "cto" ? CTO_STRUCTURE : DESIGN_STRUCTURE;
 
-    const systemPrompt = `Você é um consultor sênior da Spectra, uma empresa de tecnologia e design que oferece serviços de CTO as a Service e Design (branding, tráfego, redes sociais).
+    // Single section regeneration mode
+    const isSingleSection = !!sectionKey && !!sectionTitle && Array.isArray(sectionItems);
+
+    let systemPrompt: string;
+
+    if (isSingleSection) {
+      const itemsList = sectionItems.map((i: { key: string; label: string }) => `- "${i.key}": ${i.label}`).join("\n");
+      systemPrompt = `Você é um consultor sênior da Spectra, uma empresa de tecnologia e design.
+
+Sua tarefa é regenerar APENAS a seção "${sectionTitle}" (key: "${sectionKey}") de uma proposta comercial.
+
+Campos desta seção:
+${itemsList}
+
+${existingContent ? `Conteúdo atual (use como referência para melhorar):\n${JSON.stringify(existingContent)}\n` : ""}
+
+REGRAS:
+- Escreva de forma profissional, direta e persuasiva
+- Use linguagem de consultoria premium, sem ser genérico
+- Cada campo deve ter 2-4 parágrafos concisos
+- Personalize com base no briefing fornecido
+- NÃO invente números, métricas ou valores financeiros
+
+RESPONDA EXCLUSIVAMENTE em JSON válido:
+{
+  "${sectionKey}": {
+    "<item_key>": "conteúdo gerado..."
+  }
+}
+
+Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
+    } else {
+      systemPrompt = `Você é um consultor sênior da Spectra, uma empresa de tecnologia e design que oferece serviços de CTO as a Service e Design (branding, tráfego, redes sociais).
 
 Sua tarefa é gerar o conteúdo completo de uma proposta comercial a partir de um briefing do cliente.
 
@@ -88,6 +120,7 @@ RESPONDA EXCLUSIVAMENTE em JSON válido com a estrutura:
 }
 
 Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
+    }
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",

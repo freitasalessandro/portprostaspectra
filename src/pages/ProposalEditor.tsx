@@ -107,6 +107,7 @@ const ProposalEditor = () => {
   // AI Briefing
   const [aiBriefing, setAiBriefing] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiRegeneratingSection, setAiRegeneratingSection] = useState<string | null>(null);
 
   // Modular sections
   const [enabledSections, setEnabledSections] = useState<Record<string, boolean>>({});
@@ -302,6 +303,54 @@ const ProposalEditor = () => {
       toast({ title: "Erro de conexão com IA", variant: "destructive" });
     } finally {
       setAiGenerating(false);
+    }
+  };
+
+  const handleAiRegenerateSection = async (sectionKey: string) => {
+    if (!aiBriefing.trim()) {
+      toast({ title: "Preencha o briefing na seção 'Gerar com IA' primeiro", variant: "destructive" });
+      return;
+    }
+    const section = sections.find(s => s.key === sectionKey);
+    if (!section) return;
+
+    setAiRegeneratingSection(sectionKey);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-proposal`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            briefing: aiBriefing.trim(),
+            proposalType,
+            sectionKey,
+            sectionTitle: section.title,
+            sectionItems: section.items.map(i => ({ key: i.key, label: i.label })),
+            existingContent: sectionsContent[sectionKey] || null,
+          }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Erro desconhecido" }));
+        toast({ title: err.error || "Erro ao regenerar seção", variant: "destructive" });
+        return;
+      }
+
+      const result = await resp.json();
+      if (result[sectionKey]) {
+        setSectionsContent(prev => ({ ...prev, [sectionKey]: result[sectionKey] }));
+        toast({ title: `Seção "${section.title}" regenerada!` });
+      }
+    } catch (e) {
+      console.error("AI section regen error:", e);
+      toast({ title: "Erro de conexão com IA", variant: "destructive" });
+    } finally {
+      setAiRegeneratingSection(null);
     }
   };
 
@@ -527,7 +576,24 @@ const ProposalEditor = () => {
             enabled={enabledSections[section.key] !== false}
             onToggleEnabled={() => setEnabledSections((p) => ({ ...p, [section.key]: !(p[section.key] !== false) }))}
             collapsed={!!collapsedSections[section.key]}
-            onToggleCollapse={() => setCollapsedSections((p) => ({ ...p, [section.key]: !p[section.key] }))}>
+            onToggleCollapse={() => setCollapsedSections((p) => ({ ...p, [section.key]: !p[section.key] }))}
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleAiRegenerateSection(section.key)}
+                disabled={aiRegeneratingSection === section.key || !aiBriefing.trim()}
+                className="text-xs gap-1.5"
+                title={!aiBriefing.trim() ? "Preencha o briefing primeiro" : "Regenerar esta seção com IA"}
+              >
+                {aiRegeneratingSection === section.key ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                <span className="hidden md:inline">Regenerar</span>
+              </Button>
+            }>
             {section.items.map((item) => (
               <div key={item.key} className="space-y-2">
                 <Label>{item.label}</Label>
