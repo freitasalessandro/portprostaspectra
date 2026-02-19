@@ -56,6 +56,8 @@ interface Service {
   sort_order: number;
   user_id: string;
   is_case: boolean;
+  metric: string | null;
+  metric_label: string | null;
 }
 
 interface ServiceFile {
@@ -75,6 +77,8 @@ const emptyForm = {
   link: "",
   section: "saas",
   is_case: false,
+  metric: "",
+  metric_label: "",
 };
 
 interface Category {
@@ -156,6 +160,8 @@ const AdminServicos = () => {
       link: s.link || "",
       section: s.section,
       is_case: s.is_case,
+      metric: s.metric || "",
+      metric_label: s.metric_label || "",
     });
     setEditFiles(serviceFiles[s.id] || []);
     setDialogOpen(true);
@@ -174,6 +180,8 @@ const AdminServicos = () => {
       link: form.link || null,
       section: form.section,
       is_case: form.is_case,
+      metric: form.metric || null,
+      metric_label: form.metric_label || null,
       user_id: session.user.id,
     };
 
@@ -416,6 +424,16 @@ const AdminServicos = () => {
             <div>
               <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Link externo (opcional)</label>
               <Input value={form.link} onChange={e => setForm(f => ({ ...f, link: e.target.value }))} placeholder="https://..." />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Métrica (opcional)</label>
+                <Input value={form.metric} onChange={e => setForm(f => ({ ...f, metric: e.target.value }))} placeholder="Ex: +300%" />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Label da métrica</label>
+                <Input value={form.metric_label} onChange={e => setForm(f => ({ ...f, metric_label: e.target.value }))} placeholder="Ex: aumento em vendas" />
+              </div>
             </div>
             <div className="flex items-center justify-between rounded-md border border-border/50 p-3">
               <div>
