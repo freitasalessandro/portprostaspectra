@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut, ExternalLink, Copy, Pencil, Trash2 } from "lucide-react";
+import { Plus, ExternalLink, Copy, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import spectraLogo from "@/assets/spectra-logo.svg";
+import AdminLayout from "@/components/AdminLayout";
 
 interface Proposal {
   id: string;
@@ -61,11 +61,6 @@ const Admin = () => {
     setLoading(false);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
-  };
-
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("proposals").delete().eq("id", id);
     if (error) {
@@ -86,23 +81,8 @@ const Admin = () => {
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/30 bg-card/60 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={spectraLogo} alt="Spectra" className="w-7 h-5" />
-            <span className="font-display text-lg font-extrabold tracking-tight text-foreground">
-              SPECTRA
-            </span>
-            <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">/ Propostas</span>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
-            <LogOut className="w-4 h-4 mr-2" /> Sair
-          </Button>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-6 py-8">
+    <AdminLayout>
+      <div className="max-w-5xl">
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-display text-2xl font-bold">Propostas</h1>
           <Button onClick={() => navigate("/admin/proposta/nova")} className="font-display uppercase tracking-widest text-xs">
@@ -154,8 +134,8 @@ const Admin = () => {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 
