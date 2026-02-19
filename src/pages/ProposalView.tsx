@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Check, MessageCircle, ArrowRight, Sun, Moon } from "lucide-react";
+import { Check, MessageCircle, ArrowRight, Sun, Moon, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { getSectionsForType, type ProposalType } from "@/lib/proposal-templates";
@@ -50,13 +50,14 @@ interface SocialProof {
 
 const ProposalView = () => {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
+  const contentRef = useRef<HTMLDivElement>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [items, setItems] = useState<ProposalItem[]>([]);
   const [sections, setSections] = useState<ProposalSection[]>([]);
   const [socialProof, setSocialProof] = useState<SocialProof[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const [isDark, setIsDark] = useState(false);
 
@@ -65,8 +66,6 @@ const ProposalView = () => {
   const [acceptName, setAcceptName] = useState("");
   const [acceptEmail, setAcceptEmail] = useState("");
   const [accepting, setAccepting] = useState(false);
-
-  const isPrint = searchParams.get("print") === "true";
 
   // Default to light theme on mount
   useEffect(() => {
@@ -78,13 +77,50 @@ const ProposalView = () => {
     };
   }, []);
 
-  // Auto-trigger print dialog when ?print=true
-  useEffect(() => {
-    if (isPrint && !loading && proposal) {
-      const timer = setTimeout(() => window.print(), 800);
-      return () => clearTimeout(timer);
+  const handleDownloadPdf = async () => {
+    if (!contentRef.current || !proposal) return;
+    setGeneratingPdf(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#000000",
+        windowWidth: contentRef.current.scrollWidth,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const a4Width = 210;
+      const a4Height = 297;
+      const imgWidth = a4Width;
+      const imgHeight = (canvas.height * a4Width) / canvas.width;
+
+      const pdf = new jsPDF({ unit: "mm", format: "a4" });
+      let position = 0;
+      let remaining = imgHeight;
+
+      // First page
+      pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+
+      // Add extra pages if content exceeds one A4
+      while (remaining > a4Height) {
+        position -= a4Height;
+        remaining -= a4Height;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+      }
+
+      const slug = (proposal as any).slug || id || "proposta";
+      pdf.save(`Proposta_${slug}_Spectra.pdf`);
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Erro ao gerar PDF", description: "Tente novamente", variant: "destructive" });
+    } finally {
+      setGeneratingPdf(false);
     }
-  }, [isPrint, loading, proposal]);
+  };
 
   const toggleTheme = () => {
     const root = document.documentElement;
@@ -172,7 +208,7 @@ const ProposalView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={contentRef} className="min-h-screen bg-background">
       {/* Hero Header */}
       <header className="relative overflow-hidden border-b border-border/20">
         <div className="absolute inset-0 grid-pattern opacity-20" />
@@ -193,15 +229,27 @@ const ProposalView = () => {
                 <img src={spectraLogo} alt="Spectra" className="w-8 h-6" style={{ filter: "drop-shadow(0 0 10px hsl(220 100% 55% / 0.3))" }} />
                 <span className="font-display text-xl font-extrabold tracking-tight text-foreground">SPECTRA</span>
               </div>
-              <motion.button
-                onClick={toggleTheme}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-8 h-8 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-all duration-300"
-                aria-label="Alternar tema"
-              >
-                {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              </motion.button>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  onClick={handleDownloadPdf}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  disabled={generatingPdf}
+                  className="w-8 h-8 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-all duration-300 disabled:opacity-50"
+                  aria-label="Baixar PDF"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </motion.button>
+                <motion.button
+                  onClick={toggleTheme}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-all duration-300"
+                  aria-label="Alternar tema"
+                >
+                  {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                </motion.button>
+              </div>
             </div>
 
             <div className="flex items-center gap-3 mb-4">
