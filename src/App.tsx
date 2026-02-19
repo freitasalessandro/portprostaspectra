@@ -11,6 +11,7 @@ import AdminServicos from "./pages/AdminServicos";
 import AdminCategorias from "./pages/AdminCategorias";
 import AdminUsuarios from "./pages/AdminUsuarios";
 import AdminConfiguracoes from "./pages/AdminConfiguracoes";
+import AdminPagamentos from "./pages/AdminPagamentos";
 import ProposalEditor from "./pages/ProposalEditor";
 import ProposalView from "./pages/ProposalView";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/admin/categorias" element={<AdminCategorias />} />
           <Route path="/admin/usuarios" element={<AdminUsuarios />} />
           <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
+          <Route path="/admin/pagamentos" element={<AdminPagamentos />} />
           <Route path="/admin/proposta/:id" element={<ProposalEditor />} />
           <Route path="/proposta/:id" element={<ProposalView />} />
           <Route path="/p/:id" element={<ProposalView />} />

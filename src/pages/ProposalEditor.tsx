@@ -99,6 +99,9 @@ const ProposalEditor = () => {
   // BDI
   const [bdi, setBdi] = useState<BdiSettings>({ bdi_tax: 0, bdi_admin: 0, bdi_risk: 0, bdi_profit: 0 });
 
+  // Payment plans
+  const [paymentPlans, setPaymentPlans] = useState<{ id: string; name: string; description: string | null; installments: { label: string; percent: number }[] }[]>([]);
+
   // Modular sections
   const [enabledSections, setEnabledSections] = useState<Record<string, boolean>>({});
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
@@ -127,9 +130,10 @@ const ProposalEditor = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
 
-      const [servicesRes, settingsRes] = await Promise.all([
+      const [servicesRes, settingsRes, plansRes] = await Promise.all([
         supabase.from("services").select("id,title,description,category,is_case,metric,metric_label").order("sort_order"),
         supabase.from("company_settings").select("bdi_tax,bdi_admin,bdi_risk,bdi_profit").eq("user_id", session.user.id).maybeSingle(),
+        supabase.from("payment_plans").select("id,name,description,installments").eq("active", true).order("sort_order"),
       ]);
 
       if (servicesRes.data) {
@@ -143,6 +147,9 @@ const ProposalEditor = () => {
           bdi_risk: Number(settingsRes.data.bdi_risk) || 0,
           bdi_profit: Number(settingsRes.data.bdi_profit) || 0,
         });
+      }
+      if (plansRes.data) {
+        setPaymentPlans(plansRes.data.map((p: any) => ({ id: p.id, name: p.name, description: p.description, installments: p.installments || [] })));
       }
 
       if (!isNew) loadProposal();
@@ -497,8 +504,38 @@ const ProposalEditor = () => {
                     </div>
                   </div>
                   {item.payment_type === "setup" && (
-                    <div className="space-y-2"><Label>Condições de Pagamento</Label>
-                      <Input value={item.payment_terms} onChange={(e) => updateItem(index, "payment_terms", e.target.value)} placeholder="Ex: 3x sem juros, 50% entrada..." /></div>
+                    <div className="space-y-2">
+                      <Label>Condições de Pagamento</Label>
+                      {paymentPlans.length > 0 ? (
+                        <div className="space-y-2">
+                          <select
+                            value={item.payment_terms}
+                            onChange={(e) => updateItem(index, "payment_terms", e.target.value)}
+                            className="w-full bg-background border border-border/30 px-3 py-2 text-sm rounded-sm focus:border-primary/50 focus:outline-none transition-colors"
+                          >
+                            <option value="">Selecione um plano...</option>
+                            {paymentPlans.map((plan) => (
+                              <option key={plan.id} value={plan.installments.map(i => `${i.label}: ${i.percent}%`).join(" | ")}>
+                                {plan.name} — {plan.installments.map(i => `${i.label}: ${i.percent}%`).join(", ")}
+                              </option>
+                            ))}
+                            <option value="__custom">Personalizado...</option>
+                          </select>
+                          {item.payment_terms === "__custom" && (
+                            <Input
+                              value=""
+                              onChange={(e) => updateItem(index, "payment_terms", e.target.value)}
+                              placeholder="Ex: 50% entrada + 2x de 25%"
+                            />
+                          )}
+                          {item.payment_terms && item.payment_terms !== "__custom" && (
+                            <p className="text-[10px] text-muted-foreground/60">{item.payment_terms}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <Input value={item.payment_terms} onChange={(e) => updateItem(index, "payment_terms", e.target.value)} placeholder="Ex: 3x sem juros, 50% entrada..." />
+                      )}
+                    </div>
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-4">
