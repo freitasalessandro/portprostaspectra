@@ -65,8 +65,15 @@ const emptyForm = {
   section: "saas",
 };
 
+interface Category {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
 const AdminServicos = () => {
   const [services, setServices] = useState<Service[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -77,24 +84,22 @@ const AdminServicos = () => {
     const check = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
-      fetchServices();
+      fetchData();
     };
     check();
   }, [navigate]);
 
-  const fetchServices = async () => {
-    const { data, error } = await supabase
-      .from("services")
-      .select("*")
-      .order("section")
-      .order("sort_order");
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      setServices((data as Service[]) || []);
-    }
+  const fetchData = async () => {
+    const [servicesRes, categoriesRes] = await Promise.all([
+      supabase.from("services").select("*").order("section").order("sort_order"),
+      supabase.from("service_categories").select("*").eq("active", true).order("sort_order"),
+    ]);
+    if (!servicesRes.error) setServices((servicesRes.data as Service[]) || []);
+    if (!categoriesRes.error) setCategories((categoriesRes.data as Category[]) || []);
     setLoading(false);
   };
+
+  const fetchServices = fetchData;
 
   const openNew = () => {
     setEditingId(null);
@@ -240,7 +245,14 @@ const AdminServicos = () => {
             </div>
             <div>
               <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Categoria</label>
-              <Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} placeholder="Ex: SaaS · Fintech" />
+              <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {categories.map(c => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Descrição</label>

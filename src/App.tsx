@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import AdminCases from "./pages/AdminCases";
 import AdminServicos from "./pages/AdminServicos";
+import AdminCategorias from "./pages/AdminCategorias";
 import AdminUsuarios from "./pages/AdminUsuarios";
 import AdminConfiguracoes from "./pages/AdminConfiguracoes";
 import ProposalEditor from "./pages/ProposalEditor";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/cases" element={<AdminCases />} />
           <Route path="/admin/servicos" element={<AdminServicos />} />
+          <Route path="/admin/categorias" element={<AdminCategorias />} />
           <Route path="/admin/usuarios" element={<AdminUsuarios />} />
           <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
           <Route path="/admin/proposta/:id" element={<ProposalEditor />} />
