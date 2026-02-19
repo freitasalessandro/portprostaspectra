@@ -263,17 +263,41 @@ const ProposalView = () => {
                     <div>
                       <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-3">Setup — Investimento Único</h3>
                       <div className="border border-border/20 overflow-hidden">
-                        {setupItems.map((item, i) => (
-                          <div key={item.id} className={`p-5 ${i < setupItems.length - 1 ? "border-b border-border/15" : ""}`}>
-                            <h4 className="font-display font-bold text-base">{item.service_name}</h4>
-                            {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
-                            {item.payment_terms && (
-                              <p className="text-xs text-primary/70 mt-2 font-body">
-                                <span className="font-semibold">Condições:</span> {item.payment_terms}
-                              </p>
-                            )}
-                          </div>
-                        ))}
+                        {setupItems.map((item, i) => {
+                          // Parse payment_terms like "Entrada: 50% | 2ª parcela: 25% | 3ª parcela: 25%"
+                          const parsedInstallments = item.payment_terms
+                            ? item.payment_terms.split("|").map(part => {
+                                const match = part.trim().match(/^(.+?):\s*(\d+(?:\.\d+)?)%$/);
+                                return match ? { label: match[1].trim(), percent: parseFloat(match[2]) } : null;
+                              }).filter(Boolean) as { label: string; percent: number }[]
+                            : [];
+                          const setupValue = Number((proposal as any).setup_total) || 0;
+
+                          return (
+                            <div key={item.id} className={`p-5 ${i < setupItems.length - 1 ? "border-b border-border/15" : ""}`}>
+                              <h4 className="font-display font-bold text-base">{item.service_name}</h4>
+                              {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
+                              {parsedInstallments.length > 0 && setupValue > 0 && (
+                                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                                  {parsedInstallments.map((inst, idx) => (
+                                    <div key={idx} className="border border-border/15 bg-card/30 p-3 rounded-sm text-center">
+                                      <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider block font-body">{inst.label}</span>
+                                      <span className="font-display font-bold text-primary text-lg">
+                                        {formatCurrency(setupValue * inst.percent / 100)}
+                                      </span>
+                                      <span className="text-[9px] text-muted-foreground/40 block">{inst.percent}%</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {item.payment_terms && parsedInstallments.length === 0 && (
+                                <p className="text-xs text-primary/70 mt-2 font-body">
+                                  <span className="font-semibold">Condições:</span> {item.payment_terms}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
