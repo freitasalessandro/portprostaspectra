@@ -205,6 +205,7 @@ export type Database = {
         Row: {
           case_category: string
           case_description: string
+          case_link: string | null
           case_metric: string | null
           case_metric_label: string | null
           case_title: string
@@ -216,6 +217,7 @@ export type Database = {
         Insert: {
           case_category: string
           case_description: string
+          case_link?: string | null
           case_metric?: string | null
           case_metric_label?: string | null
           case_title: string
@@ -227,6 +229,7 @@ export type Database = {
         Update: {
           case_category?: string
           case_description?: string
+          case_link?: string | null
           case_metric?: string | null
           case_metric_label?: string | null
           case_title?: string

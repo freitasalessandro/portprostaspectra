@@ -47,6 +47,7 @@ interface SocialProof {
   case_description: string;
   case_metric: string | null;
   case_metric_label: string | null;
+  case_link: string | null;
 }
 
 const ProposalView = () => {
@@ -479,13 +480,16 @@ const ProposalView = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {socialProof.map((proof, i) => (
-                <motion.div
+                <motion.a
                   key={i}
+                  href={proof.case_link || undefined}
+                  target={proof.case_link ? "_blank" : undefined}
+                  rel={proof.case_link ? "noopener noreferrer" : undefined}
                   initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className="border border-border/20 p-4 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)] hover:border-primary/30 transition-all duration-300 group"
+                  className={`border border-border/20 p-4 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)] hover:border-primary/30 transition-all duration-300 group block ${proof.case_link ? "cursor-pointer" : ""}`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold">
@@ -502,7 +506,12 @@ const ProposalView = () => {
                   </div>
                   <h3 className="font-display font-bold text-base group-hover:text-primary transition-colors duration-300">{proof.case_title}</h3>
                   <p className="text-xs text-muted-foreground/60 mt-2 font-body leading-relaxed">{proof.case_description}</p>
-                </motion.div>
+                  {proof.case_link && (
+                    <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary/70 font-body tracking-wider uppercase group-hover:text-primary transition-colors">
+                      Ver projeto <ArrowRight className="w-3 h-3" />
+                    </span>
+                  )}
+                </motion.a>
               ))}
             </div>
           </motion.section>

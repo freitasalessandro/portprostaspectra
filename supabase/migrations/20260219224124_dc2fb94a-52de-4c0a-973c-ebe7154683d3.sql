@@ -1,0 +1,1 @@
+ALTER TABLE public.proposal_social_proof ADD COLUMN case_link TEXT DEFAULT NULL;
