@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, X, Building2, Mail, Phone, Globe, MapPin, FileText } from "lucide-react";
+import { Upload, X, Building2, Mail, Phone, Globe, MapPin, FileText, Calculator } from "lucide-react";
 
 interface CompanySettings {
   id?: string;
@@ -21,6 +21,10 @@ interface CompanySettings {
   state: string;
   zip_code: string;
   cnpj: string;
+  bdi_tax: number;
+  bdi_admin: number;
+  bdi_risk: number;
+  bdi_profit: number;
 }
 
 const emptySettings: CompanySettings = {
@@ -35,6 +39,20 @@ const emptySettings: CompanySettings = {
   state: "",
   zip_code: "",
   cnpj: "",
+  bdi_tax: 0,
+  bdi_admin: 0,
+  bdi_risk: 0,
+  bdi_profit: 0,
+};
+
+const calcBdiFactor = (s: CompanySettings) => {
+  const tax = s.bdi_tax / 100;
+  const admin = s.bdi_admin / 100;
+  const risk = s.bdi_risk / 100;
+  const profit = s.bdi_profit / 100;
+  const denominator = 1 - (tax + admin + risk + profit);
+  if (denominator <= 0) return null;
+  return (1 / denominator);
 };
 
 const AdminConfiguracoes = () => {
@@ -72,6 +90,10 @@ const AdminConfiguracoes = () => {
           state: data.state || "",
           zip_code: data.zip_code || "",
           cnpj: data.cnpj || "",
+          bdi_tax: Number(data.bdi_tax) || 0,
+          bdi_admin: Number(data.bdi_admin) || 0,
+          bdi_risk: Number(data.bdi_risk) || 0,
+          bdi_profit: Number(data.bdi_profit) || 0,
         });
       }
       setLoading(false);
@@ -95,6 +117,10 @@ const AdminConfiguracoes = () => {
       state: settings.state,
       zip_code: settings.zip_code,
       cnpj: settings.cnpj,
+      bdi_tax: settings.bdi_tax,
+      bdi_admin: settings.bdi_admin,
+      bdi_risk: settings.bdi_risk,
+      bdi_profit: settings.bdi_profit,
       user_id: userId,
     };
 
@@ -143,6 +169,14 @@ const AdminConfiguracoes = () => {
   const update = (field: keyof CompanySettings, value: string) => {
     setSettings(prev => ({ ...prev, [field]: value }));
   };
+
+  const updateNum = (field: keyof CompanySettings, value: string) => {
+    const num = value === "" ? 0 : parseFloat(value);
+    if (!isNaN(num)) setSettings(prev => ({ ...prev, [field]: num }));
+  };
+
+  const bdiFactor = calcBdiFactor(settings);
+  const bdiPercent = bdiFactor ? ((bdiFactor - 1) * 100).toFixed(2) : null;
 
   if (loading) {
     return (
@@ -251,6 +285,45 @@ const AdminConfiguracoes = () => {
                 <Input value={settings.zip_code} onChange={e => update("zip_code", e.target.value)} placeholder="00000-000" />
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* BDI */}
+        <section className="glass-card p-6 mb-6">
+          <h2 className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
+            <Calculator className="w-4 h-4" /> BDI Global
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div>
+              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Imposto (%)</label>
+              <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_tax || ""} onChange={e => updateNum("bdi_tax", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Desp. Admin (%)</label>
+              <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_admin || ""} onChange={e => updateNum("bdi_admin", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Riscos (%)</label>
+              <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_risk || ""} onChange={e => updateNum("bdi_risk", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Lucro (%)</label>
+              <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_profit || ""} onChange={e => updateNum("bdi_profit", e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <div className="rounded-md border border-border/50 p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest">Fator BDI</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">Fórmula: 1 / (1 − Σ percentuais)</p>
+            </div>
+            {bdiFactor ? (
+              <div className="text-right">
+                <p className="font-display text-2xl font-bold text-primary">{bdiFactor.toFixed(4)}</p>
+                <p className="text-xs text-muted-foreground">+{bdiPercent}% sobre custo direto</p>
+              </div>
+            ) : (
+              <p className="text-sm text-destructive font-medium">Percentuais inválidos (soma ≥ 100%)</p>
+            )}
           </div>
         </section>
 
