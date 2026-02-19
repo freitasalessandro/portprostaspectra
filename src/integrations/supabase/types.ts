@@ -271,6 +271,8 @@ export type Database = {
           id: string
           is_case: boolean
           link: string | null
+          metric: string | null
+          metric_label: string | null
           section: string
           sort_order: number
           status: string
@@ -286,6 +288,8 @@ export type Database = {
           id?: string
           is_case?: boolean
           link?: string | null
+          metric?: string | null
+          metric_label?: string | null
           section?: string
           sort_order?: number
           status?: string
@@ -301,6 +305,8 @@ export type Database = {
           id?: string
           is_case?: boolean
           link?: string | null
+          metric?: string | null
+          metric_label?: string | null
           section?: string
           sort_order?: number
           status?: string
