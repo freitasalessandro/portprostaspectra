@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           address: string | null
           ai_provider: string
+          anthropic_api_key: string | null
           bdi_admin: number
           bdi_profit: number
           bdi_risk: number
@@ -40,6 +41,7 @@ export type Database = {
         Insert: {
           address?: string | null
           ai_provider?: string
+          anthropic_api_key?: string | null
           bdi_admin?: number
           bdi_profit?: number
           bdi_risk?: number
@@ -62,6 +64,7 @@ export type Database = {
         Update: {
           address?: string | null
           ai_provider?: string
+          anthropic_api_key?: string | null
           bdi_admin?: number
           bdi_profit?: number
           bdi_risk?: number
