@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
+import { staggerContainer, fadeUp } from "@/lib/motion";
 
 const stats = [
   { value: "0", suffix: "", prefix: "Risco ", label: "Desenvolvimento Cego" },
@@ -48,21 +49,23 @@ const StatsSection = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/10 to-primary/5" />
       <div className="absolute inset-0 grid-pattern opacity-30" />
 
-      {/* Animated glow orbs */}
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 blur-[100px] rounded-full animate-breathe" />
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 blur-[100px] rounded-full animate-breathe" style={{ animationDelay: "2s" }} />
 
       <div className="line-accent mb-24" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <motion.div
+        className="max-w-7xl mx-auto relative z-10"
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+      >
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
-          {stats.map((stat, i) => (
+          {stats.map((stat) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
+              variants={fadeUp}
               className="text-center group"
             >
               <AnimatedCounter
@@ -77,7 +80,7 @@ const StatsSection = () => {
             </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       <div className="line-accent mt-24" />
     </section>
