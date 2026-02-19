@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search, Eye, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Send, Copy, Check, ChevronDown, ChevronRight, Search, Eye, Sparkles, Loader2, AlertTriangle } from "lucide-react";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { ProposalType, getSectionsForType } from "@/lib/proposal-templates";
 import { Switch } from "@/components/ui/switch";
@@ -19,6 +19,7 @@ interface ProposalItem {
   unit_price: number;
   payment_type: "setup" | "recurring";
   payment_terms: string;
+  ai_generated?: boolean;
 }
 
 interface SocialProofCase {
@@ -307,6 +308,7 @@ const ProposalEditor = () => {
           unit_price: si.estimated_price || 0,
           payment_type: si.payment_type === "recurring" ? "recurring" as const : "setup" as const,
           payment_terms: "",
+          ai_generated: true,
         }));
         setItems(newItems);
       }
@@ -628,8 +630,17 @@ const ProposalEditor = () => {
           onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, items: !p["items"] }))}
           action={<Button variant="outline" size="sm" onClick={addItem}><Plus className="w-4 h-4 mr-2" /> Adicionar</Button>}>
           <div className="space-y-4">
+            {items.some(i => i.ai_generated) && (
+              <div className="flex items-start gap-2.5 p-3 rounded-md border border-amber-500/30 bg-amber-500/5 text-amber-200/80">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                <p className="text-xs leading-relaxed">
+                  <span className="font-semibold text-amber-300">Valores estimados pela IA.</span>{" "}
+                  Os preços sugeridos são aproximações de mercado. Revise e ajuste cada valor antes de enviar a proposta ao cliente.
+                </p>
+              </div>
+            )}
             {items.map((item, index) => (
-              <div key={index} className="border border-border/30 rounded-sm p-4 space-y-3">
+              <div key={index} className={`border rounded-sm p-4 space-y-3 ${item.ai_generated ? "border-amber-500/20 bg-amber-500/[0.02]" : "border-border/30"}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 space-y-2 relative">
                     <Label>Serviço</Label>
