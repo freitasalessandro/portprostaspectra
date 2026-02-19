@@ -55,8 +55,7 @@ const generateSlug = (title: string) => {
 };
 
 const calcBdiFactor = (bdi: BdiSettings) => {
-  const sum = bdi.bdi_tax + bdi.bdi_admin + bdi.bdi_risk + bdi.bdi_profit;
-  const denom = 1 - sum / 100;
+  const denom = (1 - bdi.bdi_tax / 100) * (1 - bdi.bdi_admin / 100) * (1 - bdi.bdi_risk / 100) * (1 - bdi.bdi_profit / 100);
   if (denom <= 0) return null;
   return 1 / denom;
 };
