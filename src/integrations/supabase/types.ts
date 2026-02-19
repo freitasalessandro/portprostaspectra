@@ -85,6 +85,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          payment_terms: string | null
+          payment_type: string
           proposal_id: string
           quantity: number
           service_name: string
@@ -94,6 +96,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          payment_terms?: string | null
+          payment_type?: string
           proposal_id: string
           quantity?: number
           service_name: string
@@ -103,6 +107,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          payment_terms?: string | null
+          payment_type?: string
           proposal_id?: string
           quantity?: number
           service_name?: string

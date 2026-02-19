@@ -29,6 +29,8 @@ interface ProposalItem {
   description: string | null;
   quantity: number;
   unit_price: number;
+  payment_type: string;
+  payment_terms: string | null;
 }
 
 interface ProposalSection {
@@ -252,23 +254,53 @@ const ProposalView = () => {
               <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight">Investimento</h2>
             </div>
 
-            <div className="border border-border/20 overflow-hidden">
-              {items.map((item, i) => (
-                <div key={item.id} className={`flex items-start p-5 ${i < items.length - 1 ? "border-b border-border/15" : ""}`}>
-                  <div className="flex-1">
-                    <h3 className="font-display font-bold text-base">{item.service_name}</h3>
-                    {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
+            {(() => {
+              const setupItems = items.filter(i => i.payment_type === "setup");
+              const recurringItems = items.filter(i => i.payment_type === "recurring");
+              return (
+                <div className="space-y-6">
+                  {setupItems.length > 0 && (
+                    <div>
+                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-3">Setup — Investimento Único</h3>
+                      <div className="border border-border/20 overflow-hidden">
+                        {setupItems.map((item, i) => (
+                          <div key={item.id} className={`p-5 ${i < setupItems.length - 1 ? "border-b border-border/15" : ""}`}>
+                            <h4 className="font-display font-bold text-base">{item.service_name}</h4>
+                            {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
+                            {item.payment_terms && (
+                              <p className="text-xs text-primary/70 mt-2 font-body">
+                                <span className="font-semibold">Condições:</span> {item.payment_terms}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {recurringItems.length > 0 && (
+                    <div>
+                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-3">Recorrente — Investimento Mensal</h3>
+                      <div className="border border-border/20 overflow-hidden">
+                        {recurringItems.map((item, i) => (
+                          <div key={item.id} className={`p-5 ${i < recurringItems.length - 1 ? "border-b border-border/15" : ""}`}>
+                            <h4 className="font-display font-bold text-base">{item.service_name}</h4>
+                            {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-card/40 p-5 flex justify-between items-center border border-border/20">
+                    <span className="font-body text-sm text-muted-foreground">Investimento Total</span>
+                    <span className="font-display text-3xl font-extrabold text-gradient-intense">
+                      {formatCurrency(Number(proposal.total_value))}
+                    </span>
                   </div>
                 </div>
-              ))}
-
-              <div className="bg-card/40 p-5 flex justify-between items-center border-t border-border/20">
-                <span className="font-body text-sm text-muted-foreground">Investimento Total</span>
-                <span className="font-display text-3xl font-extrabold text-gradient-intense">
-                  {formatCurrency(Number(proposal.total_value))}
-                </span>
-              </div>
-            </div>
+              );
+            })()}
           </motion.section>
         )}
 
