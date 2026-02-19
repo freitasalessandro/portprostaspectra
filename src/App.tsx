@@ -34,6 +34,7 @@ const App = () => (
           <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
           <Route path="/admin/proposta/:id" element={<ProposalEditor />} />
           <Route path="/proposta/:id" element={<ProposalView />} />
+          <Route path="/p/:id" element={<ProposalView />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -14,6 +14,7 @@ interface Proposal {
   status: string;
   type: string;
   created_at: string;
+  slug: string | null;
 }
 
 const statusLabels: Record<string, string> = {
@@ -71,8 +72,9 @@ const Admin = () => {
     }
   };
 
-  const copyLink = (id: string) => {
-    const url = `${window.location.origin}/proposta/${id}`;
+  const copyLink = (p: Proposal) => {
+    const linkId = p.slug || p.id;
+    const url = `${window.location.origin}/proposta/${linkId}`;
     navigator.clipboard.writeText(url);
     toast({ title: "Link copiado!", description: url });
   };
@@ -117,10 +119,10 @@ const Admin = () => {
                   <p className="text-primary font-display font-bold mt-1">{formatCurrency(Number(p.total_value))}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button variant="ghost" size="icon" onClick={() => copyLink(p.id)} title="Copiar link">
+                  <Button variant="ghost" size="icon" onClick={() => copyLink(p)} title="Copiar link">
                     <Copy className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => window.open(`/proposta/${p.id}`, "_blank")} title="Visualizar">
+                  <Button variant="ghost" size="icon" onClick={() => window.open(`/proposta/${p.slug || p.id}`, "_blank")} title="Visualizar">
                     <ExternalLink className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/proposta/${p.id}`)} title="Editar">

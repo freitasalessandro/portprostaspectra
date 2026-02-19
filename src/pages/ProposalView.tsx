@@ -63,14 +63,23 @@ const ProposalView = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data, error } = await supabase.from("proposals").select("*").eq("id", id).single();
+      // Try slug first, then UUID fallback
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || "");
+      let query = supabase.from("proposals").select("*");
+      if (isUuid) {
+        query = query.eq("id", id);
+      } else {
+        query = query.eq("slug", id);
+      }
+      const { data, error } = await query.single();
       if (error || !data) { setNotFound(true); setLoading(false); return; }
       setProposal(data as unknown as Proposal);
+      const proposalId = data.id;
 
       const [itemsRes, sectionsRes, proofRes] = await Promise.all([
-        supabase.from("proposal_items").select("*").eq("proposal_id", id).order("created_at"),
-        supabase.from("proposal_sections").select("*").eq("proposal_id", id).order("sort_order"),
-        supabase.from("proposal_social_proof").select("*").eq("proposal_id", id).order("sort_order"),
+        supabase.from("proposal_items").select("*").eq("proposal_id", proposalId).order("created_at"),
+        supabase.from("proposal_sections").select("*").eq("proposal_id", proposalId).order("sort_order"),
+        supabase.from("proposal_social_proof").select("*").eq("proposal_id", proposalId).order("sort_order"),
       ]);
 
       setItems((itemsRes.data || []) as ProposalItem[]);
