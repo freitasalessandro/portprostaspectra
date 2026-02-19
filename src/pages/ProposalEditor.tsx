@@ -82,6 +82,7 @@ const ProposalEditor = () => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [status, setStatus] = useState("draft");
   const [slug, setSlug] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [items, setItems] = useState<ProposalItem[]>([
     { service_name: "", description: "", quantity: 1, unit_price: 0, payment_type: "setup", payment_terms: "" },
   ]);
@@ -136,6 +137,7 @@ const ProposalEditor = () => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
+      setCurrentUserId(session.user.id);
 
       const [servicesRes, settingsRes, plansRes] = await Promise.all([
         supabase.from("services").select("id,title,description,category,is_case,metric,metric_label").order("sort_order"),
@@ -273,7 +275,7 @@ const ProposalEditor = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ briefing: aiBriefing.trim(), proposalType }),
+          body: JSON.stringify({ briefing: aiBriefing.trim(), proposalType, userId: currentUserId }),
         }
       );
 
@@ -343,6 +345,7 @@ const ProposalEditor = () => {
             sectionTitle: section.title,
             sectionItems: section.items.map(i => ({ key: i.key, label: i.label })),
             existingContent: sectionsContent[sectionKey] || null,
+            userId: currentUserId,
           }),
         }
       );

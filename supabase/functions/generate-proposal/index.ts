@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,13 +43,76 @@ Seções para proposta de Design:
    - "modelos": Opções de pacotes e valores
 `;
 
+// --- Provider helpers ---
+
+async function callLovableAI(messages: any[], apiKey: string) {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "openai/gpt-5-nano", messages }),
+  });
+  return response;
+}
+
+async function callAnthropic(messages: any[], apiKey: string) {
+  // Convert openai-style messages to Anthropic format
+  const systemMsg = messages.find((m: any) => m.role === "system")?.content || "";
+  const userMsgs = messages.filter((m: any) => m.role !== "system").map((m: any) => ({
+    role: m.role,
+    content: m.content,
+  }));
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 4096,
+      system: systemMsg,
+      messages: userMsgs,
+    }),
+  });
+  return response;
+}
+
+function extractAnthropicContent(data: any): string | null {
+  return data?.content?.[0]?.text || null;
+}
+
+function extractLovableContent(data: any): string | null {
+  return data?.choices?.[0]?.message?.content || null;
+}
+
+// --- Fetch user settings ---
+
+async function getUserSettings(userId: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const sb = createClient(supabaseUrl, supabaseKey);
+
+  const { data } = await sb
+    .from("company_settings")
+    .select("ai_provider, anthropic_api_key")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return {
+    provider: data?.ai_provider || "lovable",
+    anthropicKey: data?.anthropic_api_key || null,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { briefing, proposalType, sectionKey, sectionTitle, sectionItems, existingContent } = await req.json();
+    const { briefing, proposalType, sectionKey, sectionTitle, sectionItems, existingContent, userId } = await req.json();
 
     if (!briefing || !proposalType) {
       return new Response(
@@ -57,12 +121,26 @@ serve(async (req) => {
       );
     }
 
+    // Determine AI provider from user settings
+    let provider = "lovable";
+    let anthropicKey: string | null = null;
+
+    if (userId) {
+      const settings = await getUserSettings(userId);
+      provider = settings.provider;
+      anthropicKey = settings.anthropicKey;
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (provider === "lovable" && !LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (provider === "anthropic" && !anthropicKey) {
+      return new Response(
+        JSON.stringify({ error: "API key da Anthropic não configurada. Acesse Integrações nas configurações." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const structure = proposalType === "cto" ? CTO_STRUCTURE : DESIGN_STRUCTURE;
-
-    // Single section regeneration mode
     const isSingleSection = !!sectionKey && !!sectionTitle && Array.isArray(sectionItems);
 
     let systemPrompt: string;
@@ -139,27 +217,19 @@ RESPONDA EXCLUSIVAMENTE em JSON válido com a estrutura:
 Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
     }
 
-    const requestBody = {
-      model: "openai/gpt-5-nano",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Briefing do cliente:\n\n${briefing}` },
-      ],
-    };
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `Briefing do cliente:\n\n${briefing}` },
+    ];
 
-    console.log("Sending request to AI gateway, model:", requestBody.model, "messages length:", requestBody.messages.length);
+    console.log(`Using provider: ${provider}, messages: ${messages.length}`);
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      }
-    );
+    let response;
+    if (provider === "anthropic") {
+      response = await callAnthropic(messages, anthropicKey!);
+    } else {
+      response = await callLovableAI(messages, LOVABLE_API_KEY!);
+    }
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -170,12 +240,18 @@ Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Créditos de IA insuficientes. Adicione créditos no workspace." }),
+          JSON.stringify({ error: "Créditos insuficientes. Verifique seu plano." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      if (response.status === 401) {
+        return new Response(
+          JSON.stringify({ error: "API key inválida. Verifique a chave em Integrações." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("AI error:", response.status, t);
       return new Response(
         JSON.stringify({ error: "Erro ao gerar proposta com IA" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -183,7 +259,9 @@ Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = provider === "anthropic"
+      ? extractAnthropicContent(data)
+      : extractLovableContent(data);
 
     if (!content) {
       return new Response(
@@ -192,7 +270,6 @@ Não inclua nenhum texto fora do JSON. Não use markdown code fences.`;
       );
     }
 
-    // Parse the JSON from the AI response, handling possible markdown fences
     let parsed;
     try {
       const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
