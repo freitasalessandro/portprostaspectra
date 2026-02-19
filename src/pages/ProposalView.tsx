@@ -218,7 +218,7 @@ const ProposalView = () => {
           transition={{ duration: 6, repeat: Infinity }}
         />
 
-        <div className="max-w-4xl mx-auto px-6 py-12 md:py-16 relative z-10">
+        <div className="max-w-4xl mx-auto px-6 py-8 md:py-10 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -252,7 +252,7 @@ const ProposalView = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <span className="text-[10px] text-primary tracking-[0.3em] uppercase font-body font-semibold px-2 py-1 border border-primary/30 rounded-sm">
                 {proposal.type === "cto" ? "CTO as a Service" : "Design"}
               </span>
@@ -263,7 +263,7 @@ const ProposalView = () => {
               )}
             </div>
 
-            <h1 className="font-display text-3xl md:text-5xl font-extrabold tracking-tight leading-[1] mb-4">
+            <h1 className="font-display text-3xl md:text-5xl font-extrabold tracking-tight leading-[1] mb-2">
               {proposal.project_title}
             </h1>
 
@@ -271,7 +271,7 @@ const ProposalView = () => {
               Proposta para <span className="text-foreground font-medium">{proposal.client_name}</span>
             </p>
 
-            <div className="flex gap-6 mt-4 text-sm text-muted-foreground/60 font-body">
+            <div className="flex gap-6 mt-2 text-sm text-muted-foreground/60 font-body">
               <span>Criada em {formatDate(proposal.created_at)}</span>
               {proposal.valid_until && <span>Válida até {formatDate(proposal.valid_until)}</span>}
             </div>
@@ -279,7 +279,7 @@ const ProposalView = () => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-10 space-y-12">
+      <main className="max-w-4xl mx-auto px-6 py-6 space-y-8">
         {/* Description */}
         {proposal.description && (
           <motion.section
@@ -307,14 +307,14 @@ const ProposalView = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: sIdx * 0.05 }}
-              className="space-y-6"
+              className="space-y-4"
             >
               <div className="flex items-baseline gap-3">
                 <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">0{sIdx + 1}</span>
-                <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight">{section.title}</h2>
+                <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">{section.title}</h2>
               </div>
 
-              <div className="space-y-6 pl-8 border-l border-border/20">
+              <div className="space-y-4 pl-6 border-l border-border/20">
                 {template?.items.map((item) => {
                   const text = sectionContent[item.key];
                   if (!text || !text.trim()) return null;
@@ -337,24 +337,24 @@ const ProposalView = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="space-y-6"
+            className="space-y-4"
           >
             <div className="flex items-baseline gap-3">
               <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">
                 0{sections.filter((s) => Object.values(s.content || {}).some((v) => v && (v as string).trim())).length + 1}
               </span>
-              <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight">Investimento</h2>
+              <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">Investimento</h2>
             </div>
 
             {(() => {
               const setupItems = items.filter(i => i.payment_type === "setup");
               const recurringItems = items.filter(i => i.payment_type === "recurring");
               return (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {setupItems.length > 0 && (
                     <div>
-                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-3">Setup — Investimento Único</h3>
-                      <div className="border border-border/20 overflow-hidden">
+                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-2">Setup — Investimento Único</h3>
+                      <div className="border border-border/20 overflow-hidden rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
                         {setupItems.map((item, i) => {
                           // Parse payment_terms like "Entrada: 50% | 2ª parcela: 25% | 3ª parcela: 25%"
                           const parsedInstallments = item.payment_terms
@@ -366,13 +366,13 @@ const ProposalView = () => {
                           const setupValue = Number((proposal as any).setup_total) || 0;
 
                           return (
-                            <div key={item.id} className={`p-5 ${i < setupItems.length - 1 ? "border-b border-border/15" : ""}`}>
+                            <div key={item.id} className={`p-4 ${i < setupItems.length - 1 ? "border-b border-border/15" : ""}`}>
                               <h4 className="font-display font-bold text-base">{item.service_name}</h4>
                               {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
                               {parsedInstallments.length > 0 && setupValue > 0 && (
-                                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-1.5">
                                   {parsedInstallments.map((inst, idx) => (
-                                    <div key={idx} className="border border-border/15 bg-card/30 p-3 rounded-sm text-center">
+                                    <div key={idx} className="border border-border/15 bg-card/30 p-2 rounded-sm text-center shadow-[0_1px_4px_hsl(0_0%_0%/0.2)]">
                                       <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider block font-body">{inst.label}</span>
                                       <span className="font-display font-bold text-primary text-lg">
                                         {formatCurrency(setupValue * inst.percent / 100)}
@@ -396,10 +396,10 @@ const ProposalView = () => {
 
                   {recurringItems.length > 0 && (
                     <div>
-                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-3">Recorrente — Investimento Mensal</h3>
-                      <div className="border border-border/20 overflow-hidden">
+                      <h3 className="font-display text-sm font-bold text-primary/80 uppercase tracking-wider mb-2">Recorrente — Investimento Mensal</h3>
+                      <div className="border border-border/20 overflow-hidden rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
                         {recurringItems.map((item, i) => (
-                          <div key={item.id} className={`p-5 ${i < recurringItems.length - 1 ? "border-b border-border/15" : ""}`}>
+                          <div key={item.id} className={`p-4 ${i < recurringItems.length - 1 ? "border-b border-border/15" : ""}`}>
                             <h4 className="font-display font-bold text-base">{item.service_name}</h4>
                             {item.description && <p className="text-sm text-muted-foreground/70 mt-1 font-body">{item.description}</p>}
                           </div>
@@ -408,7 +408,7 @@ const ProposalView = () => {
                     </div>
                   )}
 
-                  <div className="bg-card/40 p-5 space-y-3 border border-border/20">
+                  <div className="bg-card/40 p-4 space-y-2 border border-border/20 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
                     {Number((proposal as any).setup_total) > 0 && (
                       <div className="flex justify-between items-center">
                         <span className="font-body text-sm text-muted-foreground">Setup (único)</span>
@@ -455,14 +455,14 @@ const ProposalView = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="space-y-6"
+            className="space-y-4"
           >
             <div className="flex items-baseline gap-3">
               <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">05</span>
-              <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight">Cases Semelhantes</h2>
+              <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">Cases Semelhantes</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {socialProof.map((proof, i) => (
                 <motion.div
                   key={i}
@@ -470,7 +470,7 @@ const ProposalView = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className="border border-border/20 p-5 hover:border-primary/30 transition-all duration-300 group"
+                  className="border border-border/20 p-4 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)] hover:border-primary/30 transition-all duration-300 group"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <span className="text-[9px] text-primary/70 tracking-[0.25em] uppercase font-body font-semibold">
@@ -499,15 +499,15 @@ const ProposalView = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="space-y-6"
-        >
-          <div className="flex items-baseline gap-3">
-            <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">06</span>
-            <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight">Próximos Passos</h2>
-          </div>
+            className="space-y-4"
+          >
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-xs text-primary/50 tracking-[0.3em] uppercase">06</span>
+              <h2 className="font-display text-xl md:text-2xl font-extrabold tracking-tight">Próximos Passos</h2>
+            </div>
 
           {isAccepted ? (
-            <div className="border border-green-500/30 bg-green-500/5 p-8 text-center">
+            <div className="border border-green-500/30 bg-green-500/5 p-6 text-center rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
               <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
                 <Check className="w-6 h-6 text-green-400" />
               </div>
@@ -525,7 +525,7 @@ const ProposalView = () => {
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowAcceptForm(true)}
-                    className="flex-1 inline-flex items-center justify-center gap-3 px-8 py-4 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
+                    className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-3 font-display font-bold text-primary-foreground bg-gradient-to-b from-primary to-primary/90 text-xs tracking-widest uppercase relative overflow-hidden group rounded-md shadow-[inset_0_1px_0_hsl(220_100%_70%/0.3),0_2px_8px_hsl(220_100%_55%/0.3)]"
                   >
                     <span className="relative z-10 flex items-center gap-2">
                       <Check className="w-4 h-4" />
@@ -541,7 +541,7 @@ const ProposalView = () => {
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 inline-flex items-center justify-center gap-3 px-8 py-4 font-display font-bold text-foreground border border-border/40 text-xs tracking-widest uppercase hover:border-green-500/50 hover:text-green-400 transition-all duration-300"
+                      className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-3 font-display font-bold text-foreground border border-border/40 text-xs tracking-widest uppercase rounded-md shadow-[inset_0_1px_0_hsl(0_0%_100%/0.05),0_2px_6px_hsl(0_0%_0%/0.2)] hover:border-green-500/50 hover:text-green-400 transition-all duration-300"
                     >
                       <MessageCircle className="w-4 h-4" />
                       Falar no WhatsApp
@@ -549,7 +549,7 @@ const ProposalView = () => {
                   )}
                 </div>
               ) : (
-                <div className="border border-primary/30 p-6 space-y-4">
+                <div className="border border-primary/30 p-5 space-y-3 rounded-md shadow-[0_2px_8px_hsl(0_0%_0%/0.25)]">
                   <h3 className="font-display font-bold text-lg">Confirmar Aceite</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -578,7 +578,7 @@ const ProposalView = () => {
                       whileTap={{ scale: 0.98 }}
                       onClick={handleAccept}
                       disabled={accepting}
-                      className="inline-flex items-center gap-2 px-6 py-3 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase glow-box disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 font-display font-bold text-primary-foreground bg-gradient-to-b from-primary to-primary/90 text-xs tracking-widest uppercase rounded-md shadow-[inset_0_1px_0_hsl(220_100%_70%/0.3),0_2px_8px_hsl(220_100%_55%/0.3)] disabled:opacity-50"
                     >
                       <Check className="w-4 h-4" />
                       {accepting ? "Enviando..." : "Confirmar Aceite"}
@@ -597,7 +597,7 @@ const ProposalView = () => {
         </motion.section>
 
         {/* Footer */}
-        <footer className="pt-10 border-t border-border/15">
+        <footer className="pt-6 border-t border-border/15">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <img src={spectraLogo} alt="Spectra" className="w-7 h-5" style={{ filter: "drop-shadow(0 0 8px hsl(220 100% 55% / 0.2))" }} />
