@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { staggerContainer, fadeUp } from "@/lib/motion";
 
 import logo2k20 from "@/assets/brands/2k20.png";
 import logoConnectg2 from "@/assets/brands/connectg2.png";
@@ -27,14 +28,14 @@ const TrustedBrandsSection = () => {
     <section className="py-20 md:py-28 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
-      <div className="max-w-7xl mx-auto relative z-10 px-6 md:px-12">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
+      <motion.div
+        className="max-w-7xl mx-auto relative z-10 px-6 md:px-12"
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+      >
+        <motion.div className="text-center mb-16" variants={fadeUp}>
           <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center justify-center gap-3">
             <motion.span
               className="w-10 h-px bg-primary/50"
@@ -57,10 +58,16 @@ const TrustedBrandsSection = () => {
             <span className="font-extralight text-foreground/60">confiam na gente.</span>
           </h2>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Marquee infinite scroll */}
-      <div className="relative">
+      <motion.div
+        className="relative"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
         <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-l from-background to-transparent z-10" />
 
@@ -84,7 +91,7 @@ const TrustedBrandsSection = () => {
             ))}
           </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 };

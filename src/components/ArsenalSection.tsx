@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Cpu, Shield, Target, Zap, Globe, Brain } from "lucide-react";
+import { staggerContainer, fadeUp, fadeScale } from "@/lib/motion";
 
 const services = [
   { icon: Target, title: "Diagnóstico Estratégico", description: "ROI antes de cada linha de código.", span: "col-span-1" },
@@ -15,7 +16,6 @@ const ArsenalSection = () => {
     <section className="py-28 md:py-36 px-6 md:px-12 relative" id="arsenal">
       <div className="absolute inset-0 grid-pattern opacity-20" />
 
-      {/* Animated orbs */}
       <motion.div
         className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-primary/4 blur-[200px] rounded-full pointer-events-none"
         animate={{ x: [0, 30, 0], scale: [1, 1.1, 1] }}
@@ -27,15 +27,15 @@ const ArsenalSection = () => {
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <motion.div
+        className="max-w-7xl mx-auto relative z-10"
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+      >
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
-        >
+        <motion.div className="mb-16" variants={fadeUp}>
           <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
             <motion.span
               className="w-10 h-px bg-primary/50"
@@ -53,28 +53,22 @@ const ArsenalSection = () => {
         </motion.div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+          variants={staggerContainer}
+        >
           {services.map((service, i) => (
             <motion.div
               key={service.title}
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.07 }}
+              variants={fadeScale}
               whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.3 } }}
               className={`group ${service.span} relative bg-card/30 border border-border/20 p-7 md:p-8 hover:border-primary/30 hover:bg-card/50 transition-all duration-500 cursor-default overflow-hidden`}
             >
-              {/* Bottom accent */}
               <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-600" />
-
-              {/* Hover glow */}
               <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-primary/0 group-hover:bg-primary/10 blur-3xl transition-all duration-700 pointer-events-none" />
 
               <div className="flex items-center justify-between mb-5">
-                <motion.div
-                  whileHover={{ rotate: 10, scale: 1.1 }}
-                  transition={{ duration: 0.3 }}
-                >
+                <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ duration: 0.3 }}>
                   <service.icon className="w-5 h-5 text-primary/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
                 </motion.div>
                 <span className="font-display text-xs text-muted-foreground/20 tracking-[0.2em] group-hover:text-primary/20 transition-colors duration-300">
@@ -90,8 +84,8 @@ const ArsenalSection = () => {
               </p>
             </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 };
