@@ -38,19 +38,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { to, message } = await req.json();
+    const body = await req.json();
+    const { to, message, template_id, proposal_id, event } = body;
 
-    if (!to || !message) {
+    if (!to) {
       return new Response(
-        JSON.stringify({ error: "Parâmetros 'to' e 'message' são obrigatórios" }),
+        JSON.stringify({ error: "Parâmetro 'to' é obrigatório" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Fetch Evolution API settings for this user
+    // Fetch Evolution API settings
     const { data: settings, error: settingsError } = await supabase
       .from("company_settings")
-      .select("evolution_api_url, evolution_api_token, evolution_api_instance")
+      .select("evolution_api_url, evolution_api_token, evolution_api_instance, whatsapp")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -70,10 +71,52 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Clean number - remove non-digits
+    // Resolve final message text
+    let finalMessage = message || "";
+
+    if (template_id && proposal_id) {
+      // Fetch template
+      const { data: template } = await supabase
+        .from("communication_templates")
+        .select("message")
+        .eq("id", template_id)
+        .maybeSingle();
+
+      // Fetch proposal
+      const { data: proposal } = await supabase
+        .from("proposals")
+        .select("client_name, project_title, total_value, slug, valid_until, id")
+        .eq("id", proposal_id)
+        .maybeSingle();
+
+      if (template && proposal) {
+        const baseUrl = req.headers.get("origin") || "https://portprostaspectra.lovable.app";
+        const link = proposal.slug ? `${baseUrl}/p/${proposal.slug}` : `${baseUrl}/proposta/${proposal.id}`;
+        const valor = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(proposal.total_value || 0));
+        const now = new Date();
+
+        finalMessage = template.message
+          .replace(/\{\{cliente\}\}/g, proposal.client_name || "")
+          .replace(/\{\{projeto\}\}/g, proposal.project_title || "")
+          .replace(/\{\{valor\}\}/g, valor)
+          .replace(/\{\{link\}\}/g, link)
+          .replace(/\{\{data_validade\}\}/g, proposal.valid_until || "—")
+          .replace(/\{\{hora\}\}/g, `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`)
+          .replace(/\{\{protocolo\}\}/g, proposal.id.slice(0, 8).toUpperCase());
+      }
+    }
+
+    if (!finalMessage) {
+      return new Response(
+        JSON.stringify({ error: "Mensagem vazia. Forneça 'message' ou 'template_id' + 'proposal_id'." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Clean number
     const cleanNumber = to.replace(/\D/g, "");
 
-    // Send message via Evolution API v2
+    // Send via Evolution API
     const apiUrl = `${evolution_api_url.replace(/\/$/, "")}/message/sendText/${evolution_api_instance}`;
 
     const evoResponse = await fetch(apiUrl, {
@@ -82,15 +125,26 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         apikey: evolution_api_token,
       },
-      body: JSON.stringify({
-        number: cleanNumber,
-        text: message,
-      }),
+      body: JSON.stringify({ number: cleanNumber, text: finalMessage }),
     });
 
     const evoData = await evoResponse.json();
+    const success = evoResponse.ok;
 
-    if (!evoResponse.ok) {
+    // Log to communication_history
+    if (event && proposal_id) {
+      await supabase.from("communication_history").insert({
+        user_id: user.id,
+        proposal_id,
+        event,
+        destination_number: cleanNumber,
+        status: success ? "enviado" : "falhou",
+        message_sent: finalMessage,
+        error_details: success ? null : JSON.stringify(evoData),
+      });
+    }
+
+    if (!success) {
       console.error("Evolution API error:", evoData);
       return new Response(
         JSON.stringify({ error: evoData?.message || "Erro ao enviar mensagem via Evolution API" }),

@@ -14,6 +14,9 @@ import AdminConfiguracoes from "./pages/AdminConfiguracoes";
 import AdminPagamentos from "./pages/AdminPagamentos";
 import AdminIntegracoes from "./pages/AdminIntegracoes";
 import AdminAuditoria from "./pages/AdminAuditoria";
+import AdminComunicacoesModelos from "./pages/AdminComunicacoesModelos";
+import AdminComunicacoesGatilhos from "./pages/AdminComunicacoesGatilhos";
+import AdminComunicacoesHistorico from "./pages/AdminComunicacoesHistorico";
 import ProposalEditor from "./pages/ProposalEditor";
 import ProposalView from "./pages/ProposalView";
 import NotFound from "./pages/NotFound";
@@ -38,6 +41,9 @@ const App = () => (
           <Route path="/admin/pagamentos" element={<AdminPagamentos />} />
           <Route path="/admin/integracoes" element={<AdminIntegracoes />} />
           <Route path="/admin/auditoria" element={<AdminAuditoria />} />
+          <Route path="/admin/comunicacoes/modelos" element={<AdminComunicacoesModelos />} />
+          <Route path="/admin/comunicacoes/gatilhos" element={<AdminComunicacoesGatilhos />} />
+          <Route path="/admin/comunicacoes/historico" element={<AdminComunicacoesHistorico />} />
           <Route path="/admin/proposta/:id" element={<ProposalEditor />} />
           <Route path="/proposta/:id" element={<ProposalView />} />
           <Route path="/p/:id" element={<ProposalView />} />
