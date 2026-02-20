@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp, Settings } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
@@ -122,14 +122,23 @@ const AdminContratos = () => {
             </p>
             <h1 className="font-display text-3xl font-extrabold tracking-tight">Contratos</h1>
           </div>
-          <Button
-            onClick={() => navigate("/admin/contratos/novo")}
-            className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box"
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              <Plus className="w-4 h-4" /> Novo Contrato
-            </span>
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin/contratos/configuracoes")}
+              className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-5"
+            >
+              <Settings className="w-4 h-4 mr-2" /> Configurações
+            </Button>
+            <Button
+              onClick={() => navigate("/admin/contratos/novo")}
+              className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                <Plus className="w-4 h-4" /> Novo Contrato
+              </span>
+            </Button>
+          </div>
         </motion.div>
 
         {loading ? (

@@ -94,8 +94,10 @@ const ProposalView = () => {
 
   // Contract data form (post-approval)
   const [showContractDataForm, setShowContractDataForm] = useState(false);
-  const [contractData, setContractData] = useState({
+  const [clientType, setClientType] = useState<"pf" | "pj">("pf");
+  const [contractData, setContractData] = useState<Record<string, string>>({
     nome_completo: "", cpf: "", nascimento: "", endereco: "", cidade: "", estado: "", cep: "",
+    razao_social: "", cnpj: "", inscricao_estadual: "", representante_legal: "", cpf_representante: "",
   });
   const [savingContractData, setSavingContractData] = useState(false);
   const [lastSignatureId, setLastSignatureId] = useState<string | null>(null);
@@ -240,6 +242,7 @@ const ProposalView = () => {
       const { data, error } = await query.single();
       if (error || !data) { setNotFound(true); setLoading(false); return; }
       setProposal(data as Proposal);
+      setClientType((data as any).client_type || "pf");
       const proposalId = (data as any).id;
 
       const [itemsRes, sectionsRes, proofRes] = await Promise.all([
@@ -1086,57 +1089,121 @@ const ProposalView = () => {
             <DialogTitle className="font-display text-lg">Precisamos de mais algumas informações para gerar o contrato</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="sm:col-span-2">
-                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Nome Completo</label>
-                <input value={contractData.nome_completo} onChange={(e) => setContractData(p => ({ ...p, nome_completo: e.target.value }))}
-                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-              </div>
-              <div>
-                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CPF</label>
-                <input value={contractData.cpf} onChange={(e) => setContractData(p => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00"
-                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-              </div>
-              <div>
-                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Data de Nascimento</label>
-                <input type="date" value={contractData.nascimento} onChange={(e) => setContractData(p => ({ ...p, nascimento: e.target.value }))}
-                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Endereço Completo</label>
-                <input value={contractData.endereco} onChange={(e) => setContractData(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, número, complemento"
-                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-              </div>
-              <div>
-                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Cidade</label>
-                <input value={contractData.cidade} onChange={(e) => setContractData(p => ({ ...p, cidade: e.target.value }))}
-                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
-                  <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
+            {clientType === "pf" ? (
+              /* PF Fields */
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Nome Completo</label>
+                  <input value={contractData.nome_completo} onChange={(e) => setContractData(p => ({ ...p, nome_completo: e.target.value }))}
                     className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
                 </div>
                 <div>
-                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
-                  <input value={contractData.cep} onChange={(e) => setContractData(p => ({ ...p, cep: e.target.value }))} placeholder="00000-000"
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CPF</label>
+                  <input value={contractData.cpf} onChange={(e) => setContractData(p => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00"
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Data de Nascimento</label>
+                  <input type="date" value={contractData.nascimento} onChange={(e) => setContractData(p => ({ ...p, nascimento: e.target.value }))}
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Endereço Completo</label>
+                  <input value={contractData.endereco} onChange={(e) => setContractData(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, número, complemento"
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Cidade</label>
+                  <input value={contractData.cidade} onChange={(e) => setContractData(p => ({ ...p, cidade: e.target.value }))}
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
+                    <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
+                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
+                    <input value={contractData.cep} onChange={(e) => setContractData(p => ({ ...p, cep: e.target.value }))} placeholder="00000-000"
+                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* PJ Fields */
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Razão Social</label>
+                  <input value={contractData.razao_social} onChange={(e) => setContractData(p => ({ ...p, razao_social: e.target.value }))}
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CNPJ</label>
+                  <input value={contractData.cnpj} onChange={(e) => setContractData(p => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0000-00"
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Inscrição Estadual</label>
+                  <input value={contractData.inscricao_estadual} onChange={(e) => setContractData(p => ({ ...p, inscricao_estadual: e.target.value }))} placeholder="Opcional"
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Endereço Completo</label>
+                  <input value={contractData.endereco} onChange={(e) => setContractData(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, número, complemento"
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Cidade</label>
+                  <input value={contractData.cidade} onChange={(e) => setContractData(p => ({ ...p, cidade: e.target.value }))}
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
+                    <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
+                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
+                    <input value={contractData.cep} onChange={(e) => setContractData(p => ({ ...p, cep: e.target.value }))} placeholder="00000-000"
+                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  </div>
+                </div>
+                <div className="sm:col-span-2 pt-2 border-t border-border/20">
+                  <span className="text-[10px] text-primary/60 tracking-[0.2em] uppercase font-body font-semibold">Representante Legal</span>
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Nome do Representante</label>
+                  <input value={contractData.representante_legal} onChange={(e) => setContractData(p => ({ ...p, representante_legal: e.target.value }))}
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CPF do Representante</label>
+                  <input value={contractData.cpf_representante} onChange={(e) => setContractData(p => ({ ...p, cpf_representante: e.target.value }))} placeholder="000.000.000-00"
                     className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
                 </div>
               </div>
-            </div>
+            )}
             <div className="flex gap-3 pt-2">
               <button
                 onClick={async () => {
-                  if (!contractData.nome_completo.trim() || !contractData.cpf.trim()) {
-                    toast({ title: "Preencha nome e CPF", variant: "destructive" });
-                    return;
+                  if (clientType === "pf") {
+                    if (!contractData.nome_completo.trim() || !contractData.cpf.trim()) {
+                      toast({ title: "Preencha nome e CPF", variant: "destructive" });
+                      return;
+                    }
+                  } else {
+                    if (!contractData.razao_social.trim() || !contractData.cnpj.trim()) {
+                      toast({ title: "Preencha razão social e CNPJ", variant: "destructive" });
+                      return;
+                    }
                   }
                   setSavingContractData(true);
                   const sigId = lastSignatureId || signature?.id;
                   if (sigId) {
                     await supabase.from("proposal_signatures").update({
-                      contract_data: contractData,
+                      contract_data: { ...contractData, client_type: clientType },
                     } as any).eq("id", sigId);
                   }
                   setSavingContractData(false);

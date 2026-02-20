@@ -689,6 +689,7 @@ export type Database = {
           client_email: string | null
           client_name: string
           client_phone: string | null
+          client_type: string
           created_at: string
           description: string | null
           id: string
@@ -714,6 +715,7 @@ export type Database = {
           client_email?: string | null
           client_name: string
           client_phone?: string | null
+          client_type?: string
           created_at?: string
           description?: string | null
           id?: string
@@ -739,6 +741,7 @@ export type Database = {
           client_email?: string | null
           client_name?: string
           client_phone?: string | null
+          client_type?: string
           created_at?: string
           description?: string | null
           id?: string
@@ -939,6 +942,7 @@ export type Database = {
           access_code: string | null
           bdi_factor: number | null
           client_name: string | null
+          client_type: string | null
           created_at: string | null
           description: string | null
           id: string | null
@@ -959,6 +963,7 @@ export type Database = {
           access_code?: string | null
           bdi_factor?: number | null
           client_name?: string | null
+          client_type?: string | null
           created_at?: string | null
           description?: string | null
           id?: string | null
@@ -979,6 +984,7 @@ export type Database = {
           access_code?: string | null
           bdi_factor?: number | null
           client_name?: string | null
+          client_type?: string | null
           created_at?: string | null
           description?: string | null
           id?: string | null
