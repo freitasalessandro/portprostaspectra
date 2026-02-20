@@ -18,7 +18,7 @@ const words = [
 
 const TextRevealSection = () => {
   return (
-    <section className="py-28 md:py-40 px-6 relative overflow-hidden">
+    <section className="py-12 md:py-40 px-6 relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-20" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 blur-[200px] rounded-full pointer-events-none" />
 
