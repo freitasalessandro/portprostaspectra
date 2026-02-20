@@ -843,6 +843,23 @@ const ProposalEditor = () => {
               <span className="text-muted-foreground">Custo Direto</span>
               <span className="font-display font-bold">{formatCurrency(directTotal)}</span>
             </div>
+          {/* Per-proposal BDI Risk & Profit overrides */}
+            <div className="grid grid-cols-2 gap-3 mb-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Riscos (%)</Label>
+                <Input type="number" step="0.01" min={0} max={100} value={bdi.bdi_risk || ""} onChange={(e) => {
+                  const num = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                  if (!isNaN(num)) setBdi(prev => ({ ...prev, bdi_risk: num }));
+                }} placeholder="0" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Lucro (%)</Label>
+                <Input type="number" step="0.01" min={0} max={100} value={bdi.bdi_profit || ""} onChange={(e) => {
+                  const num = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                  if (!isNaN(num)) setBdi(prev => ({ ...prev, bdi_profit: num }));
+                }} placeholder="0" />
+              </div>
+            </div>
             {bdiFactor && bdiFactor > 1 && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">
