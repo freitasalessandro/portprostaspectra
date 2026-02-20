@@ -183,7 +183,7 @@ const ProposalView = () => {
       setSocialProof((proofRes.data || []) as unknown as SocialProof[]);
       setLoading(false);
 
-      // Track view
+      // Track view and fire trigger
       if (proposalId) {
         let ip = "unknown";
         try {
@@ -196,6 +196,16 @@ const ProposalView = () => {
           ip_address: ip,
           user_agent: navigator.userAgent,
         } as any).then(() => {});
+
+        // Fire proposta_visualizada trigger via edge function (no auth needed)
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fire-trigger`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ proposal_id: proposalId, event: "proposta_visualizada" }),
+        }).catch(() => {});
       }
     };
     load();
@@ -287,24 +297,15 @@ const ProposalView = () => {
         setShowAcceptForm(false);
         toast({ title: "Proposta aprovada com sucesso!" });
 
-        // Send WhatsApp notification (fire-and-forget, don't block approval)
-        try {
-          const formatCur = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
-          const notifMessage = `🎉 *Proposta Aprovada!*\n\n📋 *${proposal!.project_title}*\n👤 Cliente: ${proposal!.client_name}\n✍️ Assinada por: ${acceptName.trim()}\n💰 Valor: ${formatCur(Number(proposal!.total_value))}\n🕐 ${new Date(timestamp).toLocaleString("pt-BR")}\n🔐 Protocolo: ${hashHex.substring(0, 16).toUpperCase()}`;
-          
-          // Get owner's WhatsApp from company settings
-          const { data: ownerSettings } = await supabase
-            .from("company_settings")
-            .select("whatsapp, evolution_api_token")
-            .limit(1)
-            .maybeSingle();
-          
-          if (ownerSettings?.whatsapp && ownerSettings?.evolution_api_token) {
-            supabase.functions.invoke("send-whatsapp", {
-              body: { to: ownerSettings.whatsapp, message: notifMessage },
-            }).catch(() => {}); // Silent fail
-          }
-        } catch {} // Silent fail for notification
+        // Fire proposta_aprovada trigger via edge function (no auth needed)
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fire-trigger`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ proposal_id: proposalId, event: "proposta_aprovada" }),
+        }).catch(() => {});
       }
     } catch (e) {
       console.error("Accept error:", e);
