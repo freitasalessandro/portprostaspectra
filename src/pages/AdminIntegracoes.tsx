@@ -111,6 +111,8 @@ const AdminIntegracoes = () => {
       return;
     }
     setTesting(true);
+    // Save settings first so the edge function can read them
+    await handleSave();
     try {
       const { data, error } = await supabase.functions.invoke("send-whatsapp", {
         body: {
