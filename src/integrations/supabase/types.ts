@@ -28,6 +28,9 @@ export type Database = {
           company_name: string
           created_at: string
           email: string | null
+          evolution_api_instance: string | null
+          evolution_api_token: string | null
+          evolution_api_url: string | null
           id: string
           logo_url: string | null
           phone: string | null
@@ -51,6 +54,9 @@ export type Database = {
           company_name?: string
           created_at?: string
           email?: string | null
+          evolution_api_instance?: string | null
+          evolution_api_token?: string | null
+          evolution_api_url?: string | null
           id?: string
           logo_url?: string | null
           phone?: string | null
@@ -74,6 +80,9 @@ export type Database = {
           company_name?: string
           created_at?: string
           email?: string | null
+          evolution_api_instance?: string | null
+          evolution_api_token?: string | null
+          evolution_api_url?: string | null
           id?: string
           logo_url?: string | null
           phone?: string | null

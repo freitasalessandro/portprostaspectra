@@ -271,6 +271,25 @@ const ProposalView = () => {
         setProposal((prev) => prev ? { ...prev, status: "accepted", accepted_at: timestamp, accepted_by_name: acceptName } : prev);
         setShowAcceptForm(false);
         toast({ title: "Proposta aprovada com sucesso!" });
+
+        // Send WhatsApp notification (fire-and-forget, don't block approval)
+        try {
+          const formatCur = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+          const notifMessage = `🎉 *Proposta Aprovada!*\n\n📋 *${proposal!.project_title}*\n👤 Cliente: ${proposal!.client_name}\n✍️ Assinada por: ${acceptName.trim()}\n💰 Valor: ${formatCur(Number(proposal!.total_value))}\n🕐 ${new Date(timestamp).toLocaleString("pt-BR")}\n🔐 Protocolo: ${hashHex.substring(0, 16).toUpperCase()}`;
+          
+          // Get owner's WhatsApp from company settings
+          const { data: ownerSettings } = await supabase
+            .from("company_settings")
+            .select("whatsapp, evolution_api_token")
+            .limit(1)
+            .maybeSingle();
+          
+          if (ownerSettings?.whatsapp && ownerSettings?.evolution_api_token) {
+            supabase.functions.invoke("send-whatsapp", {
+              body: { to: ownerSettings.whatsapp, message: notifMessage },
+            }).catch(() => {}); // Silent fail
+          }
+        } catch {} // Silent fail for notification
       }
     } catch (e) {
       console.error("Accept error:", e);
