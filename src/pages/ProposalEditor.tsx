@@ -429,6 +429,13 @@ const ProposalEditor = () => {
       return;
     }
 
+    // Validate: at least one item with a name when sending
+    const validItems = items.filter(i => i.service_name.trim());
+    if (newStatus === "sent" && validItems.length === 0) {
+      toast({ title: "Adicione pelo menos um item antes de enviar", variant: "destructive" });
+      return;
+    }
+
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/login"); return; }
@@ -487,48 +494,44 @@ const ProposalEditor = () => {
       proposalId = data.id;
       setSlug(data.slug);
     } else {
-      // First insert new data, then delete old (safer order)
-      // Insert items with proposal_id
       const itemsWithId = itemsToInsert.map(i => ({ ...i, proposal_id: proposalId! }));
       const sectionsWithId = sectionsToInsert.map(s => ({ ...s, proposal_id: proposalId! }));
       const proofWithId = proofToInsert.map(p => ({ ...p, proposal_id: proposalId! }));
 
-      // Delete old data
-      const [delItems, delSections, delProof] = await Promise.all([
-        supabase.from("proposal_items").delete().eq("proposal_id", id!),
-        supabase.from("proposal_sections").delete().eq("proposal_id", id!),
-        supabase.from("proposal_social_proof").delete().eq("proposal_id", id!),
-      ]);
-
-      if (delItems.error || delSections.error || delProof.error) {
-        toast({ title: "Erro ao atualizar dados", description: "Tente novamente", variant: "destructive" });
-        setSaving(false);
-        return;
-      }
-
-      // Insert new data
-      const insertErrors: string[] = [];
-
+      // Only delete items if we have new items to insert (prevent accidental data loss)
       if (itemsWithId.length > 0) {
-        const { error: itemsErr } = await supabase.from("proposal_items").insert(itemsWithId);
-        if (itemsErr) insertErrors.push(`Itens: ${itemsErr.message}`);
+        const { error: delErr } = await supabase.from("proposal_items").delete().eq("proposal_id", id!);
+        if (delErr) { toast({ title: "Erro ao atualizar itens", variant: "destructive" }); setSaving(false); return; }
+        const { error: insErr } = await supabase.from("proposal_items").insert(itemsWithId);
+        if (insErr) { toast({ title: "Erro ao salvar itens", description: insErr.message, variant: "destructive" }); setSaving(false); return; }
       }
 
-      const { error: sectionsErr } = await supabase.from("proposal_sections").insert(sectionsWithId);
-      if (sectionsErr) insertErrors.push(`Seções: ${sectionsErr.message}`);
+      // Always update sections
+      await supabase.from("proposal_sections").delete().eq("proposal_id", id!);
+      if (sectionsWithId.length > 0) {
+        await supabase.from("proposal_sections").insert(sectionsWithId);
+      }
 
+      // Only delete social proof if we have new ones
       if (proofWithId.length > 0) {
-        const { error: proofErr } = await supabase.from("proposal_social_proof").insert(proofWithId);
-        if (proofErr) insertErrors.push(`Cases: ${proofErr.message}`);
+        await supabase.from("proposal_social_proof").delete().eq("proposal_id", id!);
+        await supabase.from("proposal_social_proof").insert(proofWithId);
+      } else {
+        // User explicitly removed all cases
+        const hasExistingProof = selectedCases.length === 0;
+        if (hasExistingProof) {
+          await supabase.from("proposal_social_proof").delete().eq("proposal_id", id!);
+        }
       }
 
-      if (insertErrors.length > 0) {
-        toast({ title: "Erro ao salvar dados", description: insertErrors.join("; "), variant: "destructive" });
-        setSaving(false);
-        return;
+      // If no items to insert, preserve existing totals from DB
+      if (itemsWithId.length === 0) {
+        // Don't overwrite total_value - keep existing DB values
+        delete (proposalData as any).total_value;
+        delete (proposalData as any).setup_total;
+        delete (proposalData as any).recurring_total;
       }
 
-      // Only update proposal AFTER related data is safely saved
       const { error } = await supabase.from("proposals").update(proposalData).eq("id", id);
       if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); setSaving(false); return; }
       setSlug(proposalSlug);
