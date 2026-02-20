@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/badge";
 const VARIABLES = [
   { key: "{{cliente}}", label: "Cliente" },
   { key: "{{projeto}}", label: "Projeto" },
-  { key: "{{valor}}", label: "Valor" },
+  { key: "{{valor}}", label: "Valor Total" },
+  { key: "{{valor_recorrente}}", label: "Valor Recorrente" },
   { key: "{{link}}", label: "Link" },
   { key: "{{codigo}}", label: "Código de Acesso" },
   { key: "{{data_validade}}", label: "Data Validade" },
