@@ -184,7 +184,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         className={`
           fixed top-0 left-0 z-50 h-screen w-[240px] bg-sidebar/80 backdrop-blur-2xl border-r border-sidebar-border/50
           flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.25,0.4,0.25,1)]
-          md:translate-x-0 md:static
+          md:translate-x-0 md:sticky md:top-0 md:self-start
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
