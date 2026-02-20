@@ -6,7 +6,7 @@ import { Check, MessageCircle, ArrowRight, Sun, Moon, Download, FileText, Dollar
 import { toast } from "@/hooks/use-toast";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { getSectionsForType, type ProposalType } from "@/lib/proposal-templates";
-import { isValidCPF, isValidCNPJ, formatCPF, formatCNPJ } from "@/lib/validators";
+import { isValidCPF, isValidCNPJ, formatCPF, formatCNPJ, formatCEP, fetchViaCEP } from "@/lib/validators";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -101,7 +101,27 @@ const ProposalView = () => {
     razao_social: "", cnpj: "", inscricao_estadual: "", representante_legal: "", cpf_representante: "",
   });
   const [savingContractData, setSavingContractData] = useState(false);
+  const [loadingCep, setLoadingCep] = useState(false);
   const [lastSignatureId, setLastSignatureId] = useState<string | null>(null);
+
+  const handleCepChange = async (value: string) => {
+    const formatted = formatCEP(value);
+    setContractData(p => ({ ...p, cep: formatted }));
+    const digits = formatted.replace(/\D/g, "");
+    if (digits.length === 8) {
+      setLoadingCep(true);
+      const result = await fetchViaCEP(digits);
+      if (result) {
+        setContractData(p => ({
+          ...p,
+          endereco: result.logradouro ? `${result.logradouro}${result.bairro ? `, ${result.bairro}` : ""}` : p.endereco,
+          cidade: result.localidade || p.cidade,
+          estado: result.uf || p.estado,
+        }));
+      }
+      setLoadingCep(false);
+    }
+  };
 
   // Check cookie on mount
   useEffect(() => {
@@ -1109,6 +1129,21 @@ const ProposalView = () => {
                   <input type="date" value={contractData.nascimento} onChange={(e) => setContractData(p => ({ ...p, nascimento: e.target.value }))}
                     className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
                 </div>
+                <div className="sm:col-span-2 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
+                    <div className="relative">
+                      <input value={contractData.cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" maxLength={9}
+                        className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                      {loadingCep && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary/60 animate-pulse">Buscando...</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
+                    <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
+                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  </div>
+                </div>
                 <div className="sm:col-span-2">
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Endereço Completo</label>
                   <input value={contractData.endereco} onChange={(e) => setContractData(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, número, complemento"
@@ -1118,18 +1153,6 @@ const ProposalView = () => {
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Cidade</label>
                   <input value={contractData.cidade} onChange={(e) => setContractData(p => ({ ...p, cidade: e.target.value }))}
                     className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
-                    <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
-                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
-                    <input value={contractData.cep} onChange={(e) => setContractData(p => ({ ...p, cep: e.target.value }))} placeholder="00000-000"
-                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-                  </div>
                 </div>
               </div>
             ) : (
@@ -1151,6 +1174,21 @@ const ProposalView = () => {
                   <input value={contractData.inscricao_estadual} onChange={(e) => setContractData(p => ({ ...p, inscricao_estadual: e.target.value }))} placeholder="Opcional"
                     className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
                 </div>
+                <div className="sm:col-span-2 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
+                    <div className="relative">
+                      <input value={contractData.cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" maxLength={9}
+                        className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                      {loadingCep && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary/60 animate-pulse">Buscando...</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
+                    <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
+                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  </div>
+                </div>
                 <div className="sm:col-span-2">
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Endereço Completo</label>
                   <input value={contractData.endereco} onChange={(e) => setContractData(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, número, complemento"
@@ -1160,18 +1198,6 @@ const ProposalView = () => {
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Cidade</label>
                   <input value={contractData.cidade} onChange={(e) => setContractData(p => ({ ...p, cidade: e.target.value }))}
                     className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
-                    <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
-                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
-                    <input value={contractData.cep} onChange={(e) => setContractData(p => ({ ...p, cep: e.target.value }))} placeholder="00000-000"
-                      className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
-                  </div>
                 </div>
                 <div className="sm:col-span-2 pt-2 border-t border-border/20">
                   <span className="text-[10px] text-primary/60 tracking-[0.2em] uppercase font-body font-semibold">Representante Legal</span>
