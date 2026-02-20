@@ -1,7 +1,7 @@
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag, CreditCard, Plug, ScrollText } from "lucide-react";
+import { FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag, CreditCard, Plug, ScrollText, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import spectraLogo from "@/assets/spectra-logo.svg";
@@ -16,6 +16,12 @@ const menuItems = [
   { title: "Integrações", icon: Plug, path: "/admin/integracoes" },
   { title: "Auditoria", icon: ScrollText, path: "/admin/auditoria" },
   { title: "Configurações", icon: Settings, path: "/admin/configuracoes" },
+];
+
+const commMenuItems = [
+  { title: "Gatilhos", icon: MessageSquare, path: "/admin/comunicacoes/gatilhos" },
+  { title: "Modelos", icon: FileText, path: "/admin/comunicacoes/modelos" },
+  { title: "Histórico", icon: ScrollText, path: "/admin/comunicacoes/historico" },
 ];
 
 interface AdminLayoutProps {
@@ -82,7 +88,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
         {/* Nav */}
         <nav className="flex-1 py-5 px-3 space-y-0.5 overflow-y-auto relative z-10">
-          {menuItems.map((item, i) => (
+          {menuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -95,6 +101,25 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <span className="tracking-wide">{item.title}</span>
             </NavLink>
           ))}
+
+          {/* Comunicações sub-section */}
+          <div className="pt-3 mt-3">
+            <span className="px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/25">Comunicações</span>
+            <div className="mt-1.5 space-y-0.5">
+              {commMenuItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-md text-[13px] font-medium text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-all duration-200 group relative"
+                  activeClassName="!text-primary bg-primary/10 !font-semibold"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <item.icon className="w-4 h-4 shrink-0 group-hover:text-primary transition-colors duration-200" strokeWidth={1.5} />
+                  <span className="tracking-wide">{item.title}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
         </nav>
 
         {/* Logout */}

@@ -44,6 +44,128 @@ export type Database = {
         }
         Relationships: []
       }
+      communication_history: {
+        Row: {
+          created_at: string
+          destination_number: string
+          error_details: string | null
+          event: string
+          id: string
+          message_sent: string
+          proposal_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          destination_number: string
+          error_details?: string | null
+          event: string
+          id?: string
+          message_sent: string
+          proposal_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          destination_number?: string
+          error_details?: string | null
+          event?: string
+          id?: string
+          message_sent?: string
+          proposal_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_history_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_history_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "public_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_templates: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          message: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          id?: string
+          message: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      communication_triggers: {
+        Row: {
+          active: boolean
+          created_at: string
+          event: string
+          id: string
+          recipient: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          event: string
+          id?: string
+          recipient?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          event?: string
+          id?: string
+          recipient?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_triggers_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "communication_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           address: string | null
