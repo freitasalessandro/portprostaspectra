@@ -18,6 +18,7 @@ import AdminComunicacoesModelos from "./pages/AdminComunicacoesModelos";
 import AdminComunicacoesGatilhos from "./pages/AdminComunicacoesGatilhos";
 import AdminComunicacoesHistorico from "./pages/AdminComunicacoesHistorico";
 import AdminContratos from "./pages/AdminContratos";
+import AdminContratosConfig from "./pages/AdminContratosConfig";
 import ContractEditor from "./pages/ContractEditor";
 import ContractView from "./pages/ContractView";
 import ProposalEditor from "./pages/ProposalEditor";
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/admin/comunicacoes/gatilhos" element={<AdminComunicacoesGatilhos />} />
           <Route path="/admin/comunicacoes/historico" element={<AdminComunicacoesHistorico />} />
           <Route path="/admin/contratos" element={<AdminContratos />} />
+          <Route path="/admin/contratos/configuracoes" element={<AdminContratosConfig />} />
           <Route path="/admin/contratos/:id" element={<ContractEditor />} />
           <Route path="/admin/proposta/:id" element={<ProposalEditor />} />
           <Route path="/proposta/:id" element={<ProposalView />} />

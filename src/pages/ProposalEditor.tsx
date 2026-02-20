@@ -73,6 +73,7 @@ const ProposalEditor = () => {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [proposalType, setProposalType] = useState<ProposalType>("cto");
+  const [clientType, setClientType] = useState<"pf" | "pj">("pf");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -181,6 +182,7 @@ const ProposalEditor = () => {
     setNotes(proposal.notes || "");
     setStatus(proposal.status);
     setProposalType((proposal as any).type || "cto");
+    setClientType((proposal as any).client_type || "pf");
     setWhatsappNumber((proposal as any).whatsapp_number || "");
     setSlug((proposal as any).slug || null);
 
@@ -448,6 +450,7 @@ const ProposalEditor = () => {
       valid_until: validUntil || null,
       notes: notes.trim() || null,
       type: proposalType,
+      client_type: clientType,
       whatsapp_number: whatsappNumber.trim() || null,
       slug: proposalSlug,
       bdi_factor: bdiFactor,
@@ -623,6 +626,23 @@ const ProposalEditor = () => {
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             </Button>
+          </div>
+        </ModuleBlock>
+
+        {/* Client Type PF/PJ */}
+        <ModuleBlock title="Tipo de Cliente" alwaysOn collapsed={!!collapsedBlocks["clientType"]}
+          onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, clientType: !p["clientType"] }))}>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => setClientType("pf")}
+              className={`p-4 border rounded-sm text-left transition-all duration-300 ${clientType === "pf" ? "border-primary bg-primary/10 text-primary" : "border-border/30 hover:border-border/60"}`}>
+              <span className="font-display font-bold text-base block">Pessoa Física</span>
+              <span className="text-xs text-muted-foreground">CPF, RG, dados pessoais</span>
+            </button>
+            <button onClick={() => setClientType("pj")}
+              className={`p-4 border rounded-sm text-left transition-all duration-300 ${clientType === "pj" ? "border-primary bg-primary/10 text-primary" : "border-border/30 hover:border-border/60"}`}>
+              <span className="font-display font-bold text-base block">Pessoa Jurídica</span>
+              <span className="text-xs text-muted-foreground">CNPJ, Razão Social, Representante Legal</span>
+            </button>
           </div>
         </ModuleBlock>
 

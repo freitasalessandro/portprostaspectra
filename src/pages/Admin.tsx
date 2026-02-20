@@ -192,8 +192,13 @@ const Admin = () => {
     const fmtDt = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
     const vars: Record<string, string> = {
-      nome: cd.nome_completo || p.client_name || "",
+      nome: cd.nome_completo || cd.razao_social || p.client_name || "",
       cpf: cd.cpf || "",
+      cnpj: cd.cnpj || "",
+      razao_social: cd.razao_social || "",
+      inscricao_estadual: cd.inscricao_estadual || "",
+      representante_legal: cd.representante_legal || "",
+      cpf_representante: cd.cpf_representante || "",
       nascimento: cd.nascimento ? fmtDt(cd.nascimento) : "",
       endereco: cd.endereco || "",
       cidade: cd.cidade || "",
@@ -205,7 +210,18 @@ const Admin = () => {
       protocolo: sig?.signature_hash?.substring(0, 16)?.toUpperCase() || "",
     };
 
-    const templateHtml = [
+    const isPJ = cd.client_type === "pj";
+
+    const templateHtml = isPJ ? [
+      "<h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>",
+      `<p><strong>CONTRATANTE:</strong> ${vars.razao_social}, inscrita no CNPJ ${vars.cnpj}${vars.inscricao_estadual ? `, IE ${vars.inscricao_estadual}` : ""}, com sede em ${vars.endereco}, ${vars.cidade} - ${vars.estado}, CEP ${vars.cep}, neste ato representada por ${vars.representante_legal}, CPF ${vars.cpf_representante}.</p>`,
+      `<p><strong>PROJETO:</strong> ${vars.projeto}</p>`,
+      `<p><strong>VALOR:</strong> ${vars.valor}</p>`,
+      `<p><strong>DATA DE APROVAÇÃO:</strong> ${vars.data_aprovacao}</p>`,
+      `<p><strong>PROTOCOLO:</strong> ${vars.protocolo}</p>`,
+      "<hr />",
+      "<p>As partes acima qualificadas celebram o presente contrato de prestação de serviços, mediante as cláusulas e condições a seguir:</p>",
+    ].join("\n") : [
       "<h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>",
       `<p><strong>CONTRATANTE:</strong> ${vars.nome}, CPF ${vars.cpf}, nascido em ${vars.nascimento}, residente em ${vars.endereco}, ${vars.cidade} - ${vars.estado}, CEP ${vars.cep}.</p>`,
       `<p><strong>PROJETO:</strong> ${vars.projeto}</p>`,
