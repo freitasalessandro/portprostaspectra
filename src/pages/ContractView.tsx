@@ -109,6 +109,27 @@ const ContractView = () => {
     setVerifying(false);
   };
 
+  // Replace {{variables}} in tiptap JSON content
+  const replaceVariablesInContent = useCallback((content: any, vars: Record<string, string>): any => {
+    if (!content) return content;
+    if (typeof content === "string") {
+      let result = content;
+      for (const [key, value] of Object.entries(vars)) {
+        result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value || "");
+      }
+      return result;
+    }
+    if (Array.isArray(content)) return content.map(item => replaceVariablesInContent(item, vars));
+    if (typeof content === "object") {
+      const result: any = {};
+      for (const [k, v] of Object.entries(content)) {
+        result[k] = replaceVariablesInContent(v, vars);
+      }
+      return result;
+    }
+    return content;
+  }, []);
+
   // Load contract
   useEffect(() => {
     if (!accessVerified) return;
@@ -120,13 +141,48 @@ const ContractView = () => {
       const { data, error } = await query.single();
       if (error || !data) { setNotFound(true); setLoading(false); return; }
       setContract(data);
+
+      // Fetch contract_data from linked proposal signature
+      let contractVars: Record<string, string> = {
+        cliente: (data as any).client_name || "",
+        data_hoje: new Date().toLocaleDateString("pt-BR"),
+      };
+
+      const proposalId = (data as any).proposal_id;
+      if (proposalId) {
+        const { data: sigData } = await supabase
+          .from("proposal_signatures")
+          .select("contract_data")
+          .eq("proposal_id", proposalId)
+          .order("signed_at", { ascending: false })
+          .limit(1);
+        if (sigData?.[0]?.contract_data) {
+          const cd = sigData[0].contract_data as Record<string, any>;
+          Object.entries(cd).forEach(([k, v]) => {
+            if (typeof v === "string") contractVars[k] = v;
+          });
+          if (cd.client_type === "pj" && cd.razao_social) contractVars.cliente = cd.razao_social;
+        }
+        // Also get proposal info for project/valor
+        const { data: propData } = await supabase
+          .from("public_proposals" as any)
+          .select("project_title, total_value")
+          .eq("id", proposalId)
+          .maybeSingle();
+        if (propData) {
+          contractVars.projeto = (propData as any).project_title || "";
+          contractVars.valor = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number((propData as any).total_value || 0));
+        }
+      }
+
       if (editor && (data as any).content) {
-        editor.commands.setContent((data as any).content);
+        const processedContent = replaceVariablesInContent((data as any).content, contractVars);
+        editor.commands.setContent(processedContent);
       }
       setLoading(false);
     };
     load();
-  }, [id, accessVerified, editor]);
+  }, [id, accessVerified, editor, replaceVariablesInContent]);
 
   // Camera helpers
   const startCamera = async (mode: "selfie" | "doc") => {

@@ -906,6 +906,7 @@ export type Database = {
           content: Json | null
           created_at: string | null
           id: string | null
+          proposal_id: string | null
           slug: string | null
           status: string | null
           title: string | null
@@ -917,6 +918,7 @@ export type Database = {
           content?: Json | null
           created_at?: string | null
           id?: string | null
+          proposal_id?: string | null
           slug?: string | null
           status?: string | null
           title?: string | null
@@ -928,12 +930,28 @@ export type Database = {
           content?: Json | null
           created_at?: string | null
           id?: string | null
+          proposal_id?: string | null
           slug?: string | null
           status?: string | null
           title?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "public_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       public_proposals: {
         Row: {

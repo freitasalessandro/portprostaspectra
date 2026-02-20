@@ -1,16 +1,35 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Send, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Send, FileText, Loader2, Variable, ChevronDown } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
+const CONTRACT_VARIABLES = [
+  { key: "{{cliente}}", label: "Cliente", group: "Geral" },
+  { key: "{{data_hoje}}", label: "Data Atual", group: "Geral" },
+  { key: "{{projeto}}", label: "Projeto", group: "Geral" },
+  { key: "{{valor}}", label: "Valor", group: "Geral" },
+  { key: "{{nome_completo}}", label: "Nome Completo", group: "PF" },
+  { key: "{{cpf}}", label: "CPF", group: "PF" },
+  { key: "{{nascimento}}", label: "Data de Nascimento", group: "PF" },
+  { key: "{{razao_social}}", label: "Razão Social", group: "PJ" },
+  { key: "{{cnpj}}", label: "CNPJ", group: "PJ" },
+  { key: "{{inscricao_estadual}}", label: "Inscrição Estadual", group: "PJ" },
+  { key: "{{representante_legal}}", label: "Representante Legal", group: "PJ" },
+  { key: "{{cpf_representante}}", label: "CPF do Representante", group: "PJ" },
+  { key: "{{endereco}}", label: "Endereço", group: "Endereço" },
+  { key: "{{cidade}}", label: "Cidade", group: "Endereço" },
+  { key: "{{estado}}", label: "Estado", group: "Endereço" },
+  { key: "{{cep}}", label: "CEP", group: "Endereço" },
+];
 
 const generateSlug = (title: string) => {
   const base = title
@@ -35,7 +54,8 @@ const ContractEditor = () => {
   const [status, setStatus] = useState("draft");
   const [slug, setSlug] = useState<string | null>(null);
   const [contractId, setContractId] = useState<string | null>(isNew ? null : id || null);
-
+  const [showVariables, setShowVariables] = useState(false);
+  const variablesRef = useRef<HTMLDivElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -278,6 +298,56 @@ const ContractEditor = () => {
                 <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} label="⫸" />
                 <div className="w-px h-6 bg-border/30 mx-1 self-center" />
                 <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} label="― HR" />
+                <div className="w-px h-6 bg-border/30 mx-1 self-center" />
+                {/* Variables dropdown */}
+                <div className="relative" ref={variablesRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowVariables(!showVariables)}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-body transition-colors ${
+                      showVariables ? "bg-primary/20 text-primary" : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    <Variable className="w-3.5 h-3.5" />
+                    Variáveis
+                    <ChevronDown className={`w-3 h-3 transition-transform ${showVariables ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {showVariables && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-0 mt-1 z-50 w-64 max-h-72 overflow-y-auto rounded-lg border border-border/30 bg-card shadow-xl p-2"
+                      >
+                        {["Geral", "PF", "PJ", "Endereço"].map((group) => (
+                          <div key={group} className="mb-2 last:mb-0">
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/40 font-display px-2 py-1">{group}</p>
+                            <div className="flex flex-wrap gap-1">
+                              {CONTRACT_VARIABLES.filter(v => v.group === group).map((v) => (
+                                <button
+                                  key={v.key}
+                                  type="button"
+                                  onClick={() => {
+                                    editor.chain().focus().insertContent(v.key).run();
+                                    setShowVariables(false);
+                                  }}
+                                  className="px-2 py-0.5 rounded bg-muted/40 text-xs font-mono text-muted-foreground hover:bg-primary/20 hover:text-primary transition-colors"
+                                >
+                                  {v.key}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        <p className="text-[9px] text-muted-foreground/30 font-body px-2 pt-1 border-t border-border/10 mt-1">
+                          Variáveis serão substituídas pelos dados do cliente na visualização do contrato.
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
             <EditorContent editor={editor} />
