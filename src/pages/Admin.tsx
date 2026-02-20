@@ -20,6 +20,7 @@ interface Proposal {
   type: string;
   created_at: string;
   slug: string | null;
+  access_code: string;
 }
 
 interface ProposalSignature {
@@ -264,7 +265,15 @@ const Admin = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground/60 font-body">{p.client_name}</p>
-                  <p className="text-primary font-display font-bold mt-1.5 text-lg">{formatCurrency(Number(p.total_value))}</p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <p className="text-primary font-display font-bold text-lg">{formatCurrency(Number(p.total_value))}</p>
+                    {p.access_code && (
+                      <span className="text-[10px] font-mono tracking-widest bg-muted/50 px-2 py-0.5 rounded text-muted-foreground" title="Código de acesso">
+                        🔒 {p.access_code}
+                      </span>
+                    )}
+                  </div>
+                  
 
                   {/* Signature details */}
                   <AnimatePresence>

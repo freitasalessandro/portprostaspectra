@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     // Get proposal and owner info
     const { data: proposal, error: propError } = await supabase
       .from("proposals")
-      .select("id, user_id, client_name, project_title, total_value, slug, valid_until, whatsapp_number, client_phone")
+      .select("id, user_id, client_name, project_title, total_value, slug, valid_until, whatsapp_number, client_phone, access_code")
       .eq("id", proposal_id)
       .single();
 
@@ -104,7 +104,8 @@ Deno.serve(async (req) => {
         .replace(/\{\{link\}\}/g, link)
         .replace(/\{\{data_validade\}\}/g, formatValidUntil(proposal.valid_until))
         .replace(/\{\{hora\}\}/g, horaStr)
-        .replace(/\{\{protocolo\}\}/g, proposal.id.slice(0, 8).toUpperCase());
+        .replace(/\{\{protocolo\}\}/g, proposal.id.slice(0, 8).toUpperCase())
+        .replace(/\{\{codigo\}\}/g, proposal.access_code || "");
 
       // Determine recipients
       const nums: { number: string; type: string }[] = [];

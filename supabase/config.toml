@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.fire-trigger]
 verify_jwt = false
+
+[functions.verify-access-code]
+verify_jwt = false
