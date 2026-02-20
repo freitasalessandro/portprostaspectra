@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp, Undo2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
@@ -91,6 +91,24 @@ const Admin = () => {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Proposta excluída" });
+      fetchProposals();
+    }
+  };
+
+  const handleRevoke = async (id: string) => {
+    if (!confirm("Tem certeza que deseja revogar a aprovação desta proposta?")) return;
+    const { error: e1 } = await supabase.from("proposals").update({
+      status: "sent",
+      accepted_at: null,
+      accepted_by_name: null,
+      accepted_by_email: null,
+    } as any).eq("id", id);
+    const { error: e2 } = await supabase.from("proposal_signatures").delete().eq("proposal_id", id);
+    if (e1 || e2) {
+      toast({ title: "Erro ao revogar", description: (e1 || e2)?.message, variant: "destructive" });
+    } else {
+      toast({ title: "Aprovação revogada" });
+      setExpandedSig(null);
       fetchProposals();
     }
   };
@@ -221,6 +239,16 @@ const Admin = () => {
                           <div className="pt-1.5 border-t border-green-500/10">
                             <span className="text-[10px] text-muted-foreground/50 block mb-0.5">Hash SHA-256:</span>
                             <code className="text-[10px] font-mono text-green-400/80 break-all select-all">{signatures[p.id].signature_hash}</code>
+                          </div>
+                          <div className="pt-2 border-t border-green-500/10 flex justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRevoke(p.id)}
+                              className="text-[10px] uppercase tracking-widest text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-3"
+                            >
+                              <Undo2 className="w-3 h-3 mr-1" /> Revogar aprovação
+                            </Button>
                           </div>
                         </div>
                       </motion.div>
