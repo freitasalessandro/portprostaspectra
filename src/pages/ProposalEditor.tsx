@@ -104,6 +104,9 @@ const ProposalEditor = () => {
   // BDI
   const [bdi, setBdi] = useState<BdiSettings>({ bdi_tax: 0, bdi_admin: 0, bdi_risk: 0, bdi_profit: 0 });
 
+  // Track if investment values (items or BDI) were modified — only save totals when true
+  const [valuesChanged, setValuesChanged] = useState(false);
+
   // Payment plans
   const [paymentPlans, setPaymentPlans] = useState<{ id: string; name: string; description: string | null; installments: { label: string; percent: number }[] }[]>([]);
 
@@ -227,12 +230,13 @@ const ProposalEditor = () => {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-  const addItem = () => setItems([...items, { service_name: "", description: "", quantity: 1, unit_price: 0, payment_type: "setup", payment_terms: "" }]);
-  const removeItem = (index: number) => { if (items.length <= 1) return; setItems(items.filter((_, i) => i !== index)); };
+  const addItem = () => { setItems([...items, { service_name: "", description: "", quantity: 1, unit_price: 0, payment_type: "setup", payment_terms: "" }]); setValuesChanged(true); };
+  const removeItem = (index: number) => { if (items.length <= 1) return; setItems(items.filter((_, i) => i !== index)); setValuesChanged(true); };
   const updateItem = (index: number, field: keyof ProposalItem, value: string | number) => {
     const updated = [...items];
     (updated[index] as any)[field] = value;
     setItems(updated);
+    setValuesChanged(true);
   };
 
   const selectServiceForItem = (index: number, svc: ServiceRecord) => {
@@ -313,6 +317,7 @@ const ProposalEditor = () => {
           ai_generated: true,
         }));
         setItems(newItems);
+        setValuesChanged(true);
       }
 
       toast({ title: "Proposta gerada com IA!", description: "Revise as seções e ajuste o conteúdo antes de salvar." });
@@ -494,12 +499,12 @@ const ProposalEditor = () => {
         }
       }
 
-      // If no items to insert, preserve existing totals from DB
-      if (itemsWithId.length === 0) {
-        // Don't overwrite total_value - keep existing DB values
+      // Only update monetary values if user changed items or BDI
+      if (!valuesChanged) {
         delete (proposalData as any).total_value;
         delete (proposalData as any).setup_total;
         delete (proposalData as any).recurring_total;
+        delete (proposalData as any).bdi_factor;
       }
 
       const { error } = await supabase.from("proposals").update(proposalData).eq("id", id);
@@ -849,14 +854,14 @@ const ProposalEditor = () => {
                 <Label className="text-xs text-muted-foreground">Riscos (%)</Label>
                 <Input type="number" step="0.01" min={0} max={100} value={bdi.bdi_risk || ""} onChange={(e) => {
                   const num = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                  if (!isNaN(num)) setBdi(prev => ({ ...prev, bdi_risk: num }));
+                  if (!isNaN(num)) { setBdi(prev => ({ ...prev, bdi_risk: num })); setValuesChanged(true); }
                 }} placeholder="0" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Lucro (%)</Label>
                 <Input type="number" step="0.01" min={0} max={100} value={bdi.bdi_profit || ""} onChange={(e) => {
                   const num = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                  if (!isNaN(num)) setBdi(prev => ({ ...prev, bdi_profit: num }));
+                  if (!isNaN(num)) { setBdi(prev => ({ ...prev, bdi_profit: num })); setValuesChanged(true); }
                 }} placeholder="0" />
               </div>
             </div>
