@@ -371,52 +371,19 @@ const ProposalEditor = () => {
     }
   };
 
-  const fireCommunicationTriggers = async (event: string, proposalId: string, userId: string) => {
+  const fireCommunicationTriggers = async (event: string, proposalId: string, _userId: string) => {
     try {
-      // Fetch active triggers for this event
-      const { data: triggers } = await supabase
-        .from("communication_triggers")
-        .select("id, template_id, recipient")
-        .eq("user_id", userId)
-        .eq("event", event)
-        .eq("active", true);
-
-      if (!triggers || triggers.length === 0) return;
-
-      // Determine destination numbers
-      const destinations: string[] = [];
-      const prospectNumber = whatsappNumber.trim() || clientPhone.trim();
-
-      // Fetch commercial number from settings
-      const { data: settings } = await supabase
-        .from("company_settings")
-        .select("whatsapp")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      for (const trigger of triggers) {
-        const nums: string[] = [];
-        if ((trigger.recipient === "cliente" || trigger.recipient === "ambos") && prospectNumber) {
-          nums.push(prospectNumber);
-        }
-        if ((trigger.recipient === "comercial" || trigger.recipient === "ambos") && settings?.whatsapp) {
-          nums.push(settings.whatsapp);
-        }
-
-        for (const num of nums) {
-          supabase.functions.invoke("send-whatsapp", {
-            body: {
-              to: num,
-              template_id: trigger.template_id,
-              proposal_id: proposalId,
-              event,
-            },
-          }).then(({ error, data }) => {
-            if (error || data?.error) {
-              console.error("Trigger send failed:", error || data?.error);
-            }
-          });
-        }
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fire-trigger`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ proposal_id: proposalId, event }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        console.error("Trigger fire failed:", err);
       }
     } catch (e) {
       console.error("Error firing triggers:", e);
