@@ -6,7 +6,7 @@ const ManifestoSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section ref={sectionRef} className="py-20 md:py-40 px-5 md:px-12 relative overflow-hidden">
+    <section ref={sectionRef} className="py-12 md:py-40 px-5 md:px-12 relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-15" />
 
       <motion.div

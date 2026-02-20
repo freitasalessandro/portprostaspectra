@@ -160,7 +160,7 @@ const CasesSection = () => {
   );
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-36 px-4 sm:px-5 md:px-12 relative overflow-hidden" id="cases">
+    <section ref={sectionRef} className="py-10 md:py-36 px-4 sm:px-5 md:px-12 relative overflow-hidden" id="cases">
       <motion.div className="absolute inset-0 grid-pattern opacity-15" style={{ y: bgParallax }} />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 

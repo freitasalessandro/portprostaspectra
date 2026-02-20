@@ -101,7 +101,7 @@ const ArsenalSection = () => {
   const orbScale = useTransform(scrollYProgress, [0, 0.5], [0.6, 1.2]);
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-36 px-4 sm:px-5 md:px-12 relative" id="arsenal">
+    <section ref={sectionRef} className="py-10 md:py-36 px-4 sm:px-5 md:px-12 relative" id="arsenal">
       <div className="absolute inset-0 grid-pattern opacity-20" />
 
       <motion.div

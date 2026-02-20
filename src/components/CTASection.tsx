@@ -20,7 +20,7 @@ const CTASection = () => {
     <section className="relative overflow-hidden" id="contato">
       <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
 
-      <div className="py-20 md:py-44 px-4 sm:px-5 md:px-12 relative">
+      <div className="py-12 md:py-44 px-4 sm:px-5 md:px-12 relative">
         <div className="absolute inset-0 grid-pattern opacity-15" />
 
         <motion.div
