@@ -37,7 +37,6 @@ const iconMap: Record<string, React.ElementType> = {
   Palette, Share2, Globe, Megaphone,
 };
 
-// Fallback static screenshots (used when no DB files exist)
 const staticScreenshotMap: Record<string, string[]> = {
   "Contrato Online + Boleto Fácil": [contrato1, contrato2, contrato3, contrato4, contrato5],
   "FlowList": [flowlist1, flowlist2, flowlist4, flowlist5, flowlist6],
@@ -123,8 +122,38 @@ const CasesSection = () => {
 
   if (!loaded) return null;
 
+  const SectionHeader = ({ label, titleBold, titleLight, subtitle }: { label: string; titleBold: string; titleLight: string; subtitle?: string }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6 }}
+      className="mb-10 md:mb-16"
+    >
+      <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-3 md:mb-4 font-body flex items-center gap-3">
+        <motion.span
+          className="w-8 md:w-10 h-px bg-primary/50"
+          initial={{ width: 0 }}
+          whileInView={{ width: 40 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        />
+        {label}
+      </p>
+      <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95]">
+        {titleBold}<br />
+        <span className="font-extralight text-foreground/60">{titleLight}</span>
+      </h2>
+      {subtitle && (
+        <p className="text-muted-foreground/60 font-body text-sm mt-3 md:mt-4 max-w-xl">
+          {subtitle}
+        </p>
+      )}
+    </motion.div>
+  );
+
   return (
-    <section className="py-28 md:py-36 px-6 md:px-12 relative overflow-hidden" id="cases">
+    <section className="py-20 md:py-36 px-5 md:px-12 relative overflow-hidden" id="cases">
       <div className="absolute inset-0 grid-pattern opacity-15" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
@@ -136,30 +165,9 @@ const CasesSection = () => {
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* SaaS Products */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
-        >
-          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
-            <motion.span
-              className="w-10 h-px bg-primary/50"
-              initial={{ width: 0 }}
-              whileInView={{ width: 40 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            />
-            Cases
-          </p>
-          <h2 className="font-display text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
-            Resultados<br />
-            <span className="font-extralight text-foreground/60">que falam sozinhos.</span>
-          </h2>
-        </motion.div>
+        <SectionHeader label="Cases" titleBold="Resultados" titleLight="que falam sozinhos." />
 
-        <div className="space-y-3 mb-24">
+        <div className="space-y-3 mb-20 md:mb-24">
           {saasProducts.map((item, i) => (
             <CaseCard
               key={item.title}
@@ -172,33 +180,14 @@ const CasesSection = () => {
         </div>
 
         {/* Custom Development */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
-        >
-          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
-            <motion.span
-              className="w-10 h-px bg-primary/50"
-              initial={{ width: 0 }}
-              whileInView={{ width: 40 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            />
-            Sob Demanda
-          </p>
-          <h2 className="font-display text-3xl md:text-5xl font-black tracking-tight leading-[0.95]">
-            Desenvolvimento<br />
-            <span className="font-extralight text-foreground/60">sob medida.</span>
-          </h2>
-          <p className="text-muted-foreground/60 font-body text-sm mt-4 max-w-xl">
-            Projetos exclusivos desenvolvidos para resolver desafios específicos de cada cliente, com tecnologia de ponta e entrega personalizada.
-          </p>
-        </motion.div>
+        <SectionHeader
+          label="Sob Demanda"
+          titleBold="Desenvolvimento"
+          titleLight="sob medida."
+          subtitle="Projetos exclusivos desenvolvidos para resolver desafios específicos de cada cliente, com tecnologia de ponta e entrega personalizada."
+        />
 
-        <div className="space-y-3 mb-24">
+        <div className="space-y-3 mb-20 md:mb-24">
           {customDev.map((item, i) => (
             <CaseCard
               key={item.title}
@@ -214,30 +203,9 @@ const CasesSection = () => {
         {/* Design Services */}
         {designServices.length > 0 && (
           <>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6 }}
-              className="mb-16"
-            >
-              <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
-                <motion.span
-                  className="w-10 h-px bg-primary/50"
-                  initial={{ width: 0 }}
-                  whileInView={{ width: 40 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                />
-                Inteligência em Design
-              </p>
-              <h2 className="font-display text-3xl md:text-5xl font-black tracking-tight leading-[0.95]">
-                Marca que<br />
-                <span className="font-extralight text-foreground/60">domina.</span>
-              </h2>
-            </motion.div>
+            <SectionHeader label="Inteligência em Design" titleBold="Marca que" titleLight="domina." />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {designServices.map((service, i) => (
                 <motion.div
                   key={service.title}
@@ -246,13 +214,13 @@ const CasesSection = () => {
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   whileHover={{ y: -4, transition: { duration: 0.3 } }}
-                  className="group border border-border/30 rounded-2xl p-6 hover:border-primary/40 transition-all duration-500 bg-card/10 hover:bg-card/30 cursor-pointer relative overflow-hidden"
+                  className="group border border-border/30 p-5 md:p-6 hover:border-primary/40 transition-all duration-500 bg-card/10 hover:bg-card/30 cursor-pointer relative overflow-hidden"
                 >
                   <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/40 to-transparent transition-all duration-500" />
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(220_100%_55%/0.2)] transition-all duration-300">
+                  <div className="w-9 h-9 md:w-10 md:h-10 bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 md:mb-5 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(220_100%_55%/0.2)] transition-all duration-300">
                     <service.icon className="w-4 h-4 text-primary" />
                   </div>
-                  <h3 className="font-display text-lg font-bold mb-2 group-hover:text-primary transition-colors duration-300">
+                  <h3 className="font-display text-base md:text-lg font-bold mb-2 group-hover:text-primary transition-colors duration-300">
                     {service.title}
                   </h3>
                   <p className="text-muted-foreground font-body text-sm leading-relaxed">

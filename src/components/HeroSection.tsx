@@ -63,7 +63,7 @@ const HeroSection = () => {
     <section
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen flex flex-col justify-end overflow-hidden pb-12 md:pb-20"
+      className="relative min-h-[100svh] flex flex-col justify-center md:justify-end overflow-hidden pt-20 pb-8 md:pb-20"
     >
       {/* Parallax background */}
       <motion.div className="absolute inset-0" style={{ x: bgX, y: bgY }}>
@@ -100,13 +100,13 @@ const HeroSection = () => {
 
       <FloatingParticles />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 md:px-12">
         {/* Top label */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-8 md:mb-12"
+          className="mb-6 md:mb-12"
         >
           <div className="flex items-center gap-3">
             <motion.span
@@ -114,7 +114,7 @@ const HeroSection = () => {
               animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="font-body text-xs md:text-sm text-primary tracking-[0.4em] uppercase font-semibold">
+            <span className="font-body text-[10px] md:text-sm text-primary tracking-[0.3em] md:tracking-[0.4em] uppercase font-semibold">
               Spectra — CTO as a Service
             </span>
           </div>
@@ -122,13 +122,13 @@ const HeroSection = () => {
 
         {/* Headline */}
         <motion.h1
-          className="font-display leading-[0.85] tracking-[-0.04em] mb-10 md:mb-14"
+          className="font-display leading-[0.85] tracking-[-0.04em] mb-8 md:mb-14"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
           <motion.span
-            className="block text-[clamp(3rem,10vw,9rem)] font-extralight text-foreground/80"
+            className="block text-[clamp(2.5rem,9vw,9rem)] font-extralight text-foreground/80"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -136,7 +136,7 @@ const HeroSection = () => {
             Sua operação
           </motion.span>
           <motion.span
-            className="block text-[clamp(3rem,10vw,9rem)] font-black text-gradient-intense"
+            className="block text-[clamp(2.5rem,9vw,9rem)] font-black text-gradient-intense"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.55 }}
@@ -150,9 +150,9 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.7 }}
-          className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-8 border-t border-border/20"
+          className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-8 pt-6 md:pt-8 border-t border-border/20"
         >
-          <p className="font-body text-muted-foreground text-sm md:text-base leading-relaxed max-w-lg">
+          <p className="font-body text-muted-foreground text-sm leading-relaxed max-w-lg">
             Transformamos complexidade operacional em ativos digitais de alta performance.
             Engenharia, IA, design e tráfego — sob um único teto estratégico.
           </p>
@@ -164,7 +164,7 @@ const HeroSection = () => {
               rel="noopener noreferrer"
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-7 py-3.5 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
+              className="px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
             >
               <span className="relative z-10">Diagnóstico</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -172,7 +172,7 @@ const HeroSection = () => {
             <motion.a
               href="#arsenal"
               whileHover={{ scale: 1.03, y: -2, borderColor: "hsl(220 100% 55% / 0.5)" }}
-              className="px-7 py-3.5 font-display font-bold text-foreground/70 border border-border/40 text-xs tracking-widest uppercase transition-all duration-300 hover:text-foreground"
+              className="px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-foreground/70 border border-border/40 text-xs tracking-widest uppercase transition-all duration-300 hover:text-foreground"
             >
               Explorar
             </motion.a>
@@ -184,7 +184,7 @@ const HeroSection = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 1 }}
-          className="grid grid-cols-3 gap-8 mt-14 md:mt-20 max-w-xl"
+          className="grid grid-cols-3 gap-6 md:gap-8 mt-10 md:mt-20 max-w-xl"
         >
           {[
             { value: "0", label: "Risco" },
@@ -197,10 +197,10 @@ const HeroSection = () => {
               whileHover={{ y: -3 }}
               transition={{ duration: 0.3 }}
             >
-              <span className="font-display text-2xl md:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-300">
+              <span className="font-display text-xl md:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-300">
                 {stat.value}
               </span>
-              <p className="font-body text-xs md:text-sm text-muted-foreground/60 tracking-wider uppercase mt-1">
+              <p className="font-body text-[10px] md:text-sm text-muted-foreground/60 tracking-wider uppercase mt-1">
                 {stat.label}
               </p>
             </motion.div>

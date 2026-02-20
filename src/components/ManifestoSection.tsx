@@ -6,7 +6,7 @@ const ManifestoSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section ref={sectionRef} className="py-28 md:py-40 px-6 md:px-12 relative overflow-hidden">
+    <section ref={sectionRef} className="py-20 md:py-40 px-5 md:px-12 relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-15" />
 
       <motion.div
@@ -22,21 +22,21 @@ const ManifestoSection = () => {
         whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-start">
           {/* Left — large editorial quote */}
           <motion.div className="lg:col-span-7" variants={slideInLeft}>
-            <p className="font-display text-3xl md:text-5xl lg:text-[3.5rem] font-extralight leading-[1.15] tracking-tight text-foreground/70">
+            <p className="font-display text-2xl md:text-5xl lg:text-[3.5rem] font-extralight leading-[1.15] tracking-tight text-foreground/70">
               O mercado entrega
-              <br />
-              o que você pede.
+              <br className="hidden md:block" />
+              {" "}o que você pede.
             </p>
             <motion.p
-              className="font-display text-3xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.15] tracking-tight mt-4"
+              className="font-display text-2xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.15] tracking-tight mt-3 md:mt-4"
               variants={fadeUp}
             >
               Nós entregamos o que
-              <br />
-              <span className="text-gradient-intense">o seu lucro exige.</span>
+              <br className="hidden md:block" />
+              {" "}<span className="text-gradient-intense">o seu lucro exige.</span>
             </motion.p>
           </motion.div>
 
@@ -64,21 +64,21 @@ const ManifestoSection = () => {
             ].map((item) => (
               <motion.div
                 key={item.num}
-                className="group py-6 border-b border-border/20 first:border-t first:border-t-border/20 relative overflow-hidden"
+                className="group py-5 md:py-6 border-b border-border/20 first:border-t first:border-t-border/20 relative overflow-hidden"
                 variants={slideInRight}
                 whileHover={{ x: 4 }}
               >
                 <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-primary transition-all duration-300" />
 
-                <div className="flex items-baseline gap-4 mb-2">
+                <div className="flex items-baseline gap-3 md:gap-4 mb-2">
                   <span className="font-display text-xs text-primary/60 tracking-[0.3em] uppercase">
                     {item.num}
                   </span>
-                  <h3 className="font-display text-base font-bold group-hover:text-primary transition-colors duration-300">
+                  <h3 className="font-display text-sm md:text-base font-bold group-hover:text-primary transition-colors duration-300">
                     {item.title}
                   </h3>
                 </div>
-                <p className="font-body text-muted-foreground text-sm leading-relaxed pl-10">
+                <p className="font-body text-muted-foreground text-sm leading-relaxed pl-8 md:pl-10">
                   {item.text}
                 </p>
               </motion.div>

@@ -20,7 +20,7 @@ const CTASection = () => {
     <section className="relative overflow-hidden" id="contato">
       <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
 
-      <div className="py-32 md:py-44 px-6 md:px-12 relative">
+      <div className="py-24 md:py-44 px-5 md:px-12 relative">
         <div className="absolute inset-0 grid-pattern opacity-15" />
 
         <motion.div
@@ -49,7 +49,7 @@ const CTASection = () => {
           <motion.img
             src={spectraLogo}
             alt=""
-            className={`w-10 h-8 mb-10 ${isLight ? "opacity-60" : "opacity-40"}`}
+            className={`w-8 md:w-10 h-6 md:h-8 mb-8 md:mb-10 ${isLight ? "opacity-60" : "opacity-40"}`}
             style={{
               filter: isLight
                 ? "brightness(0) saturate(100%) invert(25%) sepia(80%) saturate(1500%) hue-rotate(215deg) brightness(90%) drop-shadow(0 0 15px hsl(220 100% 45% / 0.3))"
@@ -61,17 +61,17 @@ const CTASection = () => {
           />
 
           <motion.h2
-            className="font-display text-4xl md:text-6xl lg:text-7xl tracking-tight mb-8 leading-[0.92]"
+            className="font-display text-3xl md:text-6xl lg:text-7xl tracking-tight mb-6 md:mb-8 leading-[0.92]"
             variants={fadeUp}
           >
             <span className="font-extralight text-foreground/70 block">Você foca no jogo.</span>
             <span className="font-black text-gradient-intense block">Nós cuidamos do estádio.</span>
           </motion.h2>
 
-          <motion.p variants={fadeUp} className="text-muted-foreground/70 text-sm md:text-base max-w-xl mb-4 font-body leading-relaxed">
+          <motion.p variants={fadeUp} className="text-muted-foreground/70 text-sm md:text-base max-w-xl mb-3 md:mb-4 font-body leading-relaxed">
             Software, IA, design e tráfego integrados. Do diagnóstico estratégico à escala — sem risco, sem desenvolvimento cego.
           </motion.p>
-          <motion.p variants={fadeUp} className="text-muted-foreground/40 text-sm max-w-md mb-12 font-body">
+          <motion.p variants={fadeUp} className="text-muted-foreground/40 text-xs md:text-sm max-w-md mb-10 md:mb-12 font-body">
             O diagnóstico é remunerado e 100% revertido no setup do projeto. Você só investe se fizer sentido.
           </motion.p>
 
@@ -82,7 +82,7 @@ const CTASection = () => {
             variants={fadeUp}
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-3 px-8 py-4 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
+            className="inline-flex items-center gap-3 px-7 md:px-8 py-3.5 md:py-4 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
           >
             <span className="relative z-10 flex items-center gap-3">
               Solicitar Diagnóstico
@@ -94,15 +94,15 @@ const CTASection = () => {
       </div>
 
       {/* Footer */}
-      <div className="px-6 md:px-12 pb-8">
-        <div className="max-w-7xl mx-auto pt-6 border-t border-border/15 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-muted-foreground/30 text-xs tracking-[0.2em] uppercase font-body">
+      <div className="px-5 md:px-12 pb-6 md:pb-8">
+        <div className="max-w-7xl mx-auto pt-5 md:pt-6 border-t border-border/15 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+          <p className="text-muted-foreground/30 text-[10px] md:text-xs tracking-[0.2em] uppercase font-body text-center md:text-left">
             © 2026 Spectra — Engenharia & Inteligência de Negócios
           </p>
-          <div className="flex gap-6">
-            <a href="#arsenal" className="text-muted-foreground/30 text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Arsenal</a>
-            <a href="#cases" className="text-muted-foreground/30 text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Cases</a>
-            <a href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra." target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Contato</a>
+          <div className="flex gap-5 md:gap-6">
+            <a href="#arsenal" className="text-muted-foreground/30 text-[10px] md:text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Arsenal</a>
+            <a href="#cases" className="text-muted-foreground/30 text-[10px] md:text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Cases</a>
+            <a href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20Spectra." target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 text-[10px] md:text-xs tracking-widest uppercase font-body hover:text-primary/60 transition-colors duration-300">Contato</a>
           </div>
         </div>
       </div>

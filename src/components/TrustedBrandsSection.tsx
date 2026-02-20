@@ -25,20 +25,20 @@ const brands = [
 
 const TrustedBrandsSection = () => {
   return (
-    <section className="py-20 md:py-28 relative overflow-hidden">
+    <section className="py-16 md:py-28 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
       <motion.div
-        className="max-w-7xl mx-auto relative z-10 px-6 md:px-12"
+        className="max-w-7xl mx-auto relative z-10 px-5 md:px-12"
         variants={staggerContainer}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
       >
-        <motion.div className="text-center mb-16" variants={fadeUp}>
-          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center justify-center gap-3">
+        <motion.div className="text-center mb-10 md:mb-16" variants={fadeUp}>
+          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-3 md:mb-4 font-body flex items-center justify-center gap-3">
             <motion.span
-              className="w-10 h-px bg-primary/50"
+              className="w-8 md:w-10 h-px bg-primary/50"
               initial={{ width: 0 }}
               whileInView={{ width: 40 }}
               viewport={{ once: true }}
@@ -46,14 +46,14 @@ const TrustedBrandsSection = () => {
             />
             Confiança
             <motion.span
-              className="w-10 h-px bg-primary/50"
+              className="w-8 md:w-10 h-px bg-primary/50"
               initial={{ width: 0 }}
               whileInView={{ width: 40 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             />
           </p>
-          <h2 className="font-display text-3xl md:text-5xl font-black tracking-tight leading-[0.95]">
+          <h2 className="font-display text-2xl md:text-5xl font-black tracking-tight leading-[0.95]">
             Marcas que<br />
             <span className="font-extralight text-foreground/60">confiam na gente.</span>
           </h2>
@@ -68,19 +68,19 @@ const TrustedBrandsSection = () => {
         viewport={{ once: true }}
         transition={{ duration: 0.8, delay: 0.3 }}
       >
-        <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-r from-background to-transparent z-10" />
-        <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-l from-background to-transparent z-10" />
+        <div className="absolute left-0 top-0 bottom-0 w-16 md:w-40 bg-gradient-to-r from-background to-transparent z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 md:w-40 bg-gradient-to-l from-background to-transparent z-10" />
 
         <div className="flex overflow-hidden">
           <motion.div
-            className="flex shrink-0 gap-12 md:gap-16 items-center py-8"
+            className="flex shrink-0 gap-8 md:gap-16 items-center py-6 md:py-8"
             animate={{ x: ["0%", "-50%"] }}
             transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
           >
             {[...brands, ...brands].map((brand, i) => (
               <div
                 key={`${brand.name}-${i}`}
-                className="shrink-0 flex items-center justify-center h-16 md:h-20 w-36 md:w-44 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                className="shrink-0 flex items-center justify-center h-12 md:h-20 w-28 md:w-44 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
               >
                 <img
                   src={brand.logo}
