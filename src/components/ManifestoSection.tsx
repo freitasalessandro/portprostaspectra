@@ -25,13 +25,13 @@ const ManifestoSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-start">
           {/* Left — large editorial quote */}
           <motion.div className="lg:col-span-7" variants={slideInLeft}>
-            <p className="font-display text-2xl md:text-5xl lg:text-[3.5rem] font-extralight leading-[1.15] tracking-tight text-foreground/70">
+            <p className="font-display text-xl sm:text-2xl md:text-5xl lg:text-[3.5rem] font-extralight leading-[1.15] tracking-tight text-foreground/70">
               O mercado entrega
               <br className="hidden md:block" />
               {" "}o que você pede.
             </p>
             <motion.p
-              className="font-display text-2xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.15] tracking-tight mt-3 md:mt-4"
+              className="font-display text-xl sm:text-2xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.15] tracking-tight mt-3 md:mt-4"
               variants={fadeUp}
             >
               Nós entregamos o que
