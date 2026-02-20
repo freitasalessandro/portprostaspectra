@@ -1275,7 +1275,21 @@ const ProposalView = () => {
                 {savingContractData ? "Salvando..." : "Salvar Dados"}
               </button>
               <button
-                onClick={() => setShowContractDataForm(false)}
+                onClick={() => {
+                  setShowContractDataForm(false);
+                  // Fire trigger: client skipped contract data
+                  const proposalId = proposal?.id;
+                  if (proposalId) {
+                    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fire-trigger`, {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                      },
+                      body: JSON.stringify({ proposal_id: proposalId, event: "dados_contrato_pendentes" }),
+                    }).catch(() => {});
+                  }
+                }}
                 className="h-10 px-5 font-display font-bold text-muted-foreground text-xs tracking-wide hover:text-foreground transition-colors rounded-lg"
               >
                 Pular

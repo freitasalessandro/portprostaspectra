@@ -15,6 +15,8 @@ const EVENTS = [
   { value: "proposta_visualizada", label: "Proposta visualizada", group: "Propostas" },
   { value: "proposta_aprovada", label: "Proposta aprovada", group: "Propostas" },
   { value: "proposta_expirada", label: "Proposta expirada", group: "Propostas" },
+  { value: "dados_contrato_pendentes", label: "Dados para contrato não enviados", group: "Propostas" },
+  { value: "followup_dados_contrato", label: "Follow-up: solicitar dados do contrato", group: "Propostas" },
   { value: "contrato_enviado", label: "Contrato enviado para assinatura", group: "Contratos" },
   { value: "contrato_visualizado", label: "Contrato visualizado", group: "Contratos" },
   { value: "contrato_assinado", label: "Contrato assinado", group: "Contratos" },
