@@ -188,6 +188,10 @@ const ContractEditor = () => {
       await supabase.functions.invoke("send-whatsapp", {
         body: { to: clientPhone.trim(), message, event: "contrato_enviado" },
       });
+      // Fire contract triggers
+      await supabase.functions.invoke("fire-trigger", {
+        body: { contract_id: contractId, event: "contrato_enviado" },
+      });
       toast({ title: "Contrato enviado via WhatsApp!" });
     } catch {
       toast({ title: "Contrato salvo mas falha ao enviar WhatsApp", variant: "destructive" });

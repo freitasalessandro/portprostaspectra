@@ -16,30 +16,114 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { proposal_id, event } = await req.json();
+    const { proposal_id, contract_id, event } = await req.json();
 
-    if (!proposal_id || !event) {
+    if (!event || (!proposal_id && !contract_id)) {
       return new Response(
-        JSON.stringify({ error: "proposal_id e event são obrigatórios" }),
+        JSON.stringify({ error: "event e (proposal_id ou contract_id) são obrigatórios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get proposal and owner info
-    const { data: proposal, error: propError } = await supabase
-      .from("proposals")
-      .select("id, user_id, client_name, project_title, total_value, slug, valid_until, whatsapp_number, client_phone, access_code")
-      .eq("id", proposal_id)
-      .single();
+    const isContractEvent = event.startsWith("contrato_");
+    let userId: string;
+    let prospectNumber = "";
+    let templateVars: Record<string, string> = {};
 
-    if (propError || !proposal) {
-      return new Response(
-        JSON.stringify({ error: "Proposta não encontrada" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (isContractEvent && contract_id) {
+      // Get contract info
+      const { data: contract, error: cErr } = await supabase
+        .from("contracts")
+        .select("id, user_id, title, slug, access_code, client_name, client_phone, whatsapp_number, proposal_id, status")
+        .eq("id", contract_id)
+        .single();
+
+      if (cErr || !contract) {
+        return new Response(
+          JSON.stringify({ error: "Contrato não encontrado" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      userId = contract.user_id;
+      prospectNumber = (contract.whatsapp_number || contract.client_phone || "").replace(/\D/g, "");
+
+      const baseUrl = req.headers.get("origin") || "https://portprostaspectra.lovable.app";
+      const contratoLink = contract.slug ? `${baseUrl}/contrato/${contract.slug}` : "";
+
+      // If contract has a linked proposal, get proposal info for extra vars
+      let proposalVars: Record<string, string> = {};
+      if (contract.proposal_id) {
+        const { data: prop } = await supabase
+          .from("proposals")
+          .select("client_name, project_title, total_value")
+          .eq("id", contract.proposal_id)
+          .maybeSingle();
+        if (prop) {
+          proposalVars = {
+            projeto: prop.project_title || "",
+            valor: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(prop.total_value || 0)),
+          };
+        }
+      }
+
+      templateVars = {
+        cliente: contract.client_name || proposalVars.projeto || "",
+        projeto: proposalVars.projeto || "",
+        valor: proposalVars.valor || "",
+        link: contratoLink,
+        contrato_titulo: contract.title || "",
+        contrato_link: contratoLink,
+        contrato_codigo: contract.access_code || "",
+        codigo: contract.access_code || "",
+        protocolo: contract.id.slice(0, 8).toUpperCase(),
+      };
+    } else {
+      // Proposal event
+      const { data: proposal, error: propError } = await supabase
+        .from("proposals")
+        .select("id, user_id, client_name, project_title, total_value, slug, valid_until, whatsapp_number, client_phone, access_code")
+        .eq("id", proposal_id)
+        .single();
+
+      if (propError || !proposal) {
+        return new Response(
+          JSON.stringify({ error: "Proposta não encontrada" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      userId = proposal.user_id;
+      prospectNumber = (proposal.whatsapp_number || proposal.client_phone || "").replace(/\D/g, "");
+
+      const baseUrl = req.headers.get("origin") || "https://portprostaspectra.lovable.app";
+      const link = proposal.slug ? `${baseUrl}/proposta/${proposal.slug}` : `${baseUrl}/proposta/${proposal.id}`;
+      const valor = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(proposal.total_value || 0));
+
+      const formatValidUntil = (d: string | null) => {
+        if (!d) return "—";
+        const parts = d.split("-");
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d;
+      };
+
+      templateVars = {
+        cliente: proposal.client_name || "",
+        projeto: proposal.project_title || "",
+        valor,
+        link,
+        data_validade: formatValidUntil(proposal.valid_until),
+        protocolo: proposal.id.slice(0, 8).toUpperCase(),
+        codigo: proposal.access_code || "",
+        contrato_titulo: "",
+        contrato_link: "",
+        contrato_codigo: "",
+      };
     }
 
-    const userId = proposal.user_id;
+    // Time in Brasília
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const horaStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    templateVars.hora = horaStr;
 
     // Get active triggers for this event and user
     const { data: triggers } = await supabase
@@ -56,7 +140,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get company settings (Evolution API + commercial WhatsApp)
+    // Get company settings
     const { data: settings } = await supabase
       .from("company_settings")
       .select("evolution_api_url, evolution_api_token, evolution_api_instance, whatsapp")
@@ -70,12 +154,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const prospectNumber = (proposal.whatsapp_number || proposal.client_phone || "").replace(/\D/g, "");
     const commercialNumber = (settings.whatsapp || "").replace(/\D/g, "");
     const results: { trigger_id: string; recipient: string; number: string; status: string; error?: string }[] = [];
 
     for (const trigger of triggers) {
-      // Get template
       const { data: template } = await supabase
         .from("communication_templates")
         .select("message")
@@ -84,30 +166,12 @@ Deno.serve(async (req) => {
 
       if (!template) continue;
 
-      // Build message from template
-      const baseUrl = req.headers.get("origin") || "https://portprostaspectra.lovable.app";
-      const link = proposal.slug ? `${baseUrl}/proposta/${proposal.slug}` : `${baseUrl}/proposta/${proposal.id}`;
-      const valor = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(proposal.total_value || 0));
-      const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-      const horaStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      // Replace all variables
+      let finalMessage = template.message;
+      for (const [key, value] of Object.entries(templateVars)) {
+        finalMessage = finalMessage.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+      }
 
-      const formatValidUntil = (d: string | null) => {
-        if (!d) return "—";
-        const parts = d.split("-");
-        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d;
-      };
-
-      const finalMessage = template.message
-        .replace(/\{\{cliente\}\}/g, proposal.client_name || "")
-        .replace(/\{\{projeto\}\}/g, proposal.project_title || "")
-        .replace(/\{\{valor\}\}/g, valor)
-        .replace(/\{\{link\}\}/g, link)
-        .replace(/\{\{data_validade\}\}/g, formatValidUntil(proposal.valid_until))
-        .replace(/\{\{hora\}\}/g, horaStr)
-        .replace(/\{\{protocolo\}\}/g, proposal.id.slice(0, 8).toUpperCase())
-        .replace(/\{\{codigo\}\}/g, proposal.access_code || "");
-
-      // Determine recipients
       const nums: { number: string; type: string }[] = [];
       if ((trigger.recipient === "cliente" || trigger.recipient === "ambos") && prospectNumber) {
         nums.push({ number: prospectNumber, type: "cliente" });
@@ -127,10 +191,9 @@ Deno.serve(async (req) => {
           const evoData = await evoResponse.json();
           const success = evoResponse.ok;
 
-          // Log to communication_history
           await supabase.from("communication_history").insert({
             user_id: userId,
-            proposal_id: proposal.id,
+            proposal_id: isContractEvent ? null : (proposal_id || null),
             event,
             destination_number: dest.number,
             status: success ? "enviado" : "falhou",

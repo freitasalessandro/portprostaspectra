@@ -11,10 +11,13 @@ import { Plus, Pencil, Trash2, X, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const EVENTS = [
-  { value: "proposta_enviada", label: "Proposta enviada" },
-  { value: "proposta_visualizada", label: "Proposta visualizada" },
-  { value: "proposta_aprovada", label: "Proposta aprovada" },
-  { value: "proposta_expirada", label: "Proposta expirada" },
+  { value: "proposta_enviada", label: "Proposta enviada", group: "Propostas" },
+  { value: "proposta_visualizada", label: "Proposta visualizada", group: "Propostas" },
+  { value: "proposta_aprovada", label: "Proposta aprovada", group: "Propostas" },
+  { value: "proposta_expirada", label: "Proposta expirada", group: "Propostas" },
+  { value: "contrato_enviado", label: "Contrato enviado para assinatura", group: "Contratos" },
+  { value: "contrato_visualizado", label: "Contrato visualizado", group: "Contratos" },
+  { value: "contrato_assinado", label: "Contrato assinado", group: "Contratos" },
 ];
 
 const RECIPIENTS = [
@@ -122,7 +125,12 @@ const AdminComunicacoesGatilhos = () => {
                 <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Evento</label>
                 <select value={editing.event || ""} onChange={(e) => setEditing({ ...editing, event: e.target.value })} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
                   <option value="">Selecione...</option>
-                  {EVENTS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                  <optgroup label="Propostas">
+                    {EVENTS.filter(e => e.group === "Propostas").map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                  </optgroup>
+                  <optgroup label="Contratos">
+                    {EVENTS.filter(e => e.group === "Contratos").map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                  </optgroup>
                 </select>
               </div>
               <div>
