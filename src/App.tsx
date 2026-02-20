@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "@/components/PageTransition";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
@@ -27,36 +29,45 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
+        <Route path="/admin/cases" element={<PageTransition><AdminCases /></PageTransition>} />
+        <Route path="/admin/servicos" element={<PageTransition><AdminServicos /></PageTransition>} />
+        <Route path="/admin/categorias" element={<PageTransition><AdminCategorias /></PageTransition>} />
+        <Route path="/admin/usuarios" element={<PageTransition><AdminUsuarios /></PageTransition>} />
+        <Route path="/admin/configuracoes" element={<PageTransition><AdminConfiguracoes /></PageTransition>} />
+        <Route path="/admin/pagamentos" element={<PageTransition><AdminPagamentos /></PageTransition>} />
+        <Route path="/admin/integracoes" element={<PageTransition><AdminIntegracoes /></PageTransition>} />
+        <Route path="/admin/auditoria" element={<PageTransition><AdminAuditoria /></PageTransition>} />
+        <Route path="/admin/comunicacoes/modelos" element={<PageTransition><AdminComunicacoesModelos /></PageTransition>} />
+        <Route path="/admin/comunicacoes/gatilhos" element={<PageTransition><AdminComunicacoesGatilhos /></PageTransition>} />
+        <Route path="/admin/comunicacoes/historico" element={<PageTransition><AdminComunicacoesHistorico /></PageTransition>} />
+        <Route path="/admin/contratos" element={<PageTransition><AdminContratos /></PageTransition>} />
+        <Route path="/admin/contratos/configuracoes" element={<PageTransition><AdminContratosConfig /></PageTransition>} />
+        <Route path="/admin/contratos/:id" element={<PageTransition><ContractEditor /></PageTransition>} />
+        <Route path="/admin/proposta/:id" element={<PageTransition><ProposalEditor /></PageTransition>} />
+        <Route path="/proposta/:id" element={<PageTransition><ProposalView /></PageTransition>} />
+        <Route path="/p/:id" element={<PageTransition><ProposalView /></PageTransition>} />
+        <Route path="/contrato/:id" element={<PageTransition><ContractView /></PageTransition>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/cases" element={<AdminCases />} />
-          <Route path="/admin/servicos" element={<AdminServicos />} />
-          <Route path="/admin/categorias" element={<AdminCategorias />} />
-          <Route path="/admin/usuarios" element={<AdminUsuarios />} />
-          <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
-          <Route path="/admin/pagamentos" element={<AdminPagamentos />} />
-          <Route path="/admin/integracoes" element={<AdminIntegracoes />} />
-          <Route path="/admin/auditoria" element={<AdminAuditoria />} />
-          <Route path="/admin/comunicacoes/modelos" element={<AdminComunicacoesModelos />} />
-          <Route path="/admin/comunicacoes/gatilhos" element={<AdminComunicacoesGatilhos />} />
-          <Route path="/admin/comunicacoes/historico" element={<AdminComunicacoesHistorico />} />
-          <Route path="/admin/contratos" element={<AdminContratos />} />
-          <Route path="/admin/contratos/configuracoes" element={<AdminContratosConfig />} />
-          <Route path="/admin/contratos/:id" element={<ContractEditor />} />
-          <Route path="/admin/proposta/:id" element={<ProposalEditor />} />
-          <Route path="/proposta/:id" element={<ProposalView />} />
-          <Route path="/p/:id" element={<ProposalView />} />
-          <Route path="/contrato/:id" element={<ContractView />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnimatedRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
