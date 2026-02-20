@@ -487,7 +487,7 @@ const ProposalView = () => {
     };
   };
 
-  const visibleSections = sections.filter(s => Object.values(s.content || {}).some(v => v && (v as string).trim()));
+  const visibleSections = sections.filter(s => Object.values(s.content || {}).some(v => v && typeof v === 'string' && v.trim()));
   const sectionNumberOffset = visibleSections.length;
 
   return (
