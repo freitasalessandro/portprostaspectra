@@ -435,6 +435,31 @@ const ProposalEditor = () => {
 
     const proposalSlug = slug || generateSlug(projectTitle);
 
+    // Prepare items, sections, and social proof BEFORE any deletes
+    const itemsToInsert = items.filter((i) => i.service_name.trim()).map((i) => ({
+      service_name: i.service_name.trim(),
+      description: i.description.trim() || null, quantity: i.quantity, unit_price: i.unit_price,
+      payment_type: i.payment_type, payment_terms: i.payment_terms.trim() || null,
+    }));
+
+    const sectionsToInsert = sections.map((s, i) => ({
+      section_key: s.key, title: s.title,
+      content: sectionsContent[s.key] || {}, sort_order: i,
+    }));
+
+    const proofToInsert = selectedCases.map((c, i) => ({
+      case_title: c.case_title, case_category: c.case_category,
+      case_description: c.case_description, case_metric: c.case_metric,
+      case_metric_label: c.case_metric_label, case_link: c.case_link || null, sort_order: i,
+    }));
+
+    // Compute totals from the items we're about to save (not from potentially stale state)
+    const savedSetupTotal = itemsToInsert.filter(i => i.payment_type === "setup").reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+    const savedRecurringTotal = itemsToInsert.filter(i => i.payment_type === "recurring").reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+    const savedSetupWithBdi = bdiFactor ? savedSetupTotal * bdiFactor : savedSetupTotal;
+    const savedRecurringWithBdi = bdiFactor ? savedRecurringTotal * bdiFactor : savedRecurringTotal;
+    const savedTotalWithBdi = savedSetupWithBdi + savedRecurringWithBdi;
+
     const proposalData = {
       user_id: session.user.id,
       client_name: clientName.trim(),
@@ -442,9 +467,9 @@ const ProposalEditor = () => {
       client_phone: clientPhone.trim() || null,
       project_title: projectTitle.trim(),
       description: description.trim() || null,
-      total_value: totalWithBdi,
-      setup_total: setupTotal,
-      recurring_total: recurringTotal,
+      total_value: savedTotalWithBdi,
+      setup_total: savedSetupWithBdi,
+      recurring_total: savedRecurringWithBdi,
       status: newStatus || status,
       valid_until: validUntil || null,
       notes: notes.trim() || null,
@@ -462,42 +487,67 @@ const ProposalEditor = () => {
       proposalId = data.id;
       setSlug(data.slug);
     } else {
+      // First insert new data, then delete old (safer order)
+      // Insert items with proposal_id
+      const itemsWithId = itemsToInsert.map(i => ({ ...i, proposal_id: proposalId! }));
+      const sectionsWithId = sectionsToInsert.map(s => ({ ...s, proposal_id: proposalId! }));
+      const proofWithId = proofToInsert.map(p => ({ ...p, proposal_id: proposalId! }));
+
+      // Delete old data
+      const [delItems, delSections, delProof] = await Promise.all([
+        supabase.from("proposal_items").delete().eq("proposal_id", id!),
+        supabase.from("proposal_sections").delete().eq("proposal_id", id!),
+        supabase.from("proposal_social_proof").delete().eq("proposal_id", id!),
+      ]);
+
+      if (delItems.error || delSections.error || delProof.error) {
+        toast({ title: "Erro ao atualizar dados", description: "Tente novamente", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
+      // Insert new data
+      const insertErrors: string[] = [];
+
+      if (itemsWithId.length > 0) {
+        const { error: itemsErr } = await supabase.from("proposal_items").insert(itemsWithId);
+        if (itemsErr) insertErrors.push(`Itens: ${itemsErr.message}`);
+      }
+
+      const { error: sectionsErr } = await supabase.from("proposal_sections").insert(sectionsWithId);
+      if (sectionsErr) insertErrors.push(`Seções: ${sectionsErr.message}`);
+
+      if (proofWithId.length > 0) {
+        const { error: proofErr } = await supabase.from("proposal_social_proof").insert(proofWithId);
+        if (proofErr) insertErrors.push(`Cases: ${proofErr.message}`);
+      }
+
+      if (insertErrors.length > 0) {
+        toast({ title: "Erro ao salvar dados", description: insertErrors.join("; "), variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
+      // Only update proposal AFTER related data is safely saved
       const { error } = await supabase.from("proposals").update(proposalData).eq("id", id);
       if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); setSaving(false); return; }
       setSlug(proposalSlug);
-      await supabase.from("proposal_items").delete().eq("proposal_id", id!);
-      await supabase.from("proposal_sections").delete().eq("proposal_id", id!);
-      await supabase.from("proposal_social_proof").delete().eq("proposal_id", id!);
     }
 
-    // Insert items
-    const itemsToInsert = items.filter((i) => i.service_name.trim()).map((i) => ({
-      proposal_id: proposalId!, service_name: i.service_name.trim(),
-      description: i.description.trim() || null, quantity: i.quantity, unit_price: i.unit_price,
-      payment_type: i.payment_type, payment_terms: i.payment_terms.trim() || null,
-    }));
-    if (itemsToInsert.length > 0) await supabase.from("proposal_items").insert(itemsToInsert);
+    // For new proposals, insert related data after proposal is created
+    if (isNew && proposalId) {
+      const itemsWithId = itemsToInsert.map(i => ({ ...i, proposal_id: proposalId! }));
+      const sectionsWithId = sectionsToInsert.map(s => ({ ...s, proposal_id: proposalId! }));
+      const proofWithId = proofToInsert.map(p => ({ ...p, proposal_id: proposalId! }));
 
-    // Insert sections
-    const sectionsToInsert = sections.map((s, i) => ({
-      proposal_id: proposalId!, section_key: s.key, title: s.title,
-      content: sectionsContent[s.key] || {}, sort_order: i,
-    }));
-    await supabase.from("proposal_sections").insert(sectionsToInsert);
-
-    // Insert social proof
-    if (selectedCases.length > 0) {
-      const proofToInsert = selectedCases.map((c, i) => ({
-        proposal_id: proposalId!, case_title: c.case_title, case_category: c.case_category,
-        case_description: c.case_description, case_metric: c.case_metric,
-        case_metric_label: c.case_metric_label, case_link: c.case_link || null, sort_order: i,
-      }));
-      await supabase.from("proposal_social_proof").insert(proofToInsert);
+      if (itemsWithId.length > 0) await supabase.from("proposal_items").insert(itemsWithId);
+      await supabase.from("proposal_sections").insert(sectionsWithId);
+      if (proofWithId.length > 0) await supabase.from("proposal_social_proof").insert(proofWithId);
     }
 
-    // Fire communication triggers for "proposta_enviada" event
+    // Fire communication triggers AFTER all data is saved
     if (newStatus === "sent" && proposalId) {
-      fireCommunicationTriggers("proposta_enviada", proposalId, session.user.id);
+      await fireCommunicationTriggers("proposta_enviada", proposalId, session.user.id);
     }
 
     setSaving(false);
