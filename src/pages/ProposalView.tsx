@@ -2,11 +2,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, MessageCircle, ArrowRight, Sun, Moon, Download, FileText, DollarSign, Briefcase, ChevronRight, Menu, X } from "lucide-react";
+import { Check, MessageCircle, ArrowRight, Sun, Moon, Download, FileText, DollarSign, Briefcase, ChevronRight, Menu, X, Shield } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { getSectionsForType, type ProposalType } from "@/lib/proposal-templates";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Proposal {
   id: string;
@@ -50,6 +52,15 @@ interface SocialProof {
   case_link: string | null;
 }
 
+interface ProposalSignature {
+  id: string;
+  signer_name: string;
+  ip_address: string;
+  user_agent: string;
+  signature_hash: string;
+  signed_at: string;
+}
+
 const ProposalView = () => {
   const { id } = useParams();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -68,8 +79,9 @@ const ProposalView = () => {
   // Accept form
   const [showAcceptForm, setShowAcceptForm] = useState(false);
   const [acceptName, setAcceptName] = useState("");
-  const [acceptEmail, setAcceptEmail] = useState("");
+  const [acceptAgreed, setAcceptAgreed] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const [signature, setSignature] = useState<ProposalSignature | null>(null);
 
   const scrollToSection = useCallback((sectionId: string) => {
     setActiveTab(sectionId);
@@ -180,22 +192,89 @@ const ProposalView = () => {
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
+  // Load existing signature if proposal is accepted
+  useEffect(() => {
+    if (proposal?.status === "accepted" && proposal?.id) {
+      supabase
+        .from("proposal_signatures")
+        .select("*")
+        .eq("proposal_id", proposal.id)
+        .order("signed_at", { ascending: false })
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) setSignature(data[0] as unknown as ProposalSignature);
+        });
+    }
+  }, [proposal?.status, proposal?.id]);
+
   const handleAccept = async () => {
     if (!acceptName.trim()) {
-      toast({ title: "Informe seu nome", variant: "destructive" });
+      toast({ title: "Informe seu nome completo", variant: "destructive" });
+      return;
+    }
+    if (!acceptAgreed) {
+      toast({ title: "Você precisa concordar com os termos", variant: "destructive" });
       return;
     }
     setAccepting(true);
-    const { error } = await supabase.rpc("accept_proposal", {
-      _proposal_id: id!,
-      _accepted_by_name: acceptName.trim(),
-      _accepted_by_email: acceptEmail.trim() || "",
-    });
-    if (error) {
-      toast({ title: "Erro ao aceitar", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Proposta aceita com sucesso!" });
-      setProposal((prev) => prev ? { ...prev, status: "accepted", accepted_at: new Date().toISOString(), accepted_by_name: acceptName } : prev);
+    try {
+      // Capture IP
+      let ip = "unknown";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        ip = ipData.ip || "unknown";
+      } catch { ip = "unknown"; }
+
+      const userAgent = navigator.userAgent;
+      const timestamp = new Date().toISOString();
+      const proposalId = proposal!.id;
+
+      // Generate SHA-256 hash
+      const hashInput = `${proposalId}${ip}${timestamp}${acceptName.trim()}`;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(hashInput);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+      // Save signature
+      const { error: sigError } = await supabase.from("proposal_signatures").insert({
+        proposal_id: proposalId,
+        signer_name: acceptName.trim(),
+        ip_address: ip,
+        user_agent: userAgent,
+        signature_hash: hashHex,
+        signed_at: timestamp,
+      } as any);
+
+      if (sigError) {
+        toast({ title: "Erro ao registrar assinatura", description: sigError.message, variant: "destructive" });
+        setAccepting(false);
+        return;
+      }
+
+      // Update proposal status
+      const { error } = await supabase.rpc("accept_proposal", {
+        _proposal_id: proposalId,
+        _accepted_by_name: acceptName.trim(),
+        _accepted_by_email: "",
+      });
+      if (error) {
+        toast({ title: "Erro ao aceitar", description: error.message, variant: "destructive" });
+      } else {
+        const newSig: ProposalSignature = {
+          id: "", signer_name: acceptName.trim(), ip_address: ip,
+          user_agent: userAgent, signature_hash: hashHex, signed_at: timestamp,
+        };
+        setSignature(newSig);
+        setProposal((prev) => prev ? { ...prev, status: "accepted", accepted_at: timestamp, accepted_by_name: acceptName } : prev);
+        setShowAcceptForm(false);
+        toast({ title: "Proposta aprovada com sucesso!" });
+      }
+    } catch (e) {
+      console.error("Accept error:", e);
+      toast({ title: "Erro inesperado", variant: "destructive" });
     }
     setAccepting(false);
   };
@@ -219,6 +298,14 @@ const ProposalView = () => {
       </div>
     );
   }
+
+  const formatDateTime = (date: string) => {
+    const d = new Date(date);
+    return {
+      date: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }),
+      time: d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    };
+  };
 
   const visibleSections = sections.filter(s => Object.values(s.content || {}).some(v => v && (v as string).trim()));
   const sectionNumberOffset = visibleSections.length;
@@ -586,82 +673,55 @@ const ProposalView = () => {
               <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="w-7 h-7 text-green-500" />
               </div>
-              <h3 className="font-display text-xl font-bold text-green-500 mb-2">Proposta Aceita</h3>
-              <p className="text-muted-foreground font-body text-sm">
-                Aceita por <span className="text-foreground font-medium">{proposal.accepted_by_name}</span>
-                {proposal.accepted_at && <> em {formatDate(proposal.accepted_at)}</>}
-              </p>
+              <h3 className="font-display text-xl font-bold text-green-500 mb-2">Proposta Aprovada</h3>
+              {signature && (() => {
+                const dt = formatDateTime(signature.signed_at);
+                return (
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground font-body text-sm">
+                      Aprovada por <span className="text-foreground font-medium">{signature.signer_name}</span> em {dt.date} às {dt.time}
+                    </p>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border/10">
+                      <Shield className="w-3.5 h-3.5 text-green-500/60" />
+                      <span className="font-mono text-xs text-muted-foreground">
+                        Protocolo: {signature.signature_hash.substring(0, 16).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+              {!signature && proposal.accepted_by_name && (
+                <p className="text-muted-foreground font-body text-sm">
+                  Aceita por <span className="text-foreground font-medium">{proposal.accepted_by_name}</span>
+                  {proposal.accepted_at && <> em {formatDate(proposal.accepted_at)}</>}
+                </p>
+              )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {!showAcceptForm ? (
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => setShowAcceptForm(true)}
-                    className="flex-1 inline-flex items-center justify-center gap-2.5 h-12 px-6 font-display font-bold text-primary-foreground bg-primary rounded-xl text-sm tracking-wide relative overflow-hidden group transition-all duration-300 hover:shadow-[0_4px_24px_hsl(var(--primary)/0.3)]"
-                  >
-                    <Check className="w-4 h-4" />
-                    Aprovar Proposta
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  </motion.button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => setShowAcceptForm(true)}
+                className="flex-1 inline-flex items-center justify-center gap-2.5 h-12 px-6 font-display font-bold text-primary-foreground bg-primary rounded-xl text-sm tracking-wide relative overflow-hidden group transition-all duration-300 hover:shadow-[0_4px_24px_hsl(var(--primary)/0.3)]"
+              >
+                <Check className="w-4 h-4" />
+                Aprovar Proposta
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              </motion.button>
 
-                  {whatsappUrl && (
-                    <motion.a
-                      href={whatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      className="flex-1 inline-flex items-center justify-center gap-2.5 h-12 px-6 font-display font-bold text-foreground border border-border/30 rounded-xl text-sm tracking-wide hover:border-border/50 hover:bg-muted/30 transition-all duration-300"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Falar no WhatsApp
-                    </motion.a>
-                  )}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-border/20 bg-card/20 p-6 space-y-4">
-                  <h3 className="font-display font-bold text-lg text-foreground">Confirmar Aceite</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-body font-medium text-muted-foreground/70">Seu nome *</label>
-                      <input
-                        value={acceptName}
-                        onChange={(e) => setAcceptName(e.target.value)}
-                        placeholder="Nome completo"
-                        className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-body font-medium text-muted-foreground/70">Seu e-mail</label>
-                      <input
-                        value={acceptEmail}
-                        onChange={(e) => setAcceptEmail(e.target.value)}
-                        placeholder="email@empresa.com"
-                        type="email"
-                        className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3 pt-1">
-                    <button
-                      onClick={handleAccept}
-                      disabled={accepting}
-                      className="inline-flex items-center gap-2 h-10 px-5 font-display font-bold text-primary-foreground bg-primary rounded-lg text-xs tracking-wide transition-all duration-300 hover:shadow-[0_4px_24px_hsl(var(--primary)/0.3)] disabled:opacity-50"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      {accepting ? "Enviando..." : "Confirmar Aceite"}
-                    </button>
-                    <button
-                      onClick={() => setShowAcceptForm(false)}
-                      className="h-10 px-5 font-display font-bold text-muted-foreground text-xs tracking-wide hover:text-foreground transition-colors rounded-lg"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
+              {whatsappUrl && (
+                <motion.a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="flex-1 inline-flex items-center justify-center gap-2.5 h-12 px-6 font-display font-bold text-foreground border border-border/30 rounded-xl text-sm tracking-wide hover:border-border/50 hover:bg-muted/30 transition-all duration-300"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Falar no WhatsApp
+                </motion.a>
               )}
             </div>
           )}
@@ -819,6 +879,55 @@ const ProposalView = () => {
           </AnimatePresence>
         </>
       )}
+      {/* Approval Modal */}
+      <Dialog open={showAcceptForm} onOpenChange={setShowAcceptForm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">Aprovar Proposta</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-body font-medium text-muted-foreground">Seu nome completo *</label>
+              <input
+                value={acceptName}
+                onChange={(e) => setAcceptName(e.target.value)}
+                placeholder="Nome completo"
+                className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
+              />
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-border/15 bg-muted/20">
+              <Checkbox
+                id="accept-terms"
+                checked={acceptAgreed}
+                onCheckedChange={(v) => setAcceptAgreed(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="accept-terms" className="text-sm font-body text-muted-foreground leading-relaxed cursor-pointer">
+                Li e concordo com os termos desta proposta comercial
+              </label>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={handleAccept}
+                disabled={accepting || !acceptName.trim() || !acceptAgreed}
+                className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-5 font-display font-bold text-primary-foreground bg-primary rounded-lg text-xs tracking-wide transition-all duration-300 hover:shadow-[0_4px_24px_hsl(var(--primary)/0.3)] disabled:opacity-50"
+              >
+                <Check className="w-3.5 h-3.5" />
+                {accepting ? "Processando..." : "Confirmar Aprovação"}
+              </button>
+              <button
+                onClick={() => setShowAcceptForm(false)}
+                className="h-10 px-5 font-display font-bold text-muted-foreground text-xs tracking-wide hover:text-foreground transition-colors rounded-lg"
+              >
+                Cancelar
+              </button>
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 font-body text-center">
+              Ao confirmar, seu IP e dados do navegador serão registrados como prova de aceite digital.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

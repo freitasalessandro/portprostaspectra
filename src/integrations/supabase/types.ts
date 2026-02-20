@@ -207,6 +207,47 @@ export type Database = {
           },
         ]
       }
+      proposal_signatures: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string
+          proposal_id: string
+          signature_hash: string
+          signed_at: string
+          signer_name: string
+          user_agent: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: string
+          proposal_id: string
+          signature_hash: string
+          signed_at?: string
+          signer_name: string
+          user_agent: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string
+          proposal_id?: string
+          signature_hash?: string
+          signed_at?: string
+          signer_name?: string
+          user_agent?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_signatures_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_social_proof: {
         Row: {
           case_category: string

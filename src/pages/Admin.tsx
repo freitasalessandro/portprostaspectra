@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, ExternalLink, Copy, Pencil, Trash2 } from "lucide-react";
+import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { staggerContainer, fadeUp } from "@/lib/motion";
 
@@ -17,6 +17,16 @@ interface Proposal {
   type: string;
   created_at: string;
   slug: string | null;
+}
+
+interface ProposalSignature {
+  id: string;
+  proposal_id: string;
+  signer_name: string;
+  ip_address: string;
+  user_agent: string;
+  signature_hash: string;
+  signed_at: string;
 }
 
 const statusLabels: Record<string, string> = {
@@ -35,7 +45,9 @@ const statusColors: Record<string, string> = {
 
 const Admin = () => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [signatures, setSignatures] = useState<Record<string, ProposalSignature>>({});
   const [loading, setLoading] = useState(true);
+  const [expandedSig, setExpandedSig] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,16 +63,25 @@ const Admin = () => {
   }, [navigate]);
 
   const fetchProposals = async () => {
-    const { data, error } = await supabase
-      .from("proposals")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [proposalsRes, sigsRes] = await Promise.all([
+      supabase.from("proposals").select("*").order("created_at", { ascending: false }),
+      supabase.from("proposal_signatures").select("*").order("signed_at", { ascending: false }),
+    ]);
 
-    if (error) {
-      toast({ title: "Erro ao carregar propostas", description: error.message, variant: "destructive" });
+    if (proposalsRes.error) {
+      toast({ title: "Erro ao carregar propostas", description: proposalsRes.error.message, variant: "destructive" });
     } else {
-      setProposals(data || []);
+      setProposals(proposalsRes.data || []);
     }
+
+    if (!sigsRes.error && sigsRes.data) {
+      const sigMap: Record<string, ProposalSignature> = {};
+      (sigsRes.data as unknown as ProposalSignature[]).forEach(s => {
+        if (!sigMap[s.proposal_id]) sigMap[s.proposal_id] = s;
+      });
+      setSignatures(sigMap);
+    }
+
     setLoading(false);
   };
 
@@ -143,7 +164,7 @@ const Admin = () => {
                 <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-primary/0 group-hover:bg-primary/5 blur-3xl transition-all duration-700 pointer-events-none" />
 
                 <div className="flex-1 min-w-0 relative z-10">
-                  <div className="flex items-center gap-3 mb-1.5">
+                  <div className="flex items-center gap-3 mb-1.5 flex-wrap">
                     <h3 className="font-display font-bold text-lg truncate group-hover:text-primary transition-colors duration-300">
                       {p.project_title}
                     </h3>
@@ -153,9 +174,58 @@ const Admin = () => {
                     <span className="text-[10px] uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-sm font-bold bg-secondary/60 text-secondary-foreground/70">
                       {(p as any).type === "design" ? "Design" : "CTO"}
                     </span>
+                    {p.status === "accepted" && signatures[p.id] && (
+                      <button
+                        onClick={() => setExpandedSig(expandedSig === p.id ? null : p.id)}
+                        className="text-[10px] uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-sm font-bold bg-green-500/10 text-green-400 flex items-center gap-1 hover:bg-green-500/20 transition-colors"
+                      >
+                        <Shield className="w-3 h-3" /> Assinatura
+                        {expandedSig === p.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground/60 font-body">{p.client_name}</p>
                   <p className="text-primary font-display font-bold mt-1.5 text-lg">{formatCurrency(Number(p.total_value))}</p>
+
+                  {/* Signature details */}
+                  <AnimatePresence>
+                    {expandedSig === p.id && signatures[p.id] && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-3 p-3 rounded-lg border border-green-500/10 bg-green-500/[0.02] space-y-1.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs font-body">
+                            <div>
+                              <span className="text-muted-foreground/50">Nome:</span>{" "}
+                              <span className="text-foreground">{signatures[p.id].signer_name}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground/50">IP:</span>{" "}
+                              <span className="text-foreground font-mono">{signatures[p.id].ip_address}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground/50">Data/Hora:</span>{" "}
+                              <span className="text-foreground">
+                                {new Date(signatures[p.id].signed_at).toLocaleString("pt-BR")}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground/50">User Agent:</span>{" "}
+                              <span className="text-foreground/60 text-[10px] break-all">{signatures[p.id].user_agent.substring(0, 80)}...</span>
+                            </div>
+                          </div>
+                          <div className="pt-1.5 border-t border-green-500/10">
+                            <span className="text-[10px] text-muted-foreground/50 block mb-0.5">Hash SHA-256:</span>
+                            <code className="text-[10px] font-mono text-green-400/80 break-all select-all">{signatures[p.id].signature_hash}</code>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0 relative z-10">
