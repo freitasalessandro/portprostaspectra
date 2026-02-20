@@ -93,15 +93,22 @@ Deno.serve(async (req) => {
         const baseUrl = req.headers.get("origin") || "https://portprostaspectra.lovable.app";
         const link = proposal.slug ? `${baseUrl}/p/${proposal.slug}` : `${baseUrl}/proposta/${proposal.id}`;
         const valor = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(proposal.total_value || 0));
-        const now = new Date();
+        const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const horaStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+        const formatValidUntil = (d: string | null) => {
+          if (!d) return "—";
+          const parts = d.split("-");
+          return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d;
+        };
 
         finalMessage = template.message
           .replace(/\{\{cliente\}\}/g, proposal.client_name || "")
           .replace(/\{\{projeto\}\}/g, proposal.project_title || "")
           .replace(/\{\{valor\}\}/g, valor)
           .replace(/\{\{link\}\}/g, link)
-          .replace(/\{\{data_validade\}\}/g, proposal.valid_until || "—")
-          .replace(/\{\{hora\}\}/g, `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`)
+          .replace(/\{\{data_validade\}\}/g, formatValidUntil(proposal.valid_until))
+          .replace(/\{\{hora\}\}/g, horaStr)
           .replace(/\{\{protocolo\}\}/g, proposal.id.slice(0, 8).toUpperCase());
       }
     }
