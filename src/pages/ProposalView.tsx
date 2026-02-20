@@ -6,6 +6,7 @@ import { Check, MessageCircle, ArrowRight, Sun, Moon, Download, FileText, Dollar
 import { toast } from "@/hooks/use-toast";
 import spectraLogo from "@/assets/spectra-logo.svg";
 import { getSectionsForType, type ProposalType } from "@/lib/proposal-templates";
+import { isValidCPF, isValidCNPJ, formatCPF, formatCNPJ } from "@/lib/validators";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -1099,8 +1100,9 @@ const ProposalView = () => {
                 </div>
                 <div>
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CPF</label>
-                  <input value={contractData.cpf} onChange={(e) => setContractData(p => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00"
-                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  <input value={contractData.cpf} onChange={(e) => setContractData(p => ({ ...p, cpf: formatCPF(e.target.value) }))} placeholder="000.000.000-00" maxLength={14}
+                    className={`w-full bg-background border rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:ring-1 focus:outline-none transition-all ${contractData.cpf && !isValidCPF(contractData.cpf) ? "border-destructive/50 focus:border-destructive focus:ring-destructive/20" : "border-border/20 focus:border-primary/40 focus:ring-primary/20"}`} />
+                  {contractData.cpf && !isValidCPF(contractData.cpf) && <span className="text-[10px] text-destructive mt-0.5 block">CPF inválido</span>}
                 </div>
                 <div>
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Data de Nascimento</label>
@@ -1140,8 +1142,9 @@ const ProposalView = () => {
                 </div>
                 <div>
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CNPJ</label>
-                  <input value={contractData.cnpj} onChange={(e) => setContractData(p => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0000-00"
-                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  <input value={contractData.cnpj} onChange={(e) => setContractData(p => ({ ...p, cnpj: formatCNPJ(e.target.value) }))} placeholder="00.000.000/0000-00" maxLength={18}
+                    className={`w-full bg-background border rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:ring-1 focus:outline-none transition-all ${contractData.cnpj && !isValidCNPJ(contractData.cnpj) ? "border-destructive/50 focus:border-destructive focus:ring-destructive/20" : "border-border/20 focus:border-primary/40 focus:ring-primary/20"}`} />
+                  {contractData.cnpj && !isValidCNPJ(contractData.cnpj) && <span className="text-[10px] text-destructive mt-0.5 block">CNPJ inválido</span>}
                 </div>
                 <div>
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Inscrição Estadual</label>
@@ -1180,8 +1183,9 @@ const ProposalView = () => {
                 </div>
                 <div>
                   <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CPF do Representante</label>
-                  <input value={contractData.cpf_representante} onChange={(e) => setContractData(p => ({ ...p, cpf_representante: e.target.value }))} placeholder="000.000.000-00"
-                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                  <input value={contractData.cpf_representante} onChange={(e) => setContractData(p => ({ ...p, cpf_representante: formatCPF(e.target.value) }))} placeholder="000.000.000-00" maxLength={14}
+                    className={`w-full bg-background border rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:ring-1 focus:outline-none transition-all ${contractData.cpf_representante && !isValidCPF(contractData.cpf_representante) ? "border-destructive/50 focus:border-destructive focus:ring-destructive/20" : "border-border/20 focus:border-primary/40 focus:ring-primary/20"}`} />
+                  {contractData.cpf_representante && !isValidCPF(contractData.cpf_representante) && <span className="text-[10px] text-destructive mt-0.5 block">CPF inválido</span>}
                 </div>
               </div>
             )}
@@ -1193,9 +1197,21 @@ const ProposalView = () => {
                       toast({ title: "Preencha nome e CPF", variant: "destructive" });
                       return;
                     }
+                    if (!isValidCPF(contractData.cpf)) {
+                      toast({ title: "CPF inválido", variant: "destructive" });
+                      return;
+                    }
                   } else {
                     if (!contractData.razao_social.trim() || !contractData.cnpj.trim()) {
                       toast({ title: "Preencha razão social e CNPJ", variant: "destructive" });
+                      return;
+                    }
+                    if (!isValidCNPJ(contractData.cnpj)) {
+                      toast({ title: "CNPJ inválido", variant: "destructive" });
+                      return;
+                    }
+                    if (contractData.cpf_representante && !isValidCPF(contractData.cpf_representante)) {
+                      toast({ title: "CPF do representante inválido", variant: "destructive" });
                       return;
                     }
                   }
