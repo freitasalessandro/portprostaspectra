@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       // Proposal event
       const { data: proposal, error: propError } = await supabase
         .from("proposals")
-        .select("id, user_id, client_name, project_title, total_value, slug, valid_until, whatsapp_number, client_phone, access_code")
+        .select("id, user_id, client_name, project_title, total_value, recurring_total, slug, valid_until, whatsapp_number, client_phone, access_code")
         .eq("id", proposal_id)
         .single();
 
@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
       const baseUrl = req.headers.get("origin") || "https://portprostaspectra.lovable.app";
       const link = proposal.slug ? `${baseUrl}/proposta/${proposal.slug}` : `${baseUrl}/proposta/${proposal.id}`;
       const valor = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(proposal.total_value || 0));
+      const valorRecorrente = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(proposal.recurring_total || 0));
 
       const formatValidUntil = (d: string | null) => {
         if (!d) return "—";
@@ -110,6 +111,7 @@ Deno.serve(async (req) => {
         cliente: proposal.client_name || "",
         projeto: proposal.project_title || "",
         valor,
+        valor_recorrente: valorRecorrente,
         link,
         data_validade: formatValidUntil(proposal.valid_until),
         protocolo: proposal.id.slice(0, 8).toUpperCase(),
