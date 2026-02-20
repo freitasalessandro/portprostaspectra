@@ -52,7 +52,7 @@
     --glow-strong: 0 0 80px hsl(220 100% 55% / 0.2), 0 0 160px hsl(220 100% 55% / 0.1);
   }
 
-  .light {
+  .light, [data-theme="light"] {
     --background: 220 20% 96%;
     --foreground: 220 30% 8%;
 
