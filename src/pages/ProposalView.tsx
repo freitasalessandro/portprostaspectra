@@ -60,6 +60,7 @@ interface ProposalSignature {
   user_agent: string;
   signature_hash: string;
   signed_at: string;
+  contract_data?: Record<string, any> | null;
 }
 
 const ProposalView = () => {
@@ -101,6 +102,7 @@ const ProposalView = () => {
     razao_social: "", cnpj: "", inscricao_estadual: "", representante_legal: "", cpf_representante: "",
   });
   const [savingContractData, setSavingContractData] = useState(false);
+  const [contractDataSaved, setContractDataSaved] = useState(false);
   const [loadingCep, setLoadingCep] = useState(false);
   const [lastSignatureId, setLastSignatureId] = useState<string | null>(null);
 
@@ -321,7 +323,11 @@ const ProposalView = () => {
         .order("signed_at", { ascending: false })
         .limit(1)
         .then(({ data }) => {
-          if (data && data.length > 0) setSignature(data[0] as unknown as ProposalSignature);
+          if (data && data.length > 0) {
+            const sig = data[0] as unknown as ProposalSignature;
+            setSignature(sig);
+            if (sig.contract_data) setContractDataSaved(true);
+          }
         });
     }
   }, [proposal?.status, proposal?.id]);
@@ -870,6 +876,16 @@ const ProposalView = () => {
                   {proposal.accepted_at && <> em {formatDate(proposal.accepted_at)}</>}
                 </p>
               )}
+              {/* Subtle CTA to fill contract data if not yet submitted */}
+              {!contractDataSaved && (
+                <button
+                  onClick={() => setShowContractDataForm(true)}
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border/20 bg-muted/20 text-muted-foreground text-xs font-body hover:bg-muted/40 hover:text-foreground transition-all"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Preencher dados para contrato
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-3">
@@ -1249,6 +1265,7 @@ const ProposalView = () => {
                     } as any).eq("id", sigId);
                   }
                   setSavingContractData(false);
+                  setContractDataSaved(true);
                   setShowContractDataForm(false);
                   toast({ title: "Dados salvos com sucesso!" });
                 }}
