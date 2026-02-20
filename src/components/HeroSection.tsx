@@ -63,7 +63,7 @@ const HeroSection = () => {
     <section
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative min-h-[auto] lg:min-h-[100svh] flex flex-col justify-center lg:justify-end overflow-hidden pt-24 pb-12 lg:pb-20 px-4 sm:px-5"
+      className="relative min-h-[auto] lg:min-h-[100svh] flex flex-col justify-center lg:justify-end overflow-hidden pt-16 pb-8 lg:pt-24 lg:pb-20 px-4 sm:px-5"
     >
       {/* Parallax background */}
       <motion.div className="absolute inset-0" style={{ x: bgX, y: bgY }}>
