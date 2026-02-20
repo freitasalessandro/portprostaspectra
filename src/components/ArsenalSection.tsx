@@ -101,7 +101,7 @@ const ArsenalSection = () => {
   const orbScale = useTransform(scrollYProgress, [0, 0.5], [0.6, 1.2]);
 
   return (
-    <section ref={sectionRef} className="py-20 md:py-36 px-5 md:px-12 relative" id="arsenal">
+    <section ref={sectionRef} className="py-16 md:py-36 px-4 sm:px-5 md:px-12 relative" id="arsenal">
       <div className="absolute inset-0 grid-pattern opacity-20" />
 
       <motion.div
@@ -132,7 +132,7 @@ const ArsenalSection = () => {
             />
             Arsenal
           </p>
-          <h2 className="font-display text-3xl md:text-6xl font-black tracking-tight leading-[0.95]">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-6xl font-black tracking-tight leading-[0.95]">
             Ferramentas<br />
             <span className="font-extralight text-foreground/60">de guerra.</span>
           </h2>

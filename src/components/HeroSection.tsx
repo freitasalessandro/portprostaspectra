@@ -63,7 +63,7 @@ const HeroSection = () => {
     <section
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative min-h-[100svh] flex flex-col justify-center md:justify-end overflow-hidden pt-20 pb-8 md:pb-20"
+      className="relative min-h-[100svh] flex flex-col justify-center md:justify-end overflow-hidden pt-20 pb-12 md:pb-20 px-4 sm:px-5"
     >
       {/* Parallax background */}
       <motion.div className="absolute inset-0" style={{ x: bgX, y: bgY }}>
@@ -86,9 +86,9 @@ const HeroSection = () => {
         <div className="absolute inset-0 border-l border-primary/10 [clip-path:polygon(30%_0,30.1%_0,0.1%_100%,0%_100%)]" />
       </div>
 
-      {/* Animated orbs */}
-      <div className="absolute top-1/4 left-1/6 w-72 h-72 rounded-full bg-primary/5 blur-[120px] animate-breathe pointer-events-none" />
-      <div className="absolute bottom-1/3 right-1/4 w-48 h-48 rounded-full bg-primary/8 blur-[100px] animate-breathe pointer-events-none" style={{ animationDelay: "2s" }} />
+      {/* Animated orbs - smaller on mobile */}
+      <div className="absolute top-1/4 left-0 w-40 md:w-72 h-40 md:h-72 rounded-full bg-primary/5 blur-[80px] md:blur-[120px] animate-breathe pointer-events-none" />
+      <div className="absolute bottom-1/3 right-0 w-28 md:w-48 h-28 md:h-48 rounded-full bg-primary/8 blur-[60px] md:blur-[100px] animate-breathe pointer-events-none" style={{ animationDelay: "2s" }} />
 
       {/* Floating logo watermark */}
       <motion.img
@@ -100,7 +100,7 @@ const HeroSection = () => {
 
       <FloatingParticles />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 md:px-12">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-1 sm:px-5 md:px-12">
         {/* Top label */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -128,7 +128,7 @@ const HeroSection = () => {
           transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
           <motion.span
-            className="block text-[clamp(2.5rem,9vw,9rem)] font-extralight text-foreground/80"
+            className="block text-[clamp(2rem,8vw,9rem)] font-extralight text-foreground/80"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -136,7 +136,7 @@ const HeroSection = () => {
             Sua operação
           </motion.span>
           <motion.span
-            className="block text-[clamp(2.5rem,9vw,9rem)] font-black text-gradient-intense"
+            className="block text-[clamp(2rem,8vw,9rem)] font-black text-gradient-intense"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.55 }}
@@ -150,21 +150,21 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.7 }}
-          className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-8 pt-6 md:pt-8 border-t border-border/20"
+          className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-8 pt-5 md:pt-8 border-t border-border/20"
         >
-          <p className="font-body text-muted-foreground text-sm leading-relaxed max-w-lg">
+          <p className="font-body text-muted-foreground text-xs sm:text-sm leading-relaxed max-w-lg">
             Transformamos complexidade operacional em ativos digitais de alta performance.
             Engenharia, IA, design e tráfego — sob um único teto estratégico.
           </p>
 
-          <div className="flex gap-3 shrink-0">
+          <div className="flex gap-2 sm:gap-3 shrink-0">
             <motion.a
               href="https://wa.me/5582933008540?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20estrat%C3%A9gico."
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
+              className="px-5 sm:px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-primary-foreground bg-primary text-[10px] sm:text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
             >
               <span className="relative z-10">Diagnóstico</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -172,7 +172,7 @@ const HeroSection = () => {
             <motion.a
               href="#arsenal"
               whileHover={{ scale: 1.03, y: -2, borderColor: "hsl(220 100% 55% / 0.5)" }}
-              className="px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-foreground/70 border border-border/40 text-xs tracking-widest uppercase transition-all duration-300 hover:text-foreground"
+              className="px-5 sm:px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-foreground/70 border border-border/40 text-[10px] sm:text-xs tracking-widest uppercase transition-all duration-300 hover:text-foreground"
             >
               Explorar
             </motion.a>
@@ -184,7 +184,7 @@ const HeroSection = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 1 }}
-          className="grid grid-cols-3 gap-6 md:gap-8 mt-10 md:mt-20 max-w-xl"
+          className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 mt-8 md:mt-20 max-w-xl"
         >
           {[
             { value: "0", label: "Risco" },
@@ -197,7 +197,7 @@ const HeroSection = () => {
               whileHover={{ y: -3 }}
               transition={{ duration: 0.3 }}
             >
-              <span className="font-display text-xl md:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-300">
+              <span className="font-display text-lg sm:text-xl md:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-300">
                 {stat.value}
               </span>
               <p className="font-body text-[10px] md:text-sm text-muted-foreground/60 tracking-wider uppercase mt-1">

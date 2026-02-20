@@ -53,7 +53,7 @@ const TrustedBrandsSection = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
             />
           </p>
-          <h2 className="font-display text-2xl md:text-5xl font-black tracking-tight leading-[0.95]">
+          <h2 className="font-display text-xl sm:text-2xl md:text-5xl font-black tracking-tight leading-[0.95]">
             Marcas que<br />
             <span className="font-extralight text-foreground/60">confiam na gente.</span>
           </h2>

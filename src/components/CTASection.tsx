@@ -20,7 +20,7 @@ const CTASection = () => {
     <section className="relative overflow-hidden" id="contato">
       <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
 
-      <div className="py-24 md:py-44 px-5 md:px-12 relative">
+      <div className="py-20 md:py-44 px-4 sm:px-5 md:px-12 relative">
         <div className="absolute inset-0 grid-pattern opacity-15" />
 
         <motion.div
@@ -61,7 +61,7 @@ const CTASection = () => {
           />
 
           <motion.h2
-            className="font-display text-3xl md:text-6xl lg:text-7xl tracking-tight mb-6 md:mb-8 leading-[0.92]"
+            className="font-display text-2xl sm:text-3xl md:text-6xl lg:text-7xl tracking-tight mb-6 md:mb-8 leading-[0.92]"
             variants={fadeUp}
           >
             <span className="font-extralight text-foreground/70 block">Você foca no jogo.</span>
@@ -82,7 +82,7 @@ const CTASection = () => {
             variants={fadeUp}
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-3 px-7 md:px-8 py-3.5 md:py-4 font-display font-bold text-primary-foreground bg-primary text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
+            className="inline-flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 font-display font-bold text-primary-foreground bg-primary text-[10px] sm:text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
           >
             <span className="relative z-10 flex items-center gap-3">
               Solicitar Diagnóstico
@@ -94,8 +94,8 @@ const CTASection = () => {
       </div>
 
       {/* Footer */}
-      <div className="px-5 md:px-12 pb-6 md:pb-8">
-        <div className="max-w-7xl mx-auto pt-5 md:pt-6 border-t border-border/15 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+      <div className="px-4 sm:px-5 md:px-12 pb-6 md:pb-8">
+        <div className="max-w-7xl mx-auto pt-5 md:pt-6 border-t border-border/15 flex flex-col items-center md:flex-row md:justify-between gap-3 md:gap-4">
           <p className="text-muted-foreground/30 text-[10px] md:text-xs tracking-[0.2em] uppercase font-body text-center md:text-left">
             © 2026 Spectra — Engenharia & Inteligência de Negócios
           </p>

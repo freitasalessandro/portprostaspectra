@@ -45,7 +45,7 @@ const Navbar = () => {
           : "backdrop-blur-none bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
         {/* Logo + Brand */}
         <a href="#" className="flex items-center gap-3 group">
           <motion.div
@@ -60,7 +60,7 @@ const Navbar = () => {
               style={{ filter: "brightness(0) saturate(100%) invert(35%) sepia(98%) saturate(2000%) hue-rotate(210deg) brightness(100%)" }}
             />
           </motion.div>
-          <span className="font-display text-xl font-extrabold tracking-tight">
+          <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight">
             <span className="text-foreground">SPECTR</span>
             <span className="text-primary">A</span>
           </span>

@@ -147,7 +147,7 @@ const CasesSection = () => {
         />
         {label}
       </p>
-      <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95]">
+      <h2 className="font-display text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95]">
         {titleBold}<br />
         <span className="font-extralight text-foreground/60">{titleLight}</span>
       </h2>
@@ -160,7 +160,7 @@ const CasesSection = () => {
   );
 
   return (
-    <section ref={sectionRef} className="py-20 md:py-36 px-5 md:px-12 relative overflow-hidden" id="cases">
+    <section ref={sectionRef} className="py-16 md:py-36 px-4 sm:px-5 md:px-12 relative overflow-hidden" id="cases">
       <motion.div className="absolute inset-0 grid-pattern opacity-15" style={{ y: bgParallax }} />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
