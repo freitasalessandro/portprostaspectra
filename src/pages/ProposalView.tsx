@@ -161,7 +161,7 @@ const ProposalView = () => {
     const load = async () => {
       // Try slug first, then UUID fallback
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || "");
-      let query = supabase.from("proposals").select("*");
+      let query = (supabase as any).from("public_proposals").select("*");
       if (isUuid) {
         query = query.eq("id", id);
       } else {
@@ -169,8 +169,8 @@ const ProposalView = () => {
       }
       const { data, error } = await query.single();
       if (error || !data) { setNotFound(true); setLoading(false); return; }
-      setProposal(data as unknown as Proposal);
-      const proposalId = data.id;
+      setProposal(data as Proposal);
+      const proposalId = (data as any).id;
 
       const [itemsRes, sectionsRes, proofRes] = await Promise.all([
         supabase.from("proposal_items").select("*").eq("proposal_id", proposalId).order("created_at"),

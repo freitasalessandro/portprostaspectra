@@ -236,6 +236,13 @@ export type Database = {
             referencedRelation: "proposals"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "proposal_items_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "public_proposals"
+            referencedColumns: ["id"]
+          },
         ]
       }
       proposal_sections: {
@@ -272,6 +279,13 @@ export type Database = {
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_sections_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "public_proposals"
             referencedColumns: ["id"]
           },
         ]
@@ -313,6 +327,13 @@ export type Database = {
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_signatures_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "public_proposals"
             referencedColumns: ["id"]
           },
         ]
@@ -360,6 +381,13 @@ export type Database = {
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_social_proof_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "public_proposals"
             referencedColumns: ["id"]
           },
         ]
@@ -578,7 +606,66 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_proposals: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_name: string | null
+          bdi_factor: number | null
+          client_name: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          notes: string | null
+          project_title: string | null
+          recurring_total: number | null
+          setup_total: number | null
+          slug: string | null
+          status: string | null
+          total_value: number | null
+          type: string | null
+          updated_at: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          bdi_factor?: number | null
+          client_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          notes?: string | null
+          project_title?: string | null
+          recurring_total?: number | null
+          setup_total?: number | null
+          slug?: string | null
+          status?: string | null
+          total_value?: number | null
+          type?: string | null
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          bdi_factor?: number | null
+          client_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          notes?: string | null
+          project_title?: string | null
+          recurring_total?: number | null
+          setup_total?: number | null
+          slug?: string | null
+          status?: string | null
+          total_value?: number | null
+          type?: string | null
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_proposal: {
