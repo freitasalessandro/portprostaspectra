@@ -182,6 +182,21 @@ const ProposalView = () => {
       setSections((sectionsRes.data || []) as unknown as ProposalSection[]);
       setSocialProof((proofRes.data || []) as unknown as SocialProof[]);
       setLoading(false);
+
+      // Track view
+      if (proposalId) {
+        let ip = "unknown";
+        try {
+          const ipRes = await fetch("https://api.ipify.org?format=json");
+          const ipData = await ipRes.json();
+          ip = ipData.ip || "unknown";
+        } catch {}
+        supabase.from("proposal_views").insert({
+          proposal_id: proposalId,
+          ip_address: ip,
+          user_agent: navigator.userAgent,
+        } as any).then(() => {});
+      }
     };
     load();
   }, [id]);

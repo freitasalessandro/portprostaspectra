@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp, Undo2 } from "lucide-react";
+import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp, Undo2, Eye, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { staggerContainer, fadeUp } from "@/lib/motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from "date-fns";
 
 interface Proposal {
   id: string;
@@ -48,6 +51,10 @@ const Admin = () => {
   const [signatures, setSignatures] = useState<Record<string, ProposalSignature>>({});
   const [loading, setLoading] = useState(true);
   const [expandedSig, setExpandedSig] = useState<string | null>(null);
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  const [viewModalId, setViewModalId] = useState<string | null>(null);
+  const [viewHistory, setViewHistory] = useState<{ id: string; viewed_at: string; ip_address: string }[]>([]);
+  const [viewHistoryLoading, setViewHistoryLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +79,19 @@ const Admin = () => {
       toast({ title: "Erro ao carregar propostas", description: proposalsRes.error.message, variant: "destructive" });
     } else {
       setProposals(proposalsRes.data || []);
+      // Fetch view counts for all proposals
+      const ids = (proposalsRes.data || []).map(p => p.id);
+      if (ids.length > 0) {
+        const { data: views } = await supabase
+          .from("proposal_views")
+          .select("proposal_id")
+          .in("proposal_id", ids);
+        if (views) {
+          const counts: Record<string, number> = {};
+          views.forEach((v: any) => { counts[v.proposal_id] = (counts[v.proposal_id] || 0) + 1; });
+          setViewCounts(counts);
+        }
+      }
     }
 
     if (!sigsRes.error && sigsRes.data) {
@@ -83,6 +103,18 @@ const Admin = () => {
     }
 
     setLoading(false);
+  };
+
+  const openViewHistory = async (proposalId: string) => {
+    setViewModalId(proposalId);
+    setViewHistoryLoading(true);
+    const { data } = await supabase
+      .from("proposal_views")
+      .select("id, viewed_at, ip_address")
+      .eq("proposal_id", proposalId)
+      .order("viewed_at", { ascending: false });
+    setViewHistory((data as any) || []);
+    setViewHistoryLoading(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -213,6 +245,14 @@ const Admin = () => {
                     <span className="text-[10px] uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-sm font-bold bg-secondary/60 text-secondary-foreground/70">
                       {(p as any).type === "design" ? "Design" : "CTO"}
                     </span>
+                    {viewCounts[p.id] > 0 && (
+                      <button
+                        onClick={() => openViewHistory(p.id)}
+                        className="text-[10px] uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-sm font-bold bg-primary/10 text-primary flex items-center gap-1 hover:bg-primary/20 transition-colors"
+                      >
+                        <Eye className="w-3 h-3" /> {viewCounts[p.id]}
+                      </button>
+                    )}
                     {p.status === "accepted" && signatures[p.id] && (
                       <button
                         onClick={() => setExpandedSig(expandedSig === p.id ? null : p.id)}
@@ -309,6 +349,41 @@ const Admin = () => {
           </motion.div>
         )}
       </div>
+
+      {/* View History Modal */}
+      <Dialog open={!!viewModalId} onOpenChange={() => setViewModalId(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">Histórico de Visualizações</DialogTitle>
+          </DialogHeader>
+          {viewHistoryLoading ? (
+            <p className="text-muted-foreground text-center py-6">Carregando...</p>
+          ) : viewHistory.length === 0 ? (
+            <p className="text-muted-foreground text-center py-6">Nenhuma visualização registrada.</p>
+          ) : (
+            <div className="max-h-[400px] overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Hora</TableHead>
+                    <TableHead>IP</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {viewHistory.map((v) => (
+                    <TableRow key={v.id}>
+                      <TableCell className="text-sm">{format(new Date(v.viewed_at), "dd/MM/yyyy")}</TableCell>
+                      <TableCell className="text-sm">{format(new Date(v.viewed_at), "HH:mm:ss")}</TableCell>
+                      <TableCell className="font-mono text-xs">{v.ip_address || "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
