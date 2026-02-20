@@ -97,6 +97,8 @@ const Admin = () => {
 
   const handleRevoke = async (id: string) => {
     if (!confirm("Tem certeza que deseja revogar a aprovação desta proposta?")) return;
+    const sig = signatures[id];
+    const proposal = proposals.find(p => p.id === id);
     const { error: e1 } = await supabase.from("proposals").update({
       status: "sent",
       accepted_at: null,
@@ -107,6 +109,25 @@ const Admin = () => {
     if (e1 || e2) {
       toast({ title: "Erro ao revogar", description: (e1 || e2)?.message, variant: "destructive" });
     } else {
+      // Audit log
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.from("audit_logs").insert({
+          user_id: session.user.id,
+          action: "proposal_approval_revoked",
+          entity_type: "proposal",
+          entity_id: id,
+          metadata: {
+            project_title: proposal?.project_title,
+            client_name: proposal?.client_name,
+            revoked_signature: sig ? {
+              signer_name: sig.signer_name,
+              signed_at: sig.signed_at,
+              signature_hash: sig.signature_hash,
+            } : null,
+          },
+        } as any);
+      }
       toast({ title: "Aprovação revogada" });
       setExpandedSig(null);
       fetchProposals();
