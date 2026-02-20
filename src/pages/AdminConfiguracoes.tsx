@@ -294,7 +294,7 @@ const AdminConfiguracoes = () => {
         {/* BDI */}
         <section className="glass-card p-6 mb-6">
           <h2 className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
-            <Calculator className="w-4 h-4" /> BDI Global
+            <Calculator className="w-4 h-4" /> BDI Global (Padrão)
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <div>
@@ -306,11 +306,11 @@ const AdminConfiguracoes = () => {
               <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_admin || ""} onChange={e => updateNum("bdi_admin", e.target.value)} placeholder="0" />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Riscos (%)</label>
+              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Riscos mín. (%)</label>
               <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_risk || ""} onChange={e => updateNum("bdi_risk", e.target.value)} placeholder="0" />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Lucro (%)</label>
+              <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Lucro mín. (%)</label>
               <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_profit || ""} onChange={e => updateNum("bdi_profit", e.target.value)} placeholder="0" />
             </div>
           </div>
