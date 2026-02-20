@@ -44,10 +44,86 @@ const AdminComunicacoesGatilhos = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Trigger> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [seeded, setSeeded] = useState(false);
+
+  const seedDefaults = async (userId: string) => {
+    // Check if user already has templates
+    const { count } = await supabase.from("communication_templates").select("id", { count: "exact", head: true }).eq("user_id", userId);
+    if ((count || 0) > 0) return; // Already has templates
+
+    const defaultTemplates = [
+      {
+        name: "Contrato enviado",
+        message: "Olá {{cliente}}! 📄 Seu contrato está pronto para assinatura.\n\n🔗 Acesse: {{contrato_link}}\n🔒 Código: {{contrato_codigo}}\n\nQualquer dúvida, estamos à disposição!",
+        event: "contrato_enviado",
+      },
+      {
+        name: "Contrato visualizado",
+        message: "Olá {{cliente}}! Vimos que você acessou o contrato. Se tiver alguma dúvida sobre os termos, estamos prontos para ajudar! 😊",
+        event: "contrato_visualizado",
+      },
+      {
+        name: "Contrato assinado",
+        message: "{{cliente}}, seu contrato foi assinado com sucesso! ✅\n\nProtocolo: {{protocolo}}\n\nObrigado pela confiança! Em breve entraremos em contato sobre os próximos passos.",
+        event: "contrato_assinado",
+      },
+      {
+        name: "Dados para contrato pendentes",
+        message: "Olá {{cliente}}! Para darmos continuidade ao seu projeto, precisamos dos seus dados cadastrais para gerar o contrato.\n\n📋 Acesse a proposta e preencha seus dados:\n🔗 {{link}}\n🔒 Código: {{codigo}}\n\nLeva menos de 2 minutos! 😊",
+        event: "dados_contrato_pendentes",
+      },
+      {
+        name: "Follow-up dados do contrato",
+        message: "Oi {{cliente}}! 👋 Notamos que ainda não recebemos seus dados para gerar o contrato do projeto {{projeto}}.\n\nPrecisamos dessas informações para avançar. É rápido:\n🔗 {{link}}\n🔒 Código: {{codigo}}\n\nPodemos ajudar com alguma dúvida?",
+        event: "followup_dados_contrato",
+      },
+      {
+        name: "Proposta enviada",
+        message: "Olá {{cliente}}! 🚀 Sua proposta para o projeto {{projeto}} está pronta.\n\n💰 Valor: {{valor}}\n🔗 Acesse: {{link}}\n🔒 Código: {{codigo}}\n📅 Válida até: {{data_validade}}",
+        event: "proposta_enviada",
+      },
+      {
+        name: "Proposta aprovada",
+        message: "Parabéns {{cliente}}! 🎉 Sua proposta para {{projeto}} foi aprovada.\n\nProtocolo: {{protocolo}}\n\nEm breve enviaremos o contrato para assinatura!",
+        event: "proposta_aprovada",
+      },
+    ];
+
+    // Insert templates
+    const { data: inserted } = await supabase.from("communication_templates").insert(
+      defaultTemplates.map(t => ({ name: t.name, message: t.message, channel: "whatsapp", user_id: userId }))
+    ).select("id, name");
+
+    if (!inserted) return;
+
+    // Create triggers linking templates to events
+    const triggersToCreate = defaultTemplates.map(dt => {
+      const tpl = inserted.find(i => i.name === dt.name);
+      if (!tpl) return null;
+      return {
+        event: dt.event,
+        template_id: tpl.id,
+        recipient: dt.event === "contrato_assinado" || dt.event === "proposta_aprovada" ? "ambos" : "cliente",
+        active: true,
+        user_id: userId,
+      };
+    }).filter(Boolean);
+
+    if (triggersToCreate.length > 0) {
+      await supabase.from("communication_triggers").insert(triggersToCreate as any);
+    }
+  };
 
   const fetchData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/login"); return; }
+
+    // Seed defaults on first access
+    if (!seeded) {
+      await seedDefaults(session.user.id);
+      setSeeded(true);
+    }
+
     const [trRes, tplRes] = await Promise.all([
       supabase.from("communication_triggers").select("id, event, template_id, recipient, active").eq("user_id", session.user.id).order("created_at", { ascending: false }),
       supabase.from("communication_templates").select("id, name").eq("user_id", session.user.id).order("name"),
