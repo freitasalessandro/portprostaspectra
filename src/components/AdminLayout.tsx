@@ -1,13 +1,14 @@
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag, CreditCard, Plug, ScrollText, MessageSquare } from "lucide-react";
+import { FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag, CreditCard, Plug, ScrollText, MessageSquare, FileSignature } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import spectraLogo from "@/assets/spectra-logo.svg";
 
 const menuItems = [
   { title: "Propostas", icon: FileText, path: "/admin" },
+  { title: "Contratos", icon: FileSignature, path: "/admin/contratos" },
   { title: "Cases", icon: Briefcase, path: "/admin/cases" },
   { title: "Serviços", icon: Wrench, path: "/admin/servicos" },
   { title: "Categorias", icon: Tag, path: "/admin/categorias" },

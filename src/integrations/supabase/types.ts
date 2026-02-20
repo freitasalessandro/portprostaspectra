@@ -247,6 +247,108 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_signatures: {
+        Row: {
+          contract_id: string
+          created_at: string
+          document_path: string
+          id: string
+          ip_address: string
+          selfie_path: string
+          signature_hash: string
+          signed_at: string
+          signer_name: string
+          user_agent: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          document_path: string
+          id?: string
+          ip_address: string
+          selfie_path: string
+          signature_hash: string
+          signed_at?: string
+          signer_name: string
+          user_agent: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          document_path?: string
+          id?: string
+          ip_address?: string
+          selfie_path?: string
+          signature_hash?: string
+          signed_at?: string
+          signer_name?: string
+          user_agent?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "public_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          access_code: string | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
+          content: Json
+          created_at: string
+          id: string
+          slug: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          access_code?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          slug?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          access_code?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          slug?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       payment_plans: {
         Row: {
           active: boolean
@@ -773,6 +875,42 @@ export type Database = {
       }
     }
     Views: {
+      public_contracts: {
+        Row: {
+          access_code: string | null
+          client_name: string | null
+          content: Json | null
+          created_at: string | null
+          id: string | null
+          slug: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_code?: string | null
+          client_name?: string | null
+          content?: Json | null
+          created_at?: string | null
+          id?: string | null
+          slug?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_code?: string | null
+          client_name?: string | null
+          content?: Json | null
+          created_at?: string | null
+          id?: string | null
+          slug?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       public_proposals: {
         Row: {
           accepted_at: string | null
