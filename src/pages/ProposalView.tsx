@@ -76,12 +76,74 @@ const ProposalView = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const isMobile = useIsMobile();
 
+  // Access code lock
+  const [accessVerified, setAccessVerified] = useState(false);
+  const [accessCode, setAccessCode] = useState("");
+  const [accessError, setAccessError] = useState("");
+  const [accessAttempts, setAccessAttempts] = useState(0);
+  const [accessLocked, setAccessLocked] = useState(false);
+  const [accessLockEnd, setAccessLockEnd] = useState<number | null>(null);
+  const [verifying, setVerifying] = useState(false);
+
   // Accept form
   const [showAcceptForm, setShowAcceptForm] = useState(false);
   const [acceptName, setAcceptName] = useState("");
   const [acceptAgreed, setAcceptAgreed] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [signature, setSignature] = useState<ProposalSignature | null>(null);
+
+  // Check cookie on mount
+  useEffect(() => {
+    const cookie = document.cookie.split(";").find(c => c.trim().startsWith(`proposal_access_${id}=`));
+    if (cookie) {
+      setAccessVerified(true);
+    }
+  }, [id]);
+
+  // Lock timer
+  useEffect(() => {
+    if (!accessLockEnd) return;
+    const interval = setInterval(() => {
+      if (Date.now() >= accessLockEnd) {
+        setAccessLocked(false);
+        setAccessLockEnd(null);
+        setAccessAttempts(0);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [accessLockEnd]);
+
+  const handleVerifyCode = async () => {
+    if (accessLocked || verifying) return;
+    setVerifying(true);
+    setAccessError("");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-access-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        body: JSON.stringify({ proposal_identifier: id, code: accessCode }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAccessVerified(true);
+        // Set session cookie (expires when browser closes)
+        document.cookie = `proposal_access_${id}=1; path=/; SameSite=Strict`;
+      } else {
+        const newAttempts = accessAttempts + 1;
+        setAccessAttempts(newAttempts);
+        if (newAttempts >= 3) {
+          setAccessLocked(true);
+          setAccessLockEnd(Date.now() + 30000);
+          setAccessError("Muitas tentativas. Aguarde 30 segundos.");
+        } else {
+          setAccessError("Código incorreto. Tente novamente.");
+        }
+      }
+    } catch {
+      setAccessError("Erro ao verificar. Tente novamente.");
+    }
+    setVerifying(false);
+  };
 
   const scrollToSection = useCallback((sectionId: string) => {
     setActiveTab(sectionId);
@@ -208,8 +270,8 @@ const ProposalView = () => {
         }).catch(() => {});
       }
     };
-    load();
-  }, [id]);
+    if (accessVerified) load();
+  }, [id, accessVerified]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -320,6 +382,47 @@ const ProposalView = () => {
 
   const templateSections = proposal ? getSectionsForType(proposal.type as ProposalType) : [];
   const isAccepted = proposal?.status === "accepted";
+
+  // Access code lock screen
+  if (!accessVerified) {
+    const lockSecondsLeft = accessLockEnd ? Math.max(0, Math.ceil((accessLockEnd - Date.now()) / 1000)) : 0;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm text-center"
+        >
+          <img src={spectraLogo} alt="Spectra" className="w-10 h-auto mx-auto mb-6 opacity-70" />
+          <h2 className="font-display text-xl font-bold mb-1 text-foreground">Acesso Protegido</h2>
+          <p className="text-muted-foreground text-sm font-body mb-6">Digite o código de acesso para visualizar esta proposta.</p>
+          <div className="flex flex-col gap-3">
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={accessCode}
+              onChange={(e) => setAccessCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onKeyDown={(e) => e.key === "Enter" && handleVerifyCode()}
+              placeholder="000000"
+              className="h-12 text-center text-2xl tracking-[0.5em] font-mono border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/30"
+              disabled={accessLocked}
+            />
+            <button
+              onClick={handleVerifyCode}
+              disabled={accessCode.length < 6 || accessLocked || verifying}
+              className="h-11 rounded-lg bg-primary text-primary-foreground font-display text-sm font-bold uppercase tracking-widest disabled:opacity-40 transition-opacity"
+            >
+              {verifying ? "Verificando..." : accessLocked ? `Aguarde ${lockSecondsLeft}s` : "Confirmar"}
+            </button>
+            {accessError && (
+              <p className="text-destructive text-xs font-body">{accessError}</p>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground font-body">Carregando proposta...</div>;
 

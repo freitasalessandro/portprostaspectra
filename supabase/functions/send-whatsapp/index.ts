@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       // Fetch proposal
       const { data: proposal } = await supabase
         .from("proposals")
-        .select("client_name, project_title, total_value, slug, valid_until, id")
+        .select("client_name, project_title, total_value, slug, valid_until, id, access_code")
         .eq("id", proposal_id)
         .maybeSingle();
 
@@ -109,7 +109,8 @@ Deno.serve(async (req) => {
           .replace(/\{\{link\}\}/g, link)
           .replace(/\{\{data_validade\}\}/g, formatValidUntil(proposal.valid_until))
           .replace(/\{\{hora\}\}/g, horaStr)
-          .replace(/\{\{protocolo\}\}/g, proposal.id.slice(0, 8).toUpperCase());
+          .replace(/\{\{protocolo\}\}/g, proposal.id.slice(0, 8).toUpperCase())
+          .replace(/\{\{codigo\}\}/g, proposal.access_code || "");
       }
     }
 

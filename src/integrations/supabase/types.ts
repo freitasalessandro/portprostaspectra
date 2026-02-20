@@ -561,6 +561,7 @@ export type Database = {
           accepted_at: string | null
           accepted_by_email: string | null
           accepted_by_name: string | null
+          access_code: string
           bdi_factor: number | null
           client_email: string | null
           client_name: string
@@ -585,6 +586,7 @@ export type Database = {
           accepted_at?: string | null
           accepted_by_email?: string | null
           accepted_by_name?: string | null
+          access_code?: string
           bdi_factor?: number | null
           client_email?: string | null
           client_name: string
@@ -609,6 +611,7 @@ export type Database = {
           accepted_at?: string | null
           accepted_by_email?: string | null
           accepted_by_name?: string | null
+          access_code?: string
           bdi_factor?: number | null
           client_email?: string | null
           client_name?: string
@@ -774,6 +777,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_by_name: string | null
+          access_code: string | null
           bdi_factor: number | null
           client_name: string | null
           created_at: string | null
@@ -793,6 +797,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_by_name?: string | null
+          access_code?: string | null
           bdi_factor?: number | null
           client_name?: string | null
           created_at?: string | null
@@ -812,6 +817,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_by_name?: string | null
+          access_code?: string | null
           bdi_factor?: number | null
           client_name?: string | null
           created_at?: string | null
