@@ -1,6 +1,6 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { FileText, ListChecks, ClipboardList, Brain, PenTool, Code2, Palette, Share2, Globe, Megaphone } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 import forms1 from "@/assets/cases/forms-1.png";
@@ -102,6 +102,13 @@ const CasesSection = () => {
   const [designServices, setDesignServices] = useState<CaseItem[]>([]);
   const [loaded, setLoaded] = useState(false);
 
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+  const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
+
   useEffect(() => {
     const fetchAll = async () => {
       const [servicesRes, filesRes] = await Promise.all([
@@ -153,8 +160,8 @@ const CasesSection = () => {
   );
 
   return (
-    <section className="py-20 md:py-36 px-5 md:px-12 relative overflow-hidden" id="cases">
-      <div className="absolute inset-0 grid-pattern opacity-15" />
+    <section ref={sectionRef} className="py-20 md:py-36 px-5 md:px-12 relative overflow-hidden" id="cases">
+      <motion.div className="absolute inset-0 grid-pattern opacity-15" style={{ y: bgParallax }} />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
       <motion.div
