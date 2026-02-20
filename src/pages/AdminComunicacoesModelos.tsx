@@ -16,9 +16,13 @@ const VARIABLES = [
   { key: "{{projeto}}", label: "Projeto" },
   { key: "{{valor}}", label: "Valor" },
   { key: "{{link}}", label: "Link" },
+  { key: "{{codigo}}", label: "Código de Acesso" },
   { key: "{{data_validade}}", label: "Data Validade" },
   { key: "{{hora}}", label: "Hora" },
   { key: "{{protocolo}}", label: "Protocolo" },
+  { key: "{{contrato_titulo}}", label: "Título do Contrato" },
+  { key: "{{contrato_link}}", label: "Link do Contrato" },
+  { key: "{{contrato_codigo}}", label: "Código do Contrato" },
 ];
 
 interface Template {

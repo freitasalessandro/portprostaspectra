@@ -86,6 +86,14 @@ const ContractView = () => {
       if (data.valid) {
         setAccessVerified(true);
         document.cookie = `contract_access_${id}=1; path=/; SameSite=Strict`;
+        // Fire contract viewed trigger
+        try {
+          await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fire-trigger`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+            body: JSON.stringify({ contract_id: data.contract_id || id, event: "contrato_visualizado" }),
+          });
+        } catch {}
       } else {
         const newAttempts = accessAttempts + 1;
         setAccessAttempts(newAttempts);
@@ -228,6 +236,15 @@ const ContractView = () => {
         headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
         body: JSON.stringify({ contract_id: contractId, action: "sign" }),
       });
+
+      // Fire contract signed trigger
+      try {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fire-trigger`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: JSON.stringify({ contract_id: contractId, event: "contrato_assinado" }),
+        });
+      } catch {}
 
       setSignatureHash(hashHex);
       setContract({ ...contract, status: "signed" });
