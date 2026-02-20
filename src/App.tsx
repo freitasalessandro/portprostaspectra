@@ -17,6 +17,9 @@ import AdminAuditoria from "./pages/AdminAuditoria";
 import AdminComunicacoesModelos from "./pages/AdminComunicacoesModelos";
 import AdminComunicacoesGatilhos from "./pages/AdminComunicacoesGatilhos";
 import AdminComunicacoesHistorico from "./pages/AdminComunicacoesHistorico";
+import AdminContratos from "./pages/AdminContratos";
+import ContractEditor from "./pages/ContractEditor";
+import ContractView from "./pages/ContractView";
 import ProposalEditor from "./pages/ProposalEditor";
 import ProposalView from "./pages/ProposalView";
 import NotFound from "./pages/NotFound";
@@ -44,9 +47,12 @@ const App = () => (
           <Route path="/admin/comunicacoes/modelos" element={<AdminComunicacoesModelos />} />
           <Route path="/admin/comunicacoes/gatilhos" element={<AdminComunicacoesGatilhos />} />
           <Route path="/admin/comunicacoes/historico" element={<AdminComunicacoesHistorico />} />
+          <Route path="/admin/contratos" element={<AdminContratos />} />
+          <Route path="/admin/contratos/:id" element={<ContractEditor />} />
           <Route path="/admin/proposta/:id" element={<ProposalEditor />} />
           <Route path="/proposta/:id" element={<ProposalView />} />
           <Route path="/p/:id" element={<ProposalView />} />
+          <Route path="/contrato/:id" element={<ContractView />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

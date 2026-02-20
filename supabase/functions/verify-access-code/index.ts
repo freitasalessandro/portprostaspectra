@@ -16,7 +16,17 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { proposal_identifier, code } = await req.json();
+    const body = await req.json();
+    const { proposal_identifier, code, type, contract_id, action } = body;
+
+    // Handle contract signing (update status)
+    if (action === "sign" && contract_id) {
+      await supabase.from("contracts").update({ status: "signed" }).eq("id", contract_id);
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!proposal_identifier || !code) {
       return new Response(
@@ -25,25 +35,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Find proposal by slug or UUID
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(proposal_identifier);
-    let query = supabase.from("proposals").select("id, access_code");
+    const tableName = type === "contract" ? "contracts" : "proposals";
+
+    let query = supabase.from(tableName).select("id, access_code");
     if (isUuid) {
       query = query.eq("id", proposal_identifier);
     } else {
       query = query.eq("slug", proposal_identifier);
     }
 
-    const { data: proposal, error } = await query.single();
+    const { data: record, error } = await query.single();
 
-    if (error || !proposal) {
+    if (error || !record) {
       return new Response(
-        JSON.stringify({ valid: false, error: "Proposta não encontrada" }),
+        JSON.stringify({ valid: false, error: "Não encontrado" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const valid = proposal.access_code === code.trim();
+    const valid = record.access_code === code.trim();
 
     return new Response(
       JSON.stringify({ valid }),
