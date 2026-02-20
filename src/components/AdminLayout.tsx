@@ -1,7 +1,7 @@
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag, CreditCard, Plug } from "lucide-react";
+import { FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag, CreditCard, Plug, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import spectraLogo from "@/assets/spectra-logo.svg";
@@ -14,6 +14,7 @@ const menuItems = [
   { title: "Pagamentos", icon: CreditCard, path: "/admin/pagamentos" },
   { title: "Usuários", icon: Users, path: "/admin/usuarios" },
   { title: "Integrações", icon: Plug, path: "/admin/integracoes" },
+  { title: "Auditoria", icon: ScrollText, path: "/admin/auditoria" },
   { title: "Configurações", icon: Settings, path: "/admin/configuracoes" },
 ];
 
