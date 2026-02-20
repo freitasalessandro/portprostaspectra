@@ -63,7 +63,7 @@ const HeroSection = () => {
     <section
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative min-h-[100svh] flex flex-col justify-center md:justify-end overflow-hidden pt-20 pb-12 md:pb-20 px-4 sm:px-5"
+      className="relative min-h-[auto] lg:min-h-[100svh] flex flex-col justify-center lg:justify-end overflow-hidden pt-24 pb-12 lg:pb-20 px-4 sm:px-5"
     >
       {/* Parallax background */}
       <motion.div className="absolute inset-0" style={{ x: bgX, y: bgY }}>
@@ -81,32 +81,32 @@ const HeroSection = () => {
       </div>
 
       {/* Diagonal cut accent */}
-      <div className="absolute top-0 right-0 w-1/2 h-full pointer-events-none hidden lg:block">
+      <div className="absolute top-0 right-0 w-1/2 h-full pointer-events-none hidden xl:block">
         <div className="absolute inset-0 bg-primary/[0.03] [clip-path:polygon(30%_0,100%_0,100%_100%,0%_100%)]" />
         <div className="absolute inset-0 border-l border-primary/10 [clip-path:polygon(30%_0,30.1%_0,0.1%_100%,0%_100%)]" />
       </div>
 
       {/* Animated orbs - smaller on mobile */}
-      <div className="absolute top-1/4 left-0 w-40 md:w-72 h-40 md:h-72 rounded-full bg-primary/5 blur-[80px] md:blur-[120px] animate-breathe pointer-events-none" />
-      <div className="absolute bottom-1/3 right-0 w-28 md:w-48 h-28 md:h-48 rounded-full bg-primary/8 blur-[60px] md:blur-[100px] animate-breathe pointer-events-none" style={{ animationDelay: "2s" }} />
+      <div className="absolute top-1/4 left-0 w-40 lg:w-72 h-40 lg:h-72 rounded-full bg-primary/5 blur-[80px] lg:blur-[120px] animate-breathe pointer-events-none" />
+      <div className="absolute bottom-1/3 right-0 w-28 lg:w-48 h-28 lg:h-48 rounded-full bg-primary/8 blur-[60px] lg:blur-[100px] animate-breathe pointer-events-none" style={{ animationDelay: "2s" }} />
 
       {/* Floating logo watermark */}
       <motion.img
         src={spectraLogo}
         alt=""
-        className="absolute top-1/2 right-[8%] -translate-y-1/2 w-[280px] md:w-[420px] opacity-[0.08] pointer-events-none hidden lg:block animate-float"
+        className="absolute top-1/2 right-[8%] -translate-y-1/2 w-[280px] lg:w-[420px] opacity-[0.08] pointer-events-none hidden xl:block animate-float"
         style={{ filter: "drop-shadow(0 0 40px hsl(220 100% 55% / 0.15))" }}
       />
 
       <FloatingParticles />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-1 sm:px-5 md:px-12">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-1 sm:px-5 lg:px-12">
         {/* Top label */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-6 md:mb-12"
+          className="mb-6 lg:mb-12"
         >
           <div className="flex items-center gap-3">
             <motion.span
@@ -114,7 +114,7 @@ const HeroSection = () => {
               animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="font-body text-[10px] md:text-sm text-primary tracking-[0.3em] md:tracking-[0.4em] uppercase font-semibold">
+            <span className="font-body text-[10px] lg:text-sm text-primary tracking-[0.3em] lg:tracking-[0.4em] uppercase font-semibold">
               Spectra — CTO as a Service
             </span>
           </div>
@@ -122,7 +122,7 @@ const HeroSection = () => {
 
         {/* Headline */}
         <motion.h1
-          className="font-display leading-[0.85] tracking-[-0.04em] mb-8 md:mb-14"
+          className="font-display leading-[0.85] tracking-[-0.04em] mb-6 lg:mb-14"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -150,7 +150,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.7 }}
-          className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-8 pt-5 md:pt-8 border-t border-border/20"
+          className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-8 pt-5 lg:pt-8 border-t border-border/20"
         >
           <p className="font-body text-muted-foreground text-xs sm:text-sm leading-relaxed max-w-lg">
             Transformamos complexidade operacional em ativos digitais de alta performance.
@@ -164,7 +164,7 @@ const HeroSection = () => {
               rel="noopener noreferrer"
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-5 sm:px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-primary-foreground bg-primary text-[10px] sm:text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
+              className="px-5 sm:px-6 lg:px-7 py-3 lg:py-3.5 font-display font-bold text-primary-foreground bg-primary text-[10px] sm:text-xs tracking-widest uppercase relative overflow-hidden group glow-box-intense"
             >
               <span className="relative z-10">Diagnóstico</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -172,7 +172,7 @@ const HeroSection = () => {
             <motion.a
               href="#arsenal"
               whileHover={{ scale: 1.03, y: -2, borderColor: "hsl(220 100% 55% / 0.5)" }}
-              className="px-5 sm:px-6 md:px-7 py-3 md:py-3.5 font-display font-bold text-foreground/70 border border-border/40 text-[10px] sm:text-xs tracking-widest uppercase transition-all duration-300 hover:text-foreground"
+              className="px-5 sm:px-6 lg:px-7 py-3 lg:py-3.5 font-display font-bold text-foreground/70 border border-border/40 text-[10px] sm:text-xs tracking-widest uppercase transition-all duration-300 hover:text-foreground"
             >
               Explorar
             </motion.a>
@@ -184,7 +184,7 @@ const HeroSection = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 1 }}
-          className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 mt-8 md:mt-20 max-w-xl"
+          className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-8 lg:mt-20 max-w-xl"
         >
           {[
             { value: "0", label: "Risco" },
@@ -197,10 +197,10 @@ const HeroSection = () => {
               whileHover={{ y: -3 }}
               transition={{ duration: 0.3 }}
             >
-              <span className="font-display text-lg sm:text-xl md:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-300">
+              <span className="font-display text-lg sm:text-xl lg:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-300">
                 {stat.value}
               </span>
-              <p className="font-body text-[10px] md:text-sm text-muted-foreground/60 tracking-wider uppercase mt-1">
+              <p className="font-body text-[10px] lg:text-sm text-muted-foreground/60 tracking-wider uppercase mt-1">
                 {stat.label}
               </p>
             </motion.div>

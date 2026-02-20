@@ -67,7 +67,7 @@ const Navbar = () => {
         </a>
 
         {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           <img
             src={spectraLogo}
             alt=""
@@ -116,7 +116,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Toggle */}
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex items-center gap-3 lg:hidden">
           <motion.button
             onClick={toggleTheme}
             whileTap={{ scale: 0.9 }}
@@ -140,7 +140,7 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="md:hidden border-t border-border/30 bg-background/95 backdrop-blur-xl px-6 py-6 flex flex-col gap-4"
+          className="lg:hidden border-t border-border/30 bg-background/95 backdrop-blur-xl px-6 py-6 flex flex-col gap-4"
         >
           {navLinks.map((link) => (
             <a
