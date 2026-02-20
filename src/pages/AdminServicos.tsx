@@ -111,6 +111,7 @@ const AdminServicos = () => {
   const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
   const [editFiles, setEditFiles] = useState<ServiceFile[]>([]);
+  const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -208,11 +209,10 @@ const AdminServicos = () => {
     fetchServices();
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!editingId || !e.target.files?.length) return;
+  const processFiles = async (files: File[]) => {
+    if (!editingId || !files.length) return;
     setUploading(true);
 
-    const files = Array.from(e.target.files);
     for (const file of files) {
       const ext = file.name.split(".").pop();
       const path = `${editingId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -239,12 +239,34 @@ const AdminServicos = () => {
       }
     }
 
-    // Refresh files
     const { data } = await supabase.from("service_files").select("*").eq("service_id", editingId).order("sort_order");
     setEditFiles((data as ServiceFile[]) || []);
     setUploading(false);
     fetchServices();
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    processFiles(Array.from(e.target.files));
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    if (!editingId || uploading) return;
+    const files = Array.from(e.dataTransfer.files);
+    processFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
   };
 
   const handleFileDelete = async (file: ServiceFile) => {
@@ -486,20 +508,27 @@ const AdminServicos = () => {
                 )}
 
                 {/* Upload button */}
-                <label className={`flex items-center justify-center gap-2 px-4 py-3 rounded-md border border-dashed border-border/50 text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
-                  <Upload className="w-4 h-4" />
-                  {uploading ? "Enviando..." : "Adicionar arquivos (PNG, JPG, MP4...)"}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*,video/*,.pdf"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                    disabled={uploading}
-                  />
-                </label>
-                <p className="text-[10px] text-muted-foreground/50 mt-1">Salve o serviço primeiro para poder adicionar arquivos.</p>
+                <div
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  className={`rounded-md border-2 border-dashed transition-colors ${dragging ? "border-primary bg-primary/5" : "border-border/50"}`}
+                >
+                  <label className={`flex flex-col items-center justify-center gap-1.5 px-4 py-5 text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+                    <Upload className="w-5 h-5" />
+                    {uploading ? "Enviando..." : dragging ? "Solte os arquivos aqui" : "Arraste arquivos ou clique para selecionar"}
+                    <span className="text-[10px] text-muted-foreground/50">PNG, JPG, MP4, PDF</span>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*,video/*,.pdf"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
               </div>
             )}
 
