@@ -53,7 +53,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+        <div className="flex-1 p-4 md:p-7 flex flex-col md:flex-row md:items-center gap-3 md:gap-8">
           <div className="flex items-center gap-3 md:w-56 shrink-0">
             <motion.div whileHover={{ rotate: 15 }} transition={{ duration: 0.3 }}>
               <item.icon className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
@@ -73,7 +73,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
             </div>
           </div>
 
-          <p className="text-muted-foreground/60 font-body text-base leading-relaxed flex-1">
+          <p className="text-muted-foreground/60 font-body text-sm md:text-base leading-relaxed flex-1">
             {item.description}
           </p>
 
@@ -113,7 +113,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
 
       {/* Screenshots gallery */}
       {item.screenshots.length > 0 && (
-        <div className="border-t border-border/15 p-4 md:p-6">
+        <div className="border-t border-border/15 p-3 md:p-6">
           <div className="flex flex-col gap-4">
             <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden bg-card/30 border border-border/20">
               <AnimatePresence mode="wait">

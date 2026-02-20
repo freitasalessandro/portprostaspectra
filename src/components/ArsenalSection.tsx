@@ -13,7 +13,7 @@ const services = [
 
 const ArsenalSection = () => {
   return (
-    <section className="py-28 md:py-36 px-6 md:px-12 relative" id="arsenal">
+    <section className="py-20 md:py-36 px-5 md:px-12 relative" id="arsenal">
       <div className="absolute inset-0 grid-pattern opacity-20" />
 
       <motion.div
@@ -35,10 +35,10 @@ const ArsenalSection = () => {
         viewport={{ once: true, margin: "-80px" }}
       >
         {/* Header */}
-        <motion.div className="mb-16" variants={fadeUp}>
-          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-4 font-body flex items-center gap-3">
+        <motion.div className="mb-12 md:mb-16" variants={fadeUp}>
+          <p className="text-primary tracking-[0.4em] uppercase text-xs md:text-sm mb-3 md:mb-4 font-body flex items-center gap-3">
             <motion.span
-              className="w-10 h-px bg-primary/50"
+              className="w-8 md:w-10 h-px bg-primary/50"
               initial={{ width: 0 }}
               whileInView={{ width: 40 }}
               viewport={{ once: true }}
@@ -46,7 +46,7 @@ const ArsenalSection = () => {
             />
             Arsenal
           </p>
-          <h2 className="font-display text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
+          <h2 className="font-display text-3xl md:text-6xl font-black tracking-tight leading-[0.95]">
             Ferramentas<br />
             <span className="font-extralight text-foreground/60">de guerra.</span>
           </h2>
@@ -54,7 +54,7 @@ const ArsenalSection = () => {
 
         {/* Bento Grid */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
           variants={staggerContainer}
         >
           {services.map((service, i) => (
@@ -62,12 +62,12 @@ const ArsenalSection = () => {
               key={service.title}
               variants={fadeScale}
               whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.3 } }}
-              className={`group ${service.span} relative bg-card/30 border border-border/20 p-7 md:p-8 hover:border-primary/30 hover:bg-card/50 transition-all duration-500 cursor-default overflow-hidden`}
+              className={`group ${service.span} relative bg-card/30 border border-border/20 p-6 md:p-8 hover:border-primary/30 hover:bg-card/50 transition-all duration-500 cursor-default overflow-hidden`}
             >
               <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-600" />
               <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-primary/0 group-hover:bg-primary/10 blur-3xl transition-all duration-700 pointer-events-none" />
 
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between mb-4 md:mb-5">
                 <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ duration: 0.3 }}>
                   <service.icon className="w-5 h-5 text-primary/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
                 </motion.div>
@@ -76,10 +76,10 @@ const ArsenalSection = () => {
                 </span>
               </div>
 
-              <h3 className="font-display text-lg md:text-xl font-bold mb-3 group-hover:text-primary transition-colors duration-300 leading-tight">
+              <h3 className="font-display text-base md:text-xl font-bold mb-2 md:mb-3 group-hover:text-primary transition-colors duration-300 leading-tight">
                 {service.title}
               </h3>
-              <p className="text-muted-foreground/70 font-body text-base leading-relaxed">
+              <p className="text-muted-foreground/70 font-body text-sm md:text-base leading-relaxed">
                 {service.description}
               </p>
             </motion.div>
