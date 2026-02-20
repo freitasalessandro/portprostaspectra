@@ -371,6 +371,58 @@ const ProposalEditor = () => {
     }
   };
 
+  const fireCommunicationTriggers = async (event: string, proposalId: string, userId: string) => {
+    try {
+      // Fetch active triggers for this event
+      const { data: triggers } = await supabase
+        .from("communication_triggers")
+        .select("id, template_id, recipient")
+        .eq("user_id", userId)
+        .eq("event", event)
+        .eq("active", true);
+
+      if (!triggers || triggers.length === 0) return;
+
+      // Determine destination numbers
+      const destinations: string[] = [];
+      const prospectNumber = whatsappNumber.trim() || clientPhone.trim();
+
+      // Fetch commercial number from settings
+      const { data: settings } = await supabase
+        .from("company_settings")
+        .select("whatsapp")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      for (const trigger of triggers) {
+        const nums: string[] = [];
+        if ((trigger.recipient === "cliente" || trigger.recipient === "ambos") && prospectNumber) {
+          nums.push(prospectNumber);
+        }
+        if ((trigger.recipient === "comercial" || trigger.recipient === "ambos") && settings?.whatsapp) {
+          nums.push(settings.whatsapp);
+        }
+
+        for (const num of nums) {
+          supabase.functions.invoke("send-whatsapp", {
+            body: {
+              to: num,
+              template_id: trigger.template_id,
+              proposal_id: proposalId,
+              event,
+            },
+          }).then(({ error, data }) => {
+            if (error || data?.error) {
+              console.error("Trigger send failed:", error || data?.error);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Error firing triggers:", e);
+    }
+  };
+
   const handleSave = async (newStatus?: string) => {
     if (!clientName.trim() || !projectTitle.trim()) {
       toast({ title: "Preencha nome do cliente e título do projeto", variant: "destructive" });
@@ -441,6 +493,11 @@ const ProposalEditor = () => {
         case_metric_label: c.case_metric_label, case_link: c.case_link || null, sort_order: i,
       }));
       await supabase.from("proposal_social_proof").insert(proofToInsert);
+    }
+
+    // Fire communication triggers for "proposta_enviada" event
+    if (newStatus === "sent" && proposalId) {
+      fireCommunicationTriggers("proposta_enviada", proposalId, session.user.id);
     }
 
     setSaving(false);
