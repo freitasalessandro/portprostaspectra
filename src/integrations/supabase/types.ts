@@ -310,6 +310,7 @@ export type Database = {
           content: Json
           created_at: string
           id: string
+          proposal_id: string | null
           slug: string | null
           status: string
           title: string
@@ -325,6 +326,7 @@ export type Database = {
           content?: Json
           created_at?: string
           id?: string
+          proposal_id?: string | null
           slug?: string | null
           status?: string
           title?: string
@@ -340,6 +342,7 @@ export type Database = {
           content?: Json
           created_at?: string
           id?: string
+          proposal_id?: string | null
           slug?: string | null
           status?: string
           title?: string
@@ -347,7 +350,22 @@ export type Database = {
           user_id?: string
           whatsapp_number?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "public_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_plans: {
         Row: {
@@ -516,6 +534,7 @@ export type Database = {
       }
       proposal_signatures: {
         Row: {
+          contract_data: Json | null
           created_at: string
           id: string
           ip_address: string
@@ -526,6 +545,7 @@ export type Database = {
           user_agent: string
         }
         Insert: {
+          contract_data?: Json | null
           created_at?: string
           id?: string
           ip_address: string
@@ -536,6 +556,7 @@ export type Database = {
           user_agent: string
         }
         Update: {
+          contract_data?: Json | null
           created_at?: string
           id?: string
           ip_address?: string

@@ -70,17 +70,38 @@ const ContractEditor = () => {
     setSlug(c.slug);
     setContractId(c.id);
     if (editor && c.content && Object.keys(c.content).length > 0) {
-      editor.commands.setContent(c.content);
+      // Check for prefill HTML from localStorage (generated from proposal)
+      const prefillKey = `contract_prefill_${c.id}`;
+      const prefillHtml = localStorage.getItem(prefillKey);
+      if (prefillHtml) {
+        editor.commands.setContent(prefillHtml);
+        localStorage.removeItem(prefillKey);
+      } else {
+        editor.commands.setContent(c.content);
+      }
+    } else if (editor) {
+      // Check localStorage prefill even when content is empty
+      const prefillKey = `contract_prefill_${c.id}`;
+      const prefillHtml = localStorage.getItem(prefillKey);
+      if (prefillHtml) {
+        editor.commands.setContent(prefillHtml);
+        localStorage.removeItem(prefillKey);
+      }
     }
     setLoading(false);
   };
 
-  // Update editor content when editor is ready and we're editing existing
+  // Also check prefill on editor ready for new contracts
   useEffect(() => {
-    if (editor && !isNew && contractId && loading === false) {
-      // Content already set in loadContract
+    if (editor && contractId && !isNew) {
+      const prefillKey = `contract_prefill_${contractId}`;
+      const prefillHtml = localStorage.getItem(prefillKey);
+      if (prefillHtml) {
+        editor.commands.setContent(prefillHtml);
+        localStorage.removeItem(prefillKey);
+      }
     }
-  }, [editor, isNew, contractId, loading]);
+  }, [editor, contractId, isNew]);
 
   const handleSave = useCallback(async () => {
     if (!title.trim()) { toast({ title: "Informe o título", variant: "destructive" }); return; }

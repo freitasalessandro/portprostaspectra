@@ -92,6 +92,14 @@ const ProposalView = () => {
   const [accepting, setAccepting] = useState(false);
   const [signature, setSignature] = useState<ProposalSignature | null>(null);
 
+  // Contract data form (post-approval)
+  const [showContractDataForm, setShowContractDataForm] = useState(false);
+  const [contractData, setContractData] = useState({
+    nome_completo: "", cpf: "", nascimento: "", endereco: "", cidade: "", estado: "", cep: "",
+  });
+  const [savingContractData, setSavingContractData] = useState(false);
+  const [lastSignatureId, setLastSignatureId] = useState<string | null>(null);
+
   // Check cookie on mount
   useEffect(() => {
     const cookie = document.cookie.split(";").find(c => c.trim().startsWith(`proposal_access_${id}=`));
@@ -326,20 +334,22 @@ const ProposalView = () => {
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
       // Save signature
-      const { error: sigError } = await supabase.from("proposal_signatures").insert({
+      const { data: sigData, error: sigError } = await supabase.from("proposal_signatures").insert({
         proposal_id: proposalId,
         signer_name: acceptName.trim(),
         ip_address: ip,
         user_agent: userAgent,
         signature_hash: hashHex,
         signed_at: timestamp,
-      } as any);
+      } as any).select("id").single();
 
       if (sigError) {
         toast({ title: "Erro ao registrar assinatura", description: sigError.message, variant: "destructive" });
         setAccepting(false);
         return;
       }
+
+      setLastSignatureId(sigData?.id || null);
 
       // Update proposal status
       const { error } = await supabase.rpc("accept_proposal", {
@@ -351,12 +361,14 @@ const ProposalView = () => {
         toast({ title: "Erro ao aceitar", description: error.message, variant: "destructive" });
       } else {
         const newSig: ProposalSignature = {
-          id: "", signer_name: acceptName.trim(), ip_address: ip,
+          id: sigData?.id || "", signer_name: acceptName.trim(), ip_address: ip,
           user_agent: userAgent, signature_hash: hashHex, signed_at: timestamp,
         };
         setSignature(newSig);
         setProposal((prev) => prev ? { ...prev, status: "accepted", accepted_at: timestamp, accepted_by_name: acceptName } : prev);
         setShowAcceptForm(false);
+        setContractData(prev => ({ ...prev, nome_completo: acceptName.trim() }));
+        setShowContractDataForm(true);
         toast({ title: "Proposta aprovada com sucesso!" });
 
         // Fire proposta_aprovada trigger via edge function (no auth needed)
@@ -1062,6 +1074,89 @@ const ProposalView = () => {
             </div>
             <p className="text-[10px] text-muted-foreground/40 font-body text-center">
               Ao confirmar, seu IP e dados do navegador serão registrados como prova de aceite digital.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contract Data Modal (post-approval) */}
+      <Dialog open={showContractDataForm} onOpenChange={setShowContractDataForm}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">Precisamos de mais algumas informações para gerar o contrato</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Nome Completo</label>
+                <input value={contractData.nome_completo} onChange={(e) => setContractData(p => ({ ...p, nome_completo: e.target.value }))}
+                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+              </div>
+              <div>
+                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CPF</label>
+                <input value={contractData.cpf} onChange={(e) => setContractData(p => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00"
+                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+              </div>
+              <div>
+                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Data de Nascimento</label>
+                <input type="date" value={contractData.nascimento} onChange={(e) => setContractData(p => ({ ...p, nascimento: e.target.value }))}
+                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Endereço Completo</label>
+                <input value={contractData.endereco} onChange={(e) => setContractData(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, número, complemento"
+                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+              </div>
+              <div>
+                <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Cidade</label>
+                <input value={contractData.cidade} onChange={(e) => setContractData(p => ({ ...p, cidade: e.target.value }))}
+                  className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">Estado</label>
+                  <input value={contractData.estado} onChange={(e) => setContractData(p => ({ ...p, estado: e.target.value }))} placeholder="UF" maxLength={2}
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-body font-medium text-muted-foreground block mb-1">CEP</label>
+                  <input value={contractData.cep} onChange={(e) => setContractData(p => ({ ...p, cep: e.target.value }))} placeholder="00000-000"
+                    className="w-full bg-background border border-border/20 rounded-lg px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={async () => {
+                  if (!contractData.nome_completo.trim() || !contractData.cpf.trim()) {
+                    toast({ title: "Preencha nome e CPF", variant: "destructive" });
+                    return;
+                  }
+                  setSavingContractData(true);
+                  const sigId = lastSignatureId || signature?.id;
+                  if (sigId) {
+                    await supabase.from("proposal_signatures").update({
+                      contract_data: contractData,
+                    } as any).eq("id", sigId);
+                  }
+                  setSavingContractData(false);
+                  setShowContractDataForm(false);
+                  toast({ title: "Dados salvos com sucesso!" });
+                }}
+                disabled={savingContractData}
+                className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-5 font-display font-bold text-primary-foreground bg-primary rounded-lg text-xs tracking-wide transition-all duration-300 hover:shadow-[0_4px_24px_hsl(var(--primary)/0.3)] disabled:opacity-50"
+              >
+                {savingContractData ? "Salvando..." : "Salvar Dados"}
+              </button>
+              <button
+                onClick={() => setShowContractDataForm(false)}
+                className="h-10 px-5 font-display font-bold text-muted-foreground text-xs tracking-wide hover:text-foreground transition-colors rounded-lg"
+              >
+                Pular
+              </button>
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 font-body text-center">
+              Esses dados serão utilizados para a geração do contrato de prestação de serviço.
             </p>
           </div>
         </DialogContent>

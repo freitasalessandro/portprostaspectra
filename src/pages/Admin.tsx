@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp, Undo2, Eye, X } from "lucide-react";
+import { Plus, ExternalLink, Copy, Pencil, Trash2, Shield, ChevronDown, ChevronUp, Undo2, Eye, X, FileSignature } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
@@ -174,6 +174,68 @@ const Admin = () => {
     toast({ title: "Link copiado!", description: url });
   };
 
+  const handleGenerateContract = async (p: Proposal) => {
+    const { data: sigData } = await supabase
+      .from("proposal_signatures")
+      .select("*")
+      .eq("proposal_id", p.id)
+      .order("signed_at", { ascending: false })
+      .limit(1);
+
+    const sig = sigData?.[0] as any;
+    const cd = sig?.contract_data || {};
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate("/login"); return; }
+
+    const fmtCur = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+    const fmtDt = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
+
+    const vars: Record<string, string> = {
+      nome: cd.nome_completo || p.client_name || "",
+      cpf: cd.cpf || "",
+      nascimento: cd.nascimento ? fmtDt(cd.nascimento) : "",
+      endereco: cd.endereco || "",
+      cidade: cd.cidade || "",
+      estado: cd.estado || "",
+      cep: cd.cep || "",
+      projeto: p.project_title || "",
+      valor: fmtCur(Number(p.total_value)),
+      data_aprovacao: fmtDt(sig?.signed_at || null),
+      protocolo: sig?.signature_hash?.substring(0, 16)?.toUpperCase() || "",
+    };
+
+    const templateHtml = [
+      "<h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>",
+      `<p><strong>CONTRATANTE:</strong> ${vars.nome}, CPF ${vars.cpf}, nascido em ${vars.nascimento}, residente em ${vars.endereco}, ${vars.cidade} - ${vars.estado}, CEP ${vars.cep}.</p>`,
+      `<p><strong>PROJETO:</strong> ${vars.projeto}</p>`,
+      `<p><strong>VALOR:</strong> ${vars.valor}</p>`,
+      `<p><strong>DATA DE APROVAÇÃO:</strong> ${vars.data_aprovacao}</p>`,
+      `<p><strong>PROTOCOLO:</strong> ${vars.protocolo}</p>`,
+      "<hr />",
+      "<p>As partes acima qualificadas celebram o presente contrato de prestação de serviços, mediante as cláusulas e condições a seguir:</p>",
+    ].join("\n");
+
+    const { data: newContract, error } = await supabase.from("contracts").insert({
+      user_id: session.user.id,
+      title: `Contrato — ${p.project_title}`,
+      client_name: cd.nome_completo || p.client_name,
+      whatsapp_number: (p as any).whatsapp_number || null,
+      proposal_id: p.id,
+      content: {},
+      status: "draft",
+    } as any).select("id").single();
+
+    if (error || !newContract) {
+      toast({ title: "Erro ao gerar contrato", description: error?.message, variant: "destructive" });
+      return;
+    }
+
+    localStorage.setItem(`contract_prefill_${newContract.id}`, templateHtml);
+    navigate(`/admin/contratos/${newContract.id}`);
+    toast({ title: "Contrato criado! Revise o conteúdo." });
+  };
+
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
@@ -273,7 +335,7 @@ const Admin = () => {
                       </span>
                     )}
                   </div>
-                  
+
 
                   {/* Signature details */}
                   <AnimatePresence>
@@ -327,6 +389,17 @@ const Admin = () => {
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0 relative z-10">
+                  {p.status === "accepted" && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleGenerateContract(p)}
+                      title="Gerar Contrato"
+                      className="w-9 h-9 text-green-400/60 hover:text-green-400 hover:bg-green-500/10 transition-all duration-200"
+                    >
+                      <FileSignature className="w-4 h-4" />
+                    </Button>
+                  )}
                   {[
                     { icon: Copy, action: () => copyLink(p), label: "Copiar link" },
                     { icon: ExternalLink, action: () => window.open(`/proposta/${p.slug || p.id}`, "_blank"), label: "Visualizar" },
