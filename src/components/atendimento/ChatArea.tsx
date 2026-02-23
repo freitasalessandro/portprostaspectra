@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, Image, FileText, X, Download,
+  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, Image, FileText, X, Download, Wifi, WifiOff,
 } from "lucide-react";
 import { Ticket, Mensagem, Motivo, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,6 +133,7 @@ export default function ChatArea({
   const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
   const [dragging, setDragging] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [instanceInfo, setInstanceInfo] = useState<{ name: string; url: string } | null>(null);
   const dragCounter = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +142,26 @@ export default function ChatArea({
   useEffect(() => {
     (supabase.from("respostas_rapidas" as any).select("*").eq("ativo", true).order("nome") as any).then(({ data }: any) => {
       if (data) setQuickReplies(data);
+    });
+  }, []);
+
+  // Fetch WhatsApp instance info
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: settings } = await supabase
+        .from("company_settings")
+        .select("evolution_api_instance, evolution_api_url")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      if (settings?.evolution_api_instance) {
+        setInstanceInfo({
+          name: settings.evolution_api_instance,
+          url: (settings.evolution_api_url || "").replace(/\/+$/, ""),
+        });
+      } else {
+        setInstanceInfo(null);
+      }
     });
   }, []);
 
@@ -342,6 +363,19 @@ export default function ChatArea({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{ticket.contato?.nome || ticket.whatsapp_number}</p>
           <p className="text-[11px] text-muted-foreground">{formatPhone(ticket.whatsapp_number)} · <span className="text-muted-foreground/60">#{ticket.protocolo}</span></p>
+          <p className="text-[10px] flex items-center gap-1 mt-0.5">
+            {instanceInfo ? (
+              <>
+                <Wifi className="w-3 h-3 text-emerald-500" />
+                <span className="text-muted-foreground">{instanceInfo.name}</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3 text-destructive" />
+                <span className="text-destructive/80">Sem instância</span>
+              </>
+            )}
+          </p>
         </div>
 
         <Select value={ticket.motivo_id || ""} onValueChange={handleMotivoChange}>
