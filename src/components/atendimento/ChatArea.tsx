@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, FileText, X, Download, Wifi, WifiOff, UserCheck, MessageSquare,
+  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, FileText, X, Download, Wifi, WifiOff, UserCheck, MessageSquare, ArrowLeft,
 } from "lucide-react";
 import { Ticket, Mensagem, Motivo, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,7 @@ interface ChatAreaProps {
   showPanel: boolean;
   onTogglePanel: () => void;
   onTicketUpdate: () => void;
+  onBack?: () => void;
 }
 
 interface PendingFile {
@@ -130,7 +131,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 };
 
 export default function ChatArea({
-  ticket, mensagens, loadingMensagens, motivos, perfil, showPanel, onTogglePanel, onTicketUpdate,
+  ticket, mensagens, loadingMensagens, motivos, perfil, showPanel, onTogglePanel, onTicketUpdate, onBack,
 }: ChatAreaProps) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -312,38 +313,45 @@ export default function ChatArea({
 
       {/* ─── HEADER ─── */}
       <div className="shrink-0 border-b border-border/20">
-        <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 px-3 py-2.5">
+          {/* Back button (mobile) */}
+          {onBack && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 md:hidden" onClick={onBack}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          )}
+
           {/* Avatar */}
-          <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-sm font-bold text-primary border border-primary/10">
+          <div className="relative shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary border border-primary/10">
               {(ticket.contato?.nome || ticket.whatsapp_number).charAt(0).toUpperCase()}
             </div>
             {instanceInfo && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-card" />
             )}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <p className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-display)" }}>
                 {ticket.contato?.nome || ticket.whatsapp_number}
               </p>
-              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-[18px] font-medium ${status.className}`}>
+              <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-[16px] font-medium shrink-0 ${status.className}`}>
                 {status.label}
               </Badge>
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[11px] text-muted-foreground">{formatPhone(ticket.whatsapp_number)}</span>
-              <span className="text-muted-foreground/30">·</span>
-              <span className="text-[11px] text-muted-foreground/60 font-mono">#{ticket.protocolo}</span>
+              <span className="text-[10px] text-muted-foreground truncate">{formatPhone(ticket.whatsapp_number)}</span>
+              <span className="text-muted-foreground/30 hidden sm:inline">·</span>
+              <span className="text-[10px] text-muted-foreground/60 font-mono hidden sm:inline">#{ticket.protocolo}</span>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-1">
+          {/* Actions row */}
+          <div className="flex items-center gap-0.5 shrink-0">
             <Select value={ticket.motivo_id || ""} onValueChange={handleMotivoChange}>
-              <SelectTrigger className="w-[130px] h-8 text-xs bg-secondary/40 border-border/30 hover:bg-secondary/60 transition-colors">
+              <SelectTrigger className="w-[100px] lg:w-[130px] h-7 text-[10px] bg-secondary/40 border-border/30">
                 <SelectValue placeholder="Motivo" />
               </SelectTrigger>
               <SelectContent>
@@ -359,37 +367,36 @@ export default function ChatArea({
             </Select>
 
             {ticket.status !== "ENCERRADO" && ticket.status !== "CANCELADO" && (
-              <div className="flex items-center gap-0.5 ml-1">
+              <div className="hidden sm:flex items-center gap-0.5">
                 {(!ticket.atendente_id || ticket.status === "ABERTO") && (
-                  <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300" onClick={handleAssumir}>
-                    <UserCheck className="w-3.5 h-3.5" /> Assumir
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1 px-2 text-emerald-400 hover:bg-emerald-500/10" onClick={handleAssumir}>
+                    <UserCheck className="w-3 h-3" /> Assumir
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300" onClick={() => handleStatusChange("AGUARDANDO")}>
-                  <PauseCircle className="w-3.5 h-3.5" /> Aguardar
+                <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1 px-2 text-amber-400 hover:bg-amber-500/10" onClick={() => handleStatusChange("AGUARDANDO")}>
+                  <PauseCircle className="w-3 h-3" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-destructive hover:bg-destructive/10" onClick={() => setCloseDialog(true)}>
-                  <XCircle className="w-3.5 h-3.5" /> Encerrar
+                <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1 px-2 text-destructive hover:bg-destructive/10" onClick={() => setCloseDialog(true)}>
+                  <XCircle className="w-3 h-3" />
                 </Button>
               </div>
             )}
 
-            <div className="w-px h-5 bg-border/30 mx-1" />
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground" onClick={onTogglePanel}>
-              {showPanel ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground hidden lg:flex" onClick={onTogglePanel}>
+              {showPanel ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
             </Button>
           </div>
         </div>
 
-        {/* Connection status bar */}
-        <div className="px-4 pb-2">
-          <div className={`flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-md w-fit ${
+        {/* Connection status */}
+        <div className="px-3 pb-2">
+          <div className={`flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-md w-fit ${
             instanceInfo ? "bg-emerald-500/8 text-emerald-400/80" : "bg-destructive/8 text-destructive/80"
           }`}>
             {instanceInfo ? (
-              <><Wifi className="w-3 h-3" /><span>{instanceInfo.name}</span></>
+              <><Wifi className="w-2.5 h-2.5" /><span>{instanceInfo.name}</span></>
             ) : (
-              <><WifiOff className="w-3 h-3" /><span>Sem instância configurada</span></>
+              <><WifiOff className="w-2.5 h-2.5" /><span>Sem instância</span></>
             )}
           </div>
         </div>

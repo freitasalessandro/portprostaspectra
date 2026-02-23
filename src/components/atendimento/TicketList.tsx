@@ -164,7 +164,7 @@ export default function TicketList({
   });
 
   return (
-    <div className="w-full md:w-[310px] shrink-0 border-r border-border/20 bg-card/20 backdrop-blur-sm flex flex-col h-full">
+    <div className="w-full shrink-0 border-r border-border/20 bg-card/20 backdrop-blur-sm flex flex-col h-full">
       {/* ─── HEADER ─── */}
       <div className="p-3 border-b border-border/15">
         <div className="flex items-center gap-2.5 mb-3">
