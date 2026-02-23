@@ -1088,6 +1088,38 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_transfers: {
+        Row: {
+          created_at: string
+          from_atendente_id: string | null
+          id: string
+          ticket_id: string
+          to_atendente_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_atendente_id?: string | null
+          id?: string
+          ticket_id: string
+          to_atendente_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_atendente_id?: string | null
+          id?: string
+          ticket_id?: string
+          to_atendente_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_transfers_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           assumed_at: string | null

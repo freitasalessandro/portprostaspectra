@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X, Clock, Tag, UserCircle, FileText } from "lucide-react";
+import { X, Clock, Tag, UserCircle, FileText, ArrowRightLeft } from "lucide-react";
 import { Ticket, Motivo } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -11,6 +11,15 @@ interface DetailPanelProps {
   ticket: Ticket;
   motivos: Motivo[];
   onTicketUpdate: () => void;
+}
+
+interface TransferRecord {
+  id: string;
+  from_atendente_id: string | null;
+  to_atendente_id: string | null;
+  created_at: string;
+  from_nome?: string;
+  to_nome?: string;
 }
 
 export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailPanelProps) {
@@ -22,6 +31,7 @@ export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailP
   const [newTag, setNewTag] = useState("");
   const [slaRemaining, setSlaRemaining] = useState("");
   const [slaPercent, setSlaPercent] = useState(0);
+  const [transfers, setTransfers] = useState<TransferRecord[]>([]);
 
   useEffect(() => {
     setNome(ticket.contato?.nome || "");
@@ -30,6 +40,40 @@ export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailP
     setNotas(ticket.contato?.notas || "");
     setTags(ticket.tags || []);
   }, [ticket]);
+
+  // Fetch transfer history
+  useEffect(() => {
+    if (!ticket.id) return;
+    const fetchTransfers = async () => {
+      const { data } = await supabase
+        .from("ticket_transfers")
+        .select("*")
+        .eq("ticket_id", ticket.id)
+        .order("created_at", { ascending: true });
+      if (!data || data.length === 0) { setTransfers([]); return; }
+      const ids = [...new Set([
+        ...data.map(t => t.from_atendente_id).filter(Boolean),
+        ...data.map(t => t.to_atendente_id).filter(Boolean),
+      ])] as string[];
+      const { data: atendentes } = ids.length > 0
+        ? await supabase.from("atendentes_perfil").select("user_id, nome_completo").in("user_id", ids)
+        : { data: [] as any[] };
+      const nameMap: Record<string, string> = {};
+      atendentes?.forEach(a => { nameMap[a.user_id] = a.nome_completo; });
+      setTransfers(data.map(t => ({
+        ...t,
+        from_nome: t.from_atendente_id ? nameMap[t.from_atendente_id] || "—" : "Sem atendente",
+        to_nome: t.to_atendente_id ? nameMap[t.to_atendente_id] || "—" : "Removido",
+      })));
+    };
+    fetchTransfers();
+
+    const channel = supabase
+      .channel(`transfers-${ticket.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "ticket_transfers", filter: `ticket_id=eq.${ticket.id}` }, () => fetchTransfers())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [ticket.id]);
 
   // SLA timer
   useEffect(() => {
@@ -202,6 +246,38 @@ export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailP
           className="h-7 text-xs bg-secondary/15 border-border/15 rounded-lg placeholder:text-muted-foreground/30"
         />
       </div>
+
+      {/* ─── TRANSFERÊNCIAS ─── */}
+      {transfers.length > 0 && (
+        <div className="p-4 border-t border-border/10">
+          <div className="flex items-center gap-2 mb-3">
+            <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground/50" />
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50" style={{ fontFamily: "var(--font-display)" }}>
+              Transferências
+            </h4>
+          </div>
+          <div className="space-y-2">
+            {transfers.map((t, i) => (
+              <div key={t.id} className="relative pl-4">
+                {i < transfers.length - 1 && (
+                  <div className="absolute left-[5px] top-4 bottom-0 w-px bg-border/20" />
+                )}
+                <div className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-primary/40 bg-card" />
+                <div className="text-[10px] space-y-0.5">
+                  <div className="text-muted-foreground/50">
+                    {format(new Date(t.created_at), "dd/MM HH:mm")}
+                  </div>
+                  <div className="text-foreground/70">
+                    <span className="text-muted-foreground/60">{t.from_nome}</span>
+                    {" → "}
+                    <span className="font-medium">{t.to_nome}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
