@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +18,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Pencil, Trash2, Phone, Mail, Building2, StickyNote } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Phone, Mail, Building2, StickyNote, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -29,6 +30,7 @@ interface Contato {
   empresa: string | null;
   notas: string | null;
   total_tickets: number;
+  active_tickets: number;
   created_at: string;
   updated_at: string;
 }
@@ -50,14 +52,20 @@ export default function AtendimentoContatos() {
   const [saving, setSaving] = useState(false);
 
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchContatos = async () => {
     setLoading(true);
     const { data } = await supabase
       .from("contatos")
-      .select("*")
+      .select("*, tickets(id, status)")
       .order("updated_at", { ascending: false });
-    setContatos(data || []);
+    const enriched = (data || []).map((c: any) => ({
+      ...c,
+      active_tickets: (c.tickets || []).filter((t: any) => !["ENCERRADO", "CANCELADO"].includes(t.status)).length,
+      tickets: undefined,
+    }));
+    setContatos(enriched);
     setLoading(false);
   };
 
@@ -209,12 +217,22 @@ export default function AtendimentoContatos() {
                       {c.empresa ? <Badge variant="secondary" className="text-[10px]">{c.empresa}</Badge> : <span className="text-xs text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      <Badge variant="outline" className="text-[10px]">{c.total_tickets}</Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px]">{c.total_tickets}</Badge>
+                        {c.active_tickets > 0 && (
+                          <Badge className="text-[10px] bg-green-500/20 text-green-400 border-green-500/30 border" variant="outline">
+                            {c.active_tickets} ativo{c.active_tickets > 1 ? "s" : ""}
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
                       {formatDistanceToNow(new Date(c.updated_at), { addSuffix: true, locale: ptBR })}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-0.5">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Ver conversas" onClick={() => navigate(`/atendimento?contato=${c.whatsapp_number}`)}>
+                        <MessageCircle className="w-3.5 h-3.5" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSheet(c)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
