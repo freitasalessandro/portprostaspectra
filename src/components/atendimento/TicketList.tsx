@@ -67,7 +67,7 @@ export default function TicketList({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const cleanNum = newNumber.replace(/\D/g, "");
-      if (cleanNum.length < 10) { toast({ title: "Número inválido", variant: "destructive" }); setCreating(false); return; }
+      if (cleanNum.length < 12 || cleanNum.length > 13) { toast({ title: "Número inválido", description: "Informe o número com DDI + DDD + número (ex: 5511999999999)", variant: "destructive" }); setCreating(false); return; }
 
       const { data: contato, error: cErr } = await supabase
         .from("contatos")
@@ -236,7 +236,22 @@ export default function TicketList({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-xs">Número WhatsApp *</Label>
-              <Input value={newNumber} onChange={e => setNewNumber(e.target.value)} placeholder="5511999999999" className="h-9 text-sm" />
+              <Input
+                value={newNumber}
+                onChange={e => {
+                  const digits = e.target.value.replace(/\D/g, "").slice(0, 13);
+                  let formatted = digits;
+                  if (digits.length > 2) formatted = `+${digits.slice(0, 2)} (${digits.slice(2)}`;
+                  if (digits.length > 4) formatted = `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4)}`;
+                  if (digits.length > 9) formatted = `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+                  setNewNumber(formatted);
+                }}
+                placeholder="+55 (11) 99999-9999"
+                className="h-9 text-sm"
+              />
+              {newNumber && newNumber.replace(/\D/g, "").length > 0 && newNumber.replace(/\D/g, "").length < 12 && (
+                <p className="text-[11px] text-destructive">Número deve ter 12 ou 13 dígitos (ex: 5511999999999)</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Nome do contato (opcional)</Label>
@@ -245,7 +260,7 @@ export default function TicketList({
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setNewDialog(false)}>Cancelar</Button>
-            <Button onClick={handleCreateTicket} disabled={creating || !newNumber.trim()}>
+            <Button onClick={handleCreateTicket} disabled={creating || newNumber.replace(/\D/g, "").length < 12}>
               {creating ? "Criando..." : "Iniciar Conversa"}
             </Button>
           </DialogFooter>
