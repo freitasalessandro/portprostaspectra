@@ -76,7 +76,11 @@ export interface AtendentePerfil {
 export function useTickets(filter: string = "minha_fila") {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  const PAGE_SIZE = 30;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -84,10 +88,35 @@ export function useTickets(filter: string = "minha_fila") {
     });
   }, []);
 
-  const fetchTickets = useCallback(async () => {
-    if (!userId) return;
-    setLoading(true);
+  const enrichTickets = async (data: any[]): Promise<Ticket[]> => {
+    if (data.length === 0) return [];
+    const ticketIds = data.map((t: any) => t.id);
+    const { data: lastMsgs } = await supabase
+      .from("mensagens")
+      .select("ticket_id, conteudo, tipo, created_at")
+      .in("ticket_id", ticketIds)
+      .order("created_at", { ascending: false });
 
+    const lastMsgMap: Record<string, { conteudo: string | null; tipo: string; created_at: string }> = {};
+    if (lastMsgs) {
+      for (const m of lastMsgs) {
+        if (!lastMsgMap[m.ticket_id]) lastMsgMap[m.ticket_id] = m;
+      }
+    }
+
+    return data.map((t: any) => {
+      const lm = lastMsgMap[t.id];
+      return {
+        ...t,
+        contato: t.contatos,
+        tags: t.tags || [],
+        ultima_mensagem: lm ? (lm.tipo !== "TEXT" ? `📎 ${lm.tipo.toLowerCase()}` : lm.conteudo) : null,
+        ultima_mensagem_at: lm?.created_at || null,
+      };
+    });
+  };
+
+  const buildQuery = () => {
     let query = supabase
       .from("tickets")
       .select("*, contatos(*)")
@@ -95,7 +124,7 @@ export function useTickets(filter: string = "minha_fila") {
 
     switch (filter) {
       case "minha_fila":
-        query = query.eq("atendente_id", userId).in("status", ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"]);
+        query = query.eq("atendente_id", userId!).in("status", ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"]);
         break;
       case "todos":
         query = query.in("status", ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"]);
@@ -104,43 +133,45 @@ export function useTickets(filter: string = "minha_fila") {
         query = query.eq("status", "AGUARDANDO");
         break;
       case "encerrados":
-        query = query.eq("status", "ENCERRADO").limit(50);
+        query = query.eq("status", "ENCERRADO");
         break;
     }
+    return query;
+  };
 
+  const fetchTickets = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    setHasMore(false);
+
+    const query = buildQuery().range(0, PAGE_SIZE - 1);
     const { data, error } = await query;
-    if (!error && data && data.length > 0) {
-      // Fetch last message for each ticket
-      const ticketIds = data.map((t: any) => t.id);
-      const { data: lastMsgs } = await supabase
-        .from("mensagens")
-        .select("ticket_id, conteudo, tipo, created_at")
-        .in("ticket_id", ticketIds)
-        .order("created_at", { ascending: false });
 
-      const lastMsgMap: Record<string, { conteudo: string | null; tipo: string; created_at: string }> = {};
-      if (lastMsgs) {
-        for (const m of lastMsgs) {
-          if (!lastMsgMap[m.ticket_id]) lastMsgMap[m.ticket_id] = m;
-        }
-      }
-
-      const ticketsWithContato = data.map((t: any) => {
-        const lm = lastMsgMap[t.id];
-        return {
-          ...t,
-          contato: t.contatos,
-          tags: t.tags || [],
-          ultima_mensagem: lm ? (lm.tipo !== "TEXT" ? `📎 ${lm.tipo.toLowerCase()}` : lm.conteudo) : null,
-          ultima_mensagem_at: lm?.created_at || null,
-        };
-      });
-      setTickets(ticketsWithContato);
+    if (!error && data) {
+      const enriched = await enrichTickets(data);
+      setTickets(enriched);
+      setHasMore(filter === "encerrados" && data.length === PAGE_SIZE);
     } else if (!error) {
       setTickets([]);
     }
     setLoading(false);
   }, [userId, filter]);
+
+  const fetchMore = useCallback(async () => {
+    if (!userId || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+
+    const offset = tickets.length;
+    const query = buildQuery().range(offset, offset + PAGE_SIZE - 1);
+    const { data, error } = await query;
+
+    if (!error && data) {
+      const enriched = await enrichTickets(data);
+      setTickets(prev => [...prev, ...enriched]);
+      setHasMore(data.length === PAGE_SIZE);
+    }
+    setLoadingMore(false);
+  }, [userId, tickets.length, loadingMore, hasMore, filter]);
 
   useEffect(() => {
     fetchTickets();
@@ -158,7 +189,7 @@ export function useTickets(filter: string = "minha_fila") {
     return () => { supabase.removeChannel(channel); };
   }, [fetchTickets]);
 
-  return { tickets, loading, refetch: fetchTickets, userId };
+  return { tickets, loading, loadingMore, hasMore, refetch: fetchTickets, fetchMore, userId };
 }
 
 export function useMensagens(ticketId: string | null) {
