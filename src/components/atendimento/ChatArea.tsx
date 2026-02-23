@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, FileText, X, Download, Wifi, WifiOff, UserCheck, MessageSquare, ArrowLeft,
+  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, FileText, X, Download, Wifi, WifiOff, UserCheck, MessageSquare, ArrowLeft, Forward,
 } from "lucide-react";
 import { Ticket, Mensagem, Motivo, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,6 +144,10 @@ export default function ChatArea({
   const [dragging, setDragging] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [instanceInfo, setInstanceInfo] = useState<{ name: string; url: string } | null>(null);
+  const [forwardDialog, setForwardDialog] = useState(false);
+  const [atendentes, setAtendentes] = useState<{ id: string; nome_completo: string; cargo: string; setor: string | null }[]>([]);
+  const [forwardTarget, setForwardTarget] = useState("");
+  const [forwarding, setForwarding] = useState(false);
   const dragCounter = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -264,6 +268,31 @@ export default function ChatArea({
     onTicketUpdate();
   };
 
+  const openForwardDialog = async () => {
+    const { data } = await supabase.from("atendentes_perfil").select("id, nome_completo, cargo, setor");
+    setAtendentes((data || []).filter(a => a.id !== perfil?.id));
+    setForwardTarget("");
+    setForwardDialog(true);
+  };
+
+  const handleForward = async () => {
+    if (!ticket || !forwardTarget) return;
+    setForwarding(true);
+    const target = atendentes.find(a => a.id === forwardTarget);
+    await supabase.from("tickets").update({ atendente_id: forwardTarget, status: "EM_ATENDIMENTO" as any }).eq("id", ticket.id);
+    // Insert system message
+    await supabase.from("mensagens").insert({
+      ticket_id: ticket.id,
+      sentido: "SISTEMA" as any,
+      tipo: "TEXT" as any,
+      conteudo: `Ticket encaminhado para ${target?.nome_completo || "outro atendente"}`,
+    });
+    setForwardDialog(false);
+    setForwarding(false);
+    onTicketUpdate();
+    toast({ title: `Encaminhado para ${target?.nome_completo}` });
+  };
+
   // Empty state
   if (!ticket) {
     return (
@@ -373,6 +402,9 @@ export default function ChatArea({
                     <UserCheck className="w-3 h-3" /> Assumir
                   </Button>
                 )}
+                <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1 px-2 text-primary hover:bg-primary/10" onClick={openForwardDialog} title="Encaminhar">
+                  <Forward className="w-3 h-3" />
+                </Button>
                 <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1 px-2 text-amber-400 hover:bg-amber-500/10" onClick={() => handleStatusChange("AGUARDANDO")}>
                   <PauseCircle className="w-3 h-3" />
                 </Button>
@@ -619,6 +651,41 @@ export default function ChatArea({
           <DialogFooter>
             <Button variant="ghost" onClick={() => setCloseDialog(false)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleClose}>Encerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Forward dialog */}
+      <Dialog open={forwardDialog} onOpenChange={setForwardDialog}>
+        <DialogContent className="rounded-2xl border-border/30">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "var(--font-display)" }}>Encaminhar ticket #{ticket.protocolo}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-1">Selecione o atendente destino:</p>
+          <Select value={forwardTarget} onValueChange={setForwardTarget}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Selecionar atendente..." />
+            </SelectTrigger>
+            <SelectContent>
+              {atendentes.map(a => (
+                <SelectItem key={a.id} value={a.id}>
+                  <span className="flex items-center gap-2">
+                    <span>{a.nome_completo}</span>
+                    <Badge variant="outline" className="text-[9px] h-4">{a.cargo === "supervisor" ? "Supervisor" : a.cargo === "n2_tecnico" ? "N2" : "N1"}</Badge>
+                  </span>
+                </SelectItem>
+              ))}
+              {atendentes.length === 0 && (
+                <div className="text-xs text-muted-foreground text-center py-3">Nenhum outro atendente disponível</div>
+              )}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setForwardDialog(false)}>Cancelar</Button>
+            <Button onClick={handleForward} disabled={!forwardTarget || forwarding}>
+              {forwarding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Forward className="w-4 h-4 mr-2" />}
+              Encaminhar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
