@@ -313,10 +313,16 @@ export default function TicketList({
                         <p className="text-[11px] text-muted-foreground/40 truncate mt-0.5 font-mono">#{ticket.protocolo}</p>
                       )}
 
-                      <div className="flex items-center gap-1 mt-1.5">
+                      <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                         <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-[16px] font-semibold border ${statusColors[ticket.status] || ""}`}>
                           {statusLabels[ticket.status] || ticket.status}
                         </Badge>
+                        {ticket.atendente_nome && (
+                          <span className="text-[9px] text-muted-foreground/50 flex items-center gap-0.5 truncate max-w-[90px]" title={ticket.atendente_nome}>
+                            <UserCheck className="w-2.5 h-2.5 shrink-0" />
+                            {ticket.atendente_nome.split(" ")[0]}
+                          </span>
+                        )}
                         {ticket.sla_status === "ALERTA" && (
                           <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] font-semibold bg-amber-500/10 text-amber-400/80 border-amber-500/20 animate-pulse">
                             SLA
