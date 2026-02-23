@@ -13,7 +13,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, User, Plus, UserCheck, Loader2, Inbox, Filter } from "lucide-react";
+import { Search, User, Plus, UserCheck, Loader2, Inbox, Filter, Users } from "lucide-react";
 import { Ticket, AtendentePerfil, cargoLabels, cargoColors, AtendenteCargo } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -333,6 +333,7 @@ export default function TicketList({
               const isSelected = selectedId === ticket.id;
               const nome = ticket.contato?.nome || ticket.whatsapp_number;
               const initial = nome.charAt(0).toUpperCase();
+              const isGroup = ticket.contato?.nome?.endsWith("(Grupo)") || false;
 
               return (
                 <motion.button
@@ -351,12 +352,19 @@ export default function TicketList({
                 >
                   <div className="flex items-start gap-2.5">
                     {/* Avatar */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
-                      isSelected
-                        ? "bg-primary/15 text-primary border border-primary/20"
-                        : "bg-secondary/50 text-foreground/60 group-hover:bg-secondary/70"
-                    }`}>
-                      {initial}
+                    <div className="relative shrink-0">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-colors ${
+                        isSelected
+                          ? "bg-primary/15 text-primary border border-primary/20"
+                          : "bg-secondary/50 text-foreground/60 group-hover:bg-secondary/70"
+                      }`}>
+                        {isGroup ? <Users className="w-4 h-4" /> : initial}
+                      </div>
+                      {isGroup && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-sky-500/90 flex items-center justify-center border border-card/80" title="Grupo">
+                          <Users className="w-2 h-2 text-white" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
