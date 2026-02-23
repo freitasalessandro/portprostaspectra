@@ -89,7 +89,7 @@ export interface AtendentePerfil {
   cargo: AtendenteCargo;
 }
 
-export function useTickets(filter: string = "minha_fila") {
+export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -154,15 +154,35 @@ export function useTickets(filter: string = "minha_fila") {
       .select("*, contatos(*)")
       .order("created_at", { ascending: false });
 
+    const activeStatuses = ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"] as const;
+
     switch (filter) {
       case "minha_fila":
-        query = query.eq("atendente_id", userId!).in("status", ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"]);
+        if (cargo === "supervisor") {
+          // Supervisors see all active tickets
+          query = query.in("status", activeStatuses);
+        } else if (cargo === "n1_triagem") {
+          // N1 sees unassigned + own tickets
+          query = query.in("status", activeStatuses).or(`atendente_id.is.null,atendente_id.eq.${userId}`);
+        } else {
+          // N2 and default: only own tickets
+          query = query.eq("atendente_id", userId!).in("status", activeStatuses);
+        }
         break;
       case "todos":
-        query = query.in("status", ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"]);
+        if (cargo === "n1_triagem") {
+          // N1 only sees unassigned in "todos"
+          query = query.in("status", activeStatuses).is("atendente_id", null);
+        } else {
+          // Supervisor and N2 see all
+          query = query.in("status", activeStatuses);
+        }
         break;
       case "aguardando":
         query = query.eq("status", "AGUARDANDO");
+        if (cargo === "n1_triagem") {
+          query = query.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
+        }
         break;
       case "encerrados":
         query = query.eq("status", "ENCERRADO");
@@ -176,11 +196,35 @@ export function useTickets(filter: string = "minha_fila") {
     setLoading(true);
     setHasMore(false);
 
-    // Fetch all tab counts in parallel
+    // Fetch all tab counts in parallel (respecting cargo permissions)
+    const activeStatuses = ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"] as const;
+    
+    // "Minha Fila" count
+    let minhaFilaQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
+    if (cargo === "supervisor") {
+      // supervisor sees all
+    } else if (cargo === "n1_triagem") {
+      minhaFilaQuery = minhaFilaQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
+    } else {
+      minhaFilaQuery = minhaFilaQuery.eq("atendente_id", userId!);
+    }
+
+    // "Todos" count
+    let todosQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
+    if (cargo === "n1_triagem") {
+      todosQuery = todosQuery.is("atendente_id", null);
+    }
+
+    // "Aguardando" count
+    let aguardandoQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "AGUARDANDO");
+    if (cargo === "n1_triagem") {
+      aguardandoQuery = aguardandoQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
+    }
+
     const countQueries = [
-      supabase.from("tickets").select("id", { count: "exact", head: true }).eq("atendente_id", userId).in("status", ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"]),
-      supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"]),
-      supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "AGUARDANDO"),
+      minhaFilaQuery,
+      todosQuery,
+      aguardandoQuery,
       supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "ENCERRADO"),
     ];
 
@@ -202,7 +246,7 @@ export function useTickets(filter: string = "minha_fila") {
       setTickets([]);
     }
     setLoading(false);
-  }, [userId, filter]);
+  }, [userId, filter, cargo]);
 
   const fetchMore = useCallback(async () => {
     if (!userId || loadingMore || !hasMore) return;

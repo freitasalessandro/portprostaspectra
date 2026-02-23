@@ -12,10 +12,10 @@ export default function Atendimento() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showPanel, setShowPanel] = useState(true);
 
-  const { tickets, loading, loadingMore, hasMore, tabCounts, refetch, fetchMore, userId } = useTickets(filter);
+  const { perfil, updatePerfil } = useAtendentePerfil();
+  const { tickets, loading, loadingMore, hasMore, tabCounts, refetch, fetchMore, userId } = useTickets(filter, perfil?.cargo);
   const { mensagens, loading: loadingMensagens } = useMensagens(selectedTicket?.id || null);
   const { motivos } = useMotivos();
-  const { perfil, updatePerfil } = useAtendentePerfil();
   const openCount = useOpenTicketCount();
 
   // Update document title
