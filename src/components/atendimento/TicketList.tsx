@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, User } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Search, User, Plus } from "lucide-react";
 import { Ticket, AtendentePerfil } from "@/hooks/useAtendimento";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -17,6 +24,7 @@ interface TicketListProps {
   onFilterChange: (filter: string) => void;
   perfil: AtendentePerfil | null;
   onToggleDisponivel: (val: boolean) => void;
+  onNewTicket: (ticket: Ticket) => void;
 }
 
 const statusColors: Record<string, string> = {
@@ -43,9 +51,48 @@ const tabs = [
 ];
 
 export default function TicketList({
-  tickets, loading, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel,
+  tickets, loading, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket,
 }: TicketListProps) {
   const [search, setSearch] = useState("");
+  const [newDialog, setNewDialog] = useState(false);
+  const [newNumber, setNewNumber] = useState("");
+  const [newNome, setNewNome] = useState("");
+  const [creating, setCreating] = useState(false);
+  const { toast } = useToast();
+
+  const handleCreateTicket = async () => {
+    if (!newNumber.trim()) return;
+    setCreating(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+      const cleanNum = newNumber.replace(/\D/g, "");
+      if (cleanNum.length < 10) { toast({ title: "Número inválido", variant: "destructive" }); setCreating(false); return; }
+
+      const { data: contato, error: cErr } = await supabase
+        .from("contatos")
+        .upsert({ whatsapp_number: cleanNum, nome: newNome || null, user_id: user.id }, { onConflict: "whatsapp_number" })
+        .select()
+        .single();
+      if (cErr) throw cErr;
+
+      const { data: ticket, error: tErr } = await supabase
+        .from("tickets")
+        .insert({ whatsapp_number: cleanNum, contato_id: contato.id, user_id: user.id, atendente_id: user.id, status: "EM_ATENDIMENTO", assumed_at: new Date().toISOString() })
+        .select("*, contatos(*)")
+        .single();
+      if (tErr) throw tErr;
+
+      onNewTicket({ ...ticket, contato: ticket.contatos, tags: ticket.tags || [] } as any);
+      setNewDialog(false);
+      setNewNumber("");
+      setNewNome("");
+      toast({ title: "Conversa iniciada" });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+    setCreating(false);
+  };
 
   const filtered = tickets.filter(t => {
     if (!search) return true;
@@ -81,15 +128,20 @@ export default function TicketList({
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar..."
-            className="pl-8 h-8 text-xs bg-background/50"
-          />
+        {/* Search + New */}
+        <div className="flex gap-1.5">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar..."
+              className="pl-8 h-8 text-xs bg-background/50"
+            />
+          </div>
+          <Button size="icon" className="h-8 w-8 shrink-0" onClick={() => setNewDialog(true)} title="Nova conversa">
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
@@ -174,6 +226,31 @@ export default function TicketList({
           })
         )}
       </div>
+
+      {/* New conversation dialog */}
+      <Dialog open={newDialog} onOpenChange={setNewDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Conversa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Número WhatsApp *</Label>
+              <Input value={newNumber} onChange={e => setNewNumber(e.target.value)} placeholder="5511999999999" className="h-9 text-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Nome do contato (opcional)</Label>
+              <Input value={newNome} onChange={e => setNewNome(e.target.value)} placeholder="João Silva" className="h-9 text-sm" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setNewDialog(false)}>Cancelar</Button>
+            <Button onClick={handleCreateTicket} disabled={creating || !newNumber.trim()}>
+              {creating ? "Criando..." : "Iniciar Conversa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
