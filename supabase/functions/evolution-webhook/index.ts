@@ -102,14 +102,20 @@ Deno.serve(async (req) => {
       const msg = body.data;
       if (!msg || !msg.key) return new Response("ok", { headers: corsHeaders });
 
-      const remoteJid = msg.key.remoteJid?.replace("@s.whatsapp.net", "") || "";
+      const remoteJid = msg.key.remoteJid || "";
+      const isGroup = remoteJid.endsWith("@g.us");
       const isFromMe = msg.key.fromMe === true;
       const messageId = msg.key.id;
       const pushName = msg.pushName || null;
 
-      if (!remoteJid || isFromMe) {
+      // Skip group messages and own messages
+      if (!remoteJid || isFromMe || isGroup) {
+        console.log("Skipping:", isGroup ? "group message" : isFromMe ? "own message" : "empty jid");
         return new Response("ok", { headers: corsHeaders });
       }
+
+      // Clean number (remove @s.whatsapp.net suffix)
+      const cleanNumber = remoteJid.replace("@s.whatsapp.net", "");
 
       // Extract message content (text, image, audio, video, document)
       const { tipo, conteudo, midiaUrl } = extractMessageContent(msg);
@@ -128,7 +134,7 @@ Deno.serve(async (req) => {
       const { data: existingContato } = await supabase
         .from("contatos")
         .select("id, nome")
-        .eq("whatsapp_number", remoteJid)
+        .eq("whatsapp_number", cleanNumber)
         .maybeSingle();
 
       if (existingContato) {
@@ -140,7 +146,7 @@ Deno.serve(async (req) => {
       } else {
         const { data: newContato } = await supabase
           .from("contatos")
-          .insert({ whatsapp_number: remoteJid, nome: pushName, user_id: ownerId })
+          .insert({ whatsapp_number: cleanNumber, nome: pushName, user_id: ownerId })
           .select("id")
           .single();
         if (!newContato) return new Response("contato error", { headers: corsHeaders });
@@ -176,7 +182,7 @@ Deno.serve(async (req) => {
           .from("tickets")
           .insert({
             contato_id: contato.id,
-            whatsapp_number: remoteJid,
+            whatsapp_number: cleanNumber,
             user_id: ownerId,
             status: "ABERTO",
           })
