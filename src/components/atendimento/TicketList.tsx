@@ -333,7 +333,7 @@ export default function TicketList({
               const isSelected = selectedId === ticket.id;
               const nome = ticket.contato?.nome || ticket.whatsapp_number;
               const initial = nome.charAt(0).toUpperCase();
-              const isGroup = ticket.contato?.nome?.endsWith("(Grupo)") || false;
+              const isGroup = ticket.whatsapp_number?.includes("@g.us") || ticket.contato?.nome?.endsWith("(Grupo)") || false;
 
               return (
                 <motion.button

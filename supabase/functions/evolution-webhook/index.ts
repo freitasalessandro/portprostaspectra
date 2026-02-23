@@ -134,9 +134,9 @@ Deno.serve(async (req) => {
         console.log("Processing allowed group message:", remoteJid);
       }
 
-      // Clean number: for private chats remove suffix, for groups use JID as identifier
+      // For groups, keep the full JID so send-message can route correctly; for private chats, strip suffix
       const cleanNumber = isGroup
-        ? remoteJid.replace("@g.us", "")
+        ? remoteJid
         : remoteJid.replace("@s.whatsapp.net", "");
 
       // Extract message content (text, image, audio, video, document)
@@ -148,8 +148,9 @@ Deno.serve(async (req) => {
         return new Response("ok", { headers: corsHeaders });
       }
 
-      // For groups, use group name as contact name; for private, use pushName
-      const contactName = isGroup ? (remoteJid.replace("@g.us", "") + " (Grupo)") : pushName;
+      // For groups, try to get group name from metadata; for private, use pushName
+      const groupSubject = isGroup ? (body.data?.groupMetadata?.subject || body.data?.pushName || remoteJid.replace("@g.us", "")) : null;
+      const contactName = isGroup ? (groupSubject + " (Grupo)") : pushName;
 
       // Find or create contato, only update nome if pushName is present and contato has no name
       let contatoId: string;
