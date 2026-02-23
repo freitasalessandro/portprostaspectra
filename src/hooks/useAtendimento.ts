@@ -403,6 +403,37 @@ export function useAtendentePerfil() {
   return { perfil, loading, updatePerfil };
 }
 
+export function useForwardNotification(perfilId: string | null) {
+  const playSound = useNotificationSound();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!perfilId) return;
+
+    const channel = supabase
+      .channel(`forward-notify-${perfilId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "tickets",
+        filter: `atendente_id=eq.${perfilId}`,
+      }, (payload) => {
+        const oldAtendente = (payload.old as any)?.atendente_id;
+        const newAtendente = (payload.new as any)?.atendente_id;
+        if (newAtendente === perfilId && oldAtendente !== perfilId) {
+          playSound();
+          toast({
+            title: "📋 Ticket encaminhado para você",
+            description: `Ticket #${(payload.new as any).protocolo || (payload.new as any).numero} foi atribuído a você.`,
+          });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [perfilId, playSound, toast]);
+}
+
 export function useOpenTicketCount() {
   const [count, setCount] = useState(0);
 
