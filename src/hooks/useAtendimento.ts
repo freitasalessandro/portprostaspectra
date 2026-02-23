@@ -109,13 +109,35 @@ export function useTickets(filter: string = "minha_fila") {
     }
 
     const { data, error } = await query;
-    if (!error && data) {
-      const ticketsWithContato = data.map((t: any) => ({
-        ...t,
-        contato: t.contatos,
-        tags: t.tags || [],
-      }));
+    if (!error && data && data.length > 0) {
+      // Fetch last message for each ticket
+      const ticketIds = data.map((t: any) => t.id);
+      const { data: lastMsgs } = await supabase
+        .from("mensagens")
+        .select("ticket_id, conteudo, tipo, created_at")
+        .in("ticket_id", ticketIds)
+        .order("created_at", { ascending: false });
+
+      const lastMsgMap: Record<string, { conteudo: string | null; tipo: string; created_at: string }> = {};
+      if (lastMsgs) {
+        for (const m of lastMsgs) {
+          if (!lastMsgMap[m.ticket_id]) lastMsgMap[m.ticket_id] = m;
+        }
+      }
+
+      const ticketsWithContato = data.map((t: any) => {
+        const lm = lastMsgMap[t.id];
+        return {
+          ...t,
+          contato: t.contatos,
+          tags: t.tags || [],
+          ultima_mensagem: lm ? (lm.tipo !== "TEXT" ? `📎 ${lm.tipo.toLowerCase()}` : lm.conteudo) : null,
+          ultima_mensagem_at: lm?.created_at || null,
+        };
+      });
       setTickets(ticketsWithContato);
+    } else if (!error) {
+      setTickets([]);
     }
     setLoading(false);
   }, [userId, filter]);
