@@ -17,6 +17,7 @@ interface TransferRecord {
   id: string;
   from_atendente_id: string | null;
   to_atendente_id: string | null;
+  motivo: string | null;
   created_at: string;
   from_nome?: string;
   to_nome?: string;
@@ -272,6 +273,9 @@ export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailP
                     {" → "}
                     <span className="font-medium">{t.to_nome}</span>
                   </div>
+                  {t.motivo && (
+                    <div className="text-muted-foreground/60 italic mt-0.5">"{t.motivo}"</div>
+                  )}
                 </div>
               </div>
             ))}

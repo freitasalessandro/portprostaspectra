@@ -1120,6 +1120,7 @@ export type Database = {
           created_at: string
           from_atendente_id: string | null
           id: string
+          motivo: string | null
           ticket_id: string
           to_atendente_id: string | null
         }
@@ -1127,6 +1128,7 @@ export type Database = {
           created_at?: string
           from_atendente_id?: string | null
           id?: string
+          motivo?: string | null
           ticket_id: string
           to_atendente_id?: string | null
         }
@@ -1134,6 +1136,7 @@ export type Database = {
           created_at?: string
           from_atendente_id?: string | null
           id?: string
+          motivo?: string | null
           ticket_id?: string
           to_atendente_id?: string | null
         }

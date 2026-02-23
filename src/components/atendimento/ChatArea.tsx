@@ -147,6 +147,7 @@ export default function ChatArea({
   const [forwardDialog, setForwardDialog] = useState(false);
   const [atendentes, setAtendentes] = useState<{ id: string; nome_completo: string; cargo: string; setor: string | null }[]>([]);
   const [forwardTarget, setForwardTarget] = useState("");
+  const [forwardMotivo, setForwardMotivo] = useState("");
   const [forwarding, setForwarding] = useState(false);
   const dragCounter = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -272,6 +273,7 @@ export default function ChatArea({
     const { data } = await supabase.from("atendentes_perfil").select("id, nome_completo, cargo, setor");
     setAtendentes((data || []).filter(a => a.id !== perfil?.id));
     setForwardTarget("");
+    setForwardMotivo("");
     setForwardDialog(true);
   };
 
@@ -279,13 +281,30 @@ export default function ChatArea({
     if (!ticket || !forwardTarget) return;
     setForwarding(true);
     const target = atendentes.find(a => a.id === forwardTarget);
+    const motivoText = forwardMotivo.trim();
     await supabase.from("tickets").update({ atendente_id: forwardTarget, status: "EM_ATENDIMENTO" as any }).eq("id", ticket.id);
+    // Update the auto-created transfer record with motivo
+    if (motivoText) {
+      const { data: latestTransfer } = await supabase
+        .from("ticket_transfers")
+        .select("id")
+        .eq("ticket_id", ticket.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latestTransfer) {
+        await supabase.from("ticket_transfers").update({ motivo: motivoText }).eq("id", latestTransfer.id);
+      }
+    }
     // Insert system message
+    const msgContent = motivoText
+      ? `Ticket encaminhado para ${target?.nome_completo || "outro atendente"}\nMotivo: ${motivoText}`
+      : `Ticket encaminhado para ${target?.nome_completo || "outro atendente"}`;
     await supabase.from("mensagens").insert({
       ticket_id: ticket.id,
       sentido: "SISTEMA" as any,
       tipo: "TEXT" as any,
-      conteudo: `Ticket encaminhado para ${target?.nome_completo || "outro atendente"}`,
+      conteudo: msgContent,
     });
     setForwardDialog(false);
     setForwarding(false);
@@ -680,6 +699,13 @@ export default function ChatArea({
               )}
             </SelectContent>
           </Select>
+          <Textarea
+            value={forwardMotivo}
+            onChange={e => setForwardMotivo(e.target.value)}
+            placeholder="Motivo do encaminhamento (opcional)..."
+            className="text-sm min-h-[60px] resize-none"
+            maxLength={500}
+          />
           <DialogFooter>
             <Button variant="ghost" onClick={() => setForwardDialog(false)}>Cancelar</Button>
             <Button onClick={handleForward} disabled={!forwardTarget || forwarding}>
