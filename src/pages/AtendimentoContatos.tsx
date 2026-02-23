@@ -18,7 +18,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Pencil, Trash2, Phone, Mail, Building2, StickyNote, MessageCircle } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Phone, Mail, Building2, StickyNote, MessageCircle, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -50,11 +50,13 @@ export default function AtendimentoContatos() {
   const [fEmpresa, setFEmpresa] = useState("");
   const [fNotas, setFNotas] = useState("");
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const syncContactNames = async () => {
+    setSyncing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -66,6 +68,7 @@ export default function AtendimentoContatos() {
         fetchContatos();
       }
     } catch {}
+    setSyncing(false);
   };
 
   const fetchContatos = async () => {
@@ -166,7 +169,15 @@ export default function AtendimentoContatos() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Contatos</h1>
-            <p className="text-sm text-muted-foreground">Gerencie sua base de contatos do atendimento</p>
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              Gerencie sua base de contatos do atendimento
+              {syncing && (
+                <span className="inline-flex items-center gap-1 text-xs text-primary">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  Sincronizando nomes…
+                </span>
+              )}
+            </p>
           </div>
           <Button onClick={() => openSheet()} className="shrink-0">
             <Plus className="w-4 h-4 mr-2" /> Novo Contato
