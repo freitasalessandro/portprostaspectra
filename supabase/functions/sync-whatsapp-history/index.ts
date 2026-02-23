@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
     for (const chat of individualChats) {
       try {
-        const remoteJid = chat.id || chat.remoteJid || chat.jid || chat.chatId || "";
+        const remoteJid = chat.remoteJid || chat.id || chat.jid || chat.chatId || "";
         const waNumber = remoteJid.replace("@s.whatsapp.net", "");
 
         if (!waNumber || waNumber.length < 10) {
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Check if ticket already exists for this number
+        // Check if ticket already exists WITH messages
         const { data: existingTickets } = await supabase
           .from("tickets")
           .select("id")
@@ -101,43 +101,56 @@ Deno.serve(async (req) => {
           .eq("whatsapp_number", waNumber)
           .limit(1);
 
+        let ticketId: string;
+
         if (existingTickets && existingTickets.length > 0) {
-          skipped++;
-          continue;
-        }
+          // Check if this ticket already has messages
+          const { count } = await supabase
+            .from("mensagens")
+            .select("id", { count: "exact", head: true })
+            .eq("ticket_id", existingTickets[0].id);
 
-        // Create or find contact
-        const contactName = chat.name || chat.pushName || null;
-        const { data: contato } = await supabase
-          .from("contatos")
-          .upsert(
-            { whatsapp_number: waNumber, nome: contactName, user_id: userId },
-            { onConflict: "whatsapp_number" }
-          )
-          .select()
-          .single();
+          if (count && count > 0) {
+            skipped++;
+            continue;
+          }
+          // Reuse existing ticket (empty one from previous failed import)
+          ticketId = existingTickets[0].id;
+        } else {
+          // Create or find contact
+          const contactName = chat.name || chat.pushName || null;
+          const { data: contato } = await supabase
+            .from("contatos")
+            .upsert(
+              { whatsapp_number: waNumber, nome: contactName, user_id: userId },
+              { onConflict: "whatsapp_number" }
+            )
+            .select()
+            .single();
 
-        if (!contato) {
-          errors.push(`Falha ao criar contato: ${waNumber}`);
-          continue;
-        }
+          if (!contato) {
+            errors.push(`Falha ao criar contato: ${waNumber}`);
+            continue;
+          }
 
-        // Create ticket as ENCERRADO
-        const { data: ticket, error: ticketErr } = await supabase
-          .from("tickets")
-          .insert({
-            whatsapp_number: waNumber,
-            contato_id: contato.id,
-            user_id: userId,
-            status: "ENCERRADO",
-            closed_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
+          // Create ticket as ENCERRADO
+          const { data: ticket, error: ticketErr } = await supabase
+            .from("tickets")
+            .insert({
+              whatsapp_number: waNumber,
+              contato_id: contato.id,
+              user_id: userId,
+              status: "ENCERRADO",
+              closed_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
 
-        if (ticketErr || !ticket) {
-          errors.push(`Falha ao criar ticket: ${waNumber} - ${ticketErr?.message}`);
-          continue;
+          if (ticketErr || !ticket) {
+            errors.push(`Falha ao criar ticket: ${waNumber} - ${ticketErr?.message}`);
+            continue;
+          }
+          ticketId = ticket.id;
         }
 
         // 2. Fetch messages for this chat
@@ -151,8 +164,19 @@ Deno.serve(async (req) => {
         });
 
         if (msgsRes.ok) {
-          const messages = await msgsRes.json();
-          const msgArray = Array.isArray(messages) ? messages : messages?.messages || [];
+          const messagesRaw = await msgsRes.json();
+          // Handle various response formats from Evolution API
+          let msgArray: any[] = [];
+          if (Array.isArray(messagesRaw)) {
+            msgArray = messagesRaw;
+          } else if (messagesRaw?.messages && Array.isArray(messagesRaw.messages)) {
+            msgArray = messagesRaw.messages;
+          } else if (messagesRaw?.messages?.records && Array.isArray(messagesRaw.messages.records)) {
+            msgArray = messagesRaw.messages.records;
+          } else if (typeof messagesRaw === "object" && messagesRaw !== null) {
+            // Log structure for debugging
+            console.log("Unexpected messages format, keys:", JSON.stringify(Object.keys(messagesRaw)).substring(0, 200));
+          }
 
           const dbMessages = [];
           for (const msg of msgArray) {
@@ -192,7 +216,7 @@ Deno.serve(async (req) => {
               : new Date().toISOString();
 
             dbMessages.push({
-              ticket_id: ticket.id,
+              ticket_id: ticketId,
               sentido,
               tipo,
               conteudo,
