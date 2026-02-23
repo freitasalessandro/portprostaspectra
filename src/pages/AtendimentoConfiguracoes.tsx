@@ -259,7 +259,15 @@ export default function AtendimentoConfiguracoes() {
 
   const testWaConnection = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("evolution-status");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setWaConnected(false);
+        toast({ title: "Erro", description: "Você precisa estar logado para testar a conexão.", variant: "destructive" });
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("evolution-status", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       if (error) {
         setWaConnected(false);
       } else {
