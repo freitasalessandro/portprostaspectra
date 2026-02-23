@@ -81,14 +81,55 @@ export default function AtendimentoConfiguracoes() {
     fetchRespostas();
   }, [userId]);
 
+  const seedMotivos = async () => {
+    if (!userId) return;
+    const { count } = await supabase.from("motivos_atendimento").select("*", { count: "exact", head: true }).eq("user_id", userId);
+    if ((count || 0) > 0) return;
+    const defaults = [
+      { nome: "Suporte Técnico", descricao: "Problemas técnicos em produtos SaaS (FlowList, Forms, Contrato Online, YnasAPS)", sla_minutos: 60, prioridade: "1" as const, cor_hex: "#EF4444" },
+      { nome: "Dúvidas sobre Produto", descricao: "Perguntas sobre funcionalidades, planos e uso dos produtos Spectra", sla_minutos: 120, prioridade: "2" as const, cor_hex: "#3B82F6" },
+      { nome: "Solicitação de Feature", descricao: "Pedidos de novas funcionalidades ou melhorias em produtos existentes", sla_minutos: 1440, prioridade: "3" as const, cor_hex: "#8B5CF6" },
+      { nome: "Comercial / Proposta", descricao: "Interesse em novos projetos, propostas comerciais e Diagnóstico Estratégico", sla_minutos: 30, prioridade: "1" as const, cor_hex: "#10B981" },
+      { nome: "Financeiro / Contrato", descricao: "Questões sobre pagamentos, faturas e contratos ativos", sla_minutos: 240, prioridade: "2" as const, cor_hex: "#F59E0B" },
+      { nome: "Projeto sob Medida", descricao: "Acompanhamento de projetos customizados em desenvolvimento", sla_minutos: 480, prioridade: "2" as const, cor_hex: "#06B6D4" },
+      { nome: "Bug / Incidente", descricao: "Relato de bugs críticos ou incidentes em produção", sla_minutos: 30, prioridade: "1" as const, cor_hex: "#DC2626" },
+      { nome: "Onboarding", descricao: "Implantação e treinamento inicial de novos clientes", sla_minutos: 480, prioridade: "3" as const, cor_hex: "#6366F1" },
+    ];
+    await supabase.from("motivos_atendimento").insert(defaults.map(m => ({ ...m, user_id: userId })));
+  };
+
+  const seedRespostas = async () => {
+    if (!userId) return;
+    const { count } = await (supabase.from("respostas_rapidas" as any).select("*", { count: "exact", head: true }).eq("user_id", userId) as any);
+    if ((count || 0) > 0) return;
+    const defaults = [
+      { nome: "Boas-vindas", conteudo: "Olá! 👋 Seja bem-vindo ao suporte Spectra. Como posso ajudá-lo hoje?", categoria: "Saudação" },
+      { nome: "Aguarde um momento", conteudo: "Estou verificando essa questão para você. Um momento, por favor! ⏳", categoria: "Saudação" },
+      { nome: "Solicitar detalhes", conteudo: "Para que eu possa ajudá-lo melhor, poderia me enviar mais detalhes sobre o problema? (prints, mensagens de erro, qual produto está usando)", categoria: "Suporte" },
+      { nome: "Bug recebido", conteudo: "Obrigado pelo relato! Registrei esse bug internamente e nossa equipe já está analisando. Retorno com uma atualização em breve.", categoria: "Suporte" },
+      { nome: "Problema resolvido", conteudo: "O problema foi corrigido! ✅ Poderia confirmar se está tudo funcionando corretamente do seu lado?", categoria: "Suporte" },
+      { nome: "Encaminhar comercial", conteudo: "Vou encaminhar sua solicitação para nosso time comercial. Em breve entrarão em contato para agendar um Diagnóstico Estratégico gratuito! 🚀", categoria: "Comercial" },
+      { nome: "Proposta enviada", conteudo: "Sua proposta foi enviada! 📄 Você pode acessá-la pelo link que enviei. Qualquer dúvida sobre os termos, estou à disposição.", categoria: "Comercial" },
+      { nome: "Contrato disponível", conteudo: "Seu contrato está disponível para assinatura digital! 📝 Acesse pelo link enviado e siga as instruções. É rápido e seguro.", categoria: "Comercial" },
+      { nome: "Atualização de projeto", conteudo: "Segue atualização do seu projeto: estamos na fase de [FASE]. Previsão de entrega da próxima etapa: [DATA].", categoria: "Projeto" },
+      { nome: "Encerramento", conteudo: "Agradeço o contato! Se precisar de algo mais, estou à disposição. Tenha um ótimo dia! 😊", categoria: "Encerramento" },
+      { nome: "Fora do horário", conteudo: "Nosso horário de atendimento é de segunda a sexta, das 9h às 18h. Registramos sua mensagem e retornaremos no próximo dia útil!", categoria: "Encerramento" },
+      { nome: "NPS / Avaliação", conteudo: "Sua opinião é muito importante! De 0 a 10, como avalia o atendimento recebido? 📊", categoria: "Encerramento" },
+    ];
+    await (supabase.from("respostas_rapidas" as any).insert(defaults.map(r => ({ ...r, user_id: userId }))) as any);
+  };
+
   const fetchRespostas = async () => {
     if (!userId) return;
+    await seedRespostas();
     const { data } = await (supabase.from("respostas_rapidas" as any).select("*").eq("user_id", userId).order("nome") as any);
     if (data) setRespostas(data);
   };
 
   const fetchMotivos = async () => {
-    const { data } = await supabase.from("motivos_atendimento").select("*").order("nome");
+    if (!userId) return;
+    await seedMotivos();
+    const { data } = await supabase.from("motivos_atendimento").select("*").eq("user_id", userId).order("nome");
     if (data) setMotivos(data as Motivo[]);
   };
 
