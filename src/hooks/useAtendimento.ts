@@ -216,7 +216,25 @@ export function useAtendentePerfil() {
         .select("*")
         .eq("user_id", data.user.id)
         .maybeSingle();
-      if (p) setPerfil(p as AtendentePerfil);
+      if (p) {
+        setPerfil(p as AtendentePerfil);
+      } else {
+        // Auto-create profile if it doesn't exist
+        const displayName = data.user.email?.split("@")[0] || "Atendente";
+        const { data: created } = await supabase
+          .from("atendentes_perfil")
+          .insert({
+            id: data.user.id,
+            user_id: data.user.id,
+            nome_completo: displayName,
+            setor: null,
+            assinatura_padrao: null,
+            assinatura_ativa: false,
+          })
+          .select()
+          .single();
+        if (created) setPerfil(created as AtendentePerfil);
+      }
       setLoading(false);
     });
   }, []);
