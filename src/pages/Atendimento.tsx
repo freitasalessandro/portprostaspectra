@@ -4,7 +4,7 @@ import AdminLayout from "@/components/AdminLayout";
 import TicketList from "@/components/atendimento/TicketList";
 import ChatArea from "@/components/atendimento/ChatArea";
 import DetailPanel from "@/components/atendimento/DetailPanel";
-import { useTickets, useMensagens, useMotivos, useAtendentePerfil, Ticket } from "@/hooks/useAtendimento";
+import { useTickets, useMensagens, useMotivos, useAtendentePerfil, useForwardNotification, Ticket } from "@/hooks/useAtendimento";
 import { useOpenTicketCount } from "@/hooks/useAtendimento";
 
 export default function Atendimento() {
@@ -17,6 +17,7 @@ export default function Atendimento() {
   const { mensagens, loading: loadingMensagens } = useMensagens(selectedTicket?.id || null);
   const { motivos } = useMotivos();
   const openCount = useOpenTicketCount();
+  useForwardNotification(perfil?.id || null);
 
   // Update document title
   useEffect(() => {
