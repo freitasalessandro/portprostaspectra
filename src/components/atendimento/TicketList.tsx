@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -271,15 +272,20 @@ export default function TicketList({
             <p className="text-sm text-muted-foreground/50">Nenhum ticket encontrado</p>
           </div>
         ) : (
-          <div className="p-1.5 space-y-0.5">
-            {filtered.map(ticket => {
+          <AnimatePresence mode="popLayout">
+            {filtered.map((ticket, index) => {
               const isSelected = selectedId === ticket.id;
               const nome = ticket.contato?.nome || ticket.whatsapp_number;
               const initial = nome.charAt(0).toUpperCase();
 
               return (
-                <button
+                <motion.button
                   key={ticket.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.3) }}
+                  layout
                   onClick={() => onSelect(ticket)}
                   className={`w-full text-left p-2.5 rounded-xl transition-all group ${
                     isSelected
@@ -336,10 +342,10 @@ export default function TicketList({
                       </div>
                     </div>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
-          </div>
+          </AnimatePresence>
         )}
 
         {/* Infinite scroll sentinel */}
