@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, User, Plus, UserCheck } from "lucide-react";
+import { Search, User, Plus, UserCheck, Loader2 } from "lucide-react";
 import { Ticket, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,9 @@ interface Contato {
 interface TicketListProps {
   tickets: Ticket[];
   loading: boolean;
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
   selectedId: string | null;
   onSelect: (ticket: Ticket) => void;
   filter: string;
@@ -59,7 +62,7 @@ const tabs = [
 ];
 
 export default function TicketList({
-  tickets, loading, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket,
+  tickets, loading, loadingMore, hasMore, onLoadMore, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket,
 }: TicketListProps) {
   const [search, setSearch] = useState("");
   const [newDialog, setNewDialog] = useState(false);
@@ -71,6 +74,20 @@ export default function TicketList({
   const [searchingContatos, setSearchingContatos] = useState(false);
   const [selectedContato, setSelectedContato] = useState<Contato | null>(null);
   const { toast } = useToast();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!hasMore || !onLoadMore || filter !== "encerrados") return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) onLoadMore(); },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, onLoadMore, filter, tickets.length]);
 
   // Debounced contact search
   useEffect(() => {
@@ -283,6 +300,16 @@ export default function TicketList({
               </button>
             );
           })
+        )}
+        {/* Infinite scroll sentinel */}
+        {filter === "encerrados" && hasMore && (
+          <div ref={sentinelRef} className="p-3 flex justify-center">
+            {loadingMore ? (
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            ) : (
+              <span className="text-[10px] text-muted-foreground">Carregar mais...</span>
+            )}
+          </div>
         )}
       </div>
 
