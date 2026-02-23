@@ -32,6 +32,7 @@ const ProposalView = lazy(() => import("./pages/ProposalView"));
 const Atendimento = lazy(() => import("./pages/Atendimento"));
 const AtendimentoDashboard = lazy(() => import("./pages/AtendimentoDashboard"));
 const AtendimentoConfiguracoes = lazy(() => import("./pages/AtendimentoConfiguracoes"));
+const AtendimentoContatos = lazy(() => import("./pages/AtendimentoContatos"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const AnimatedRoutes = () => {
         <Route path="/atendimento" element={<LazyPage><Atendimento /></LazyPage>} />
         <Route path="/atendimento/dashboard" element={<LazyPage><AtendimentoDashboard /></LazyPage>} />
         <Route path="/atendimento/configuracoes" element={<LazyPage><AtendimentoConfiguracoes /></LazyPage>} />
+        <Route path="/atendimento/contatos" element={<LazyPage><AtendimentoContatos /></LazyPage>} />
         <Route path="*" element={<LazyPage><NotFound /></LazyPage>} />
       </Routes>
     </AnimatePresence>
