@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap,
+  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2,
 } from "lucide-react";
 import { Ticket, Mensagem, Motivo, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -276,6 +276,17 @@ export default function ChatArea({
             </div>
           ))
         )}
+        {/* Sending indicator */}
+        {sending && (
+          <div className="flex justify-end mb-1.5">
+            <div className="max-w-[70%] px-3 py-2 text-sm bg-primary/60 text-primary-foreground rounded-xl rounded-tr-none">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span className="text-xs opacity-80">Enviando...</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input bar */}
@@ -340,7 +351,7 @@ export default function ChatArea({
               disabled={!text.trim() || sending}
               onClick={handleSend}
             >
-              <Send className="w-4 h-4" />
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
           {perfil?.assinatura_ativa && perfil.assinatura_padrao && (
