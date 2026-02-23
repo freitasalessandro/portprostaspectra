@@ -39,7 +39,7 @@ export default function Atendimento() {
 
   return (
     <AdminLayout>
-      <div className="flex h-[calc(100vh-theme(spacing.14))] md:h-screen -m-6 md:-m-10 overflow-hidden">
+      <div className="flex h-[calc(100dvh-theme(spacing.14))] md:h-[100dvh] -m-6 md:-m-10 overflow-hidden">
         {/* Mobile: show list OR chat, not both */}
         <div className={`${selectedTicket ? 'hidden md:flex' : 'flex'} md:w-[310px] shrink-0 flex-col`}>
           <TicketList
