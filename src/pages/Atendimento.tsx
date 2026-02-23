@@ -12,7 +12,7 @@ export default function Atendimento() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showPanel, setShowPanel] = useState(true);
 
-  const { tickets, loading, loadingMore, hasMore, encerradosCount, refetch, fetchMore, userId } = useTickets(filter);
+  const { tickets, loading, loadingMore, hasMore, tabCounts, refetch, fetchMore, userId } = useTickets(filter);
   const { mensagens, loading: loadingMensagens } = useMensagens(selectedTicket?.id || null);
   const { motivos } = useMotivos();
   const { perfil, updatePerfil } = useAtendentePerfil();
@@ -44,7 +44,7 @@ export default function Atendimento() {
           loading={loading}
           loadingMore={loadingMore}
           hasMore={hasMore}
-          encerradosCount={encerradosCount}
+          tabCounts={tabCounts}
           onLoadMore={fetchMore}
           selectedId={selectedTicket?.id || null}
           onSelect={setSelectedTicket}
