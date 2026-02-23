@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 
-const NOTIFICATION_SOUND_URL = "https://cdn.pixabay.com/audio/2022/12/12/audio_e8c0a75e6a.mp3";
+const NOTIFICATION_SOUND_URL = "https://cdn.pixabay.com/audio/2024/11/10/audio_26e31e6ce7.mp3";
 
 export function useNotificationSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
