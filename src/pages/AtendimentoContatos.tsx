@@ -54,6 +54,20 @@ export default function AtendimentoContatos() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const syncContactNames = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data } = await supabase.functions.invoke("sync-contact-names", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (data?.updated > 0) {
+        toast({ title: `${data.updated} contato(s) atualizado(s)` });
+        fetchContatos();
+      }
+    } catch {}
+  };
+
   const fetchContatos = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -69,7 +83,7 @@ export default function AtendimentoContatos() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchContatos(); }, []);
+  useEffect(() => { fetchContatos(); syncContactNames(); }, []);
 
   const openSheet = (c?: Contato) => {
     if (c) {
