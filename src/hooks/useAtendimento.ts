@@ -173,9 +173,12 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
         if (cargo === "n1_triagem") {
           // N1 only sees unassigned in "todos"
           query = query.in("status", activeStatuses).is("atendente_id", null);
+        } else if (cargo === "supervisor") {
+          // Supervisor sees tickets assigned to others (not self) + unassigned
+          query = query.in("status", activeStatuses).or(`atendente_id.is.null,atendente_id.neq.${userId}`);
         } else {
-          // Supervisor and N2 see all
-          query = query.in("status", activeStatuses);
+          // N2 sees all tickets not assigned to self
+          query = query.in("status", activeStatuses).neq("atendente_id", userId!);
         }
         break;
       case "aguardando":
@@ -209,10 +212,14 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
       minhaFilaQuery = minhaFilaQuery.eq("atendente_id", userId!);
     }
 
-    // "Todos" count
+    // "Todos" count (excludes own tickets to avoid overlap with "Minha Fila")
     let todosQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
     if (cargo === "n1_triagem") {
       todosQuery = todosQuery.is("atendente_id", null);
+    } else if (cargo === "supervisor") {
+      todosQuery = todosQuery.or(`atendente_id.is.null,atendente_id.neq.${userId}`);
+    } else {
+      todosQuery = todosQuery.neq("atendente_id", userId!);
     }
 
     // "Aguardando" count
