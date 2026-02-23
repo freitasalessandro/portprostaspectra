@@ -10,7 +10,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star,
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap,
 } from "lucide-react";
 import { Ticket, Mensagem, Motivo, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,8 +73,16 @@ export default function ChatArea({
   const [sending, setSending] = useState(false);
   const [closeDialog, setCloseDialog] = useState(false);
   const [rating, setRating] = useState(0);
+  const [quickReplies, setQuickReplies] = useState<{ id: string; nome: string; conteudo: string }[]>([]);
+  const [quickOpen, setQuickOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    (supabase.from("respostas_rapidas" as any).select("*").eq("ativo", true).order("nome") as any).then(({ data }: any) => {
+      if (data) setQuickReplies(data);
+    });
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -271,6 +283,34 @@ export default function ChatArea({
       {ticket.status !== "ENCERRADO" && ticket.status !== "CANCELADO" && (
         <div className="p-3 border-t border-border/30 bg-card/20 shrink-0">
           <div className="flex items-end gap-2">
+            <Popover open={quickOpen} onOpenChange={setQuickOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-amber-400 hover:bg-amber-500/10" title="Respostas rápidas">
+                  <Zap className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="start" className="w-72 p-0">
+                <div className="p-2 border-b border-border/30">
+                  <p className="text-xs font-medium text-muted-foreground">Respostas Rápidas</p>
+                </div>
+                <ScrollArea className="max-h-[200px]">
+                  {quickReplies.length === 0 ? (
+                    <p className="text-xs text-muted-foreground p-3 text-center">Nenhuma resposta cadastrada. Adicione em Configurações.</p>
+                  ) : (
+                    quickReplies.map(qr => (
+                      <button
+                        key={qr.id}
+                        className="w-full text-left px-3 py-2 hover:bg-secondary/60 transition-colors border-b border-border/10 last:border-0"
+                        onClick={() => { setText(prev => prev + qr.conteudo); setQuickOpen(false); }}
+                      >
+                        <p className="text-xs font-medium">{qr.nome}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{qr.conteudo}</p>
+                      </button>
+                    ))
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
             <Textarea
               value={text}
               onChange={e => setText(e.target.value)}
