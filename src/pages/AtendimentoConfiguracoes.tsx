@@ -58,12 +58,13 @@ export default function AtendimentoConfiguracoes() {
   const [waConnected, setWaConnected] = useState<boolean | null>(null);
 
   // Respostas rápidas
-  interface RespostaRapida { id: string; nome: string; conteudo: string; ativo: boolean; user_id: string; }
+  interface RespostaRapida { id: string; nome: string; conteudo: string; categoria: string; ativo: boolean; user_id: string; }
   const [respostas, setRespostas] = useState<RespostaRapida[]>([]);
   const [respostaSheet, setRespostaSheet] = useState(false);
   const [editResposta, setEditResposta] = useState<RespostaRapida | null>(null);
   const [rNome, setRNome] = useState("");
   const [rConteudo, setRConteudo] = useState("");
+  const [rCategoria, setRCategoria] = useState("Geral");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -229,14 +230,14 @@ export default function AtendimentoConfiguracoes() {
 
   // Respostas rápidas CRUD
   const openRespostaSheet = (r?: RespostaRapida) => {
-    if (r) { setEditResposta(r); setRNome(r.nome); setRConteudo(r.conteudo); }
-    else { setEditResposta(null); setRNome(""); setRConteudo(""); }
+    if (r) { setEditResposta(r); setRNome(r.nome); setRConteudo(r.conteudo); setRCategoria(r.categoria); }
+    else { setEditResposta(null); setRNome(""); setRConteudo(""); setRCategoria("Geral"); }
     setRespostaSheet(true);
   };
 
   const saveResposta = async () => {
     if (!rNome || !rConteudo || !userId) return;
-    const payload = { nome: rNome, conteudo: rConteudo, user_id: userId };
+    const payload = { nome: rNome, conteudo: rConteudo, categoria: rCategoria, user_id: userId };
     if (editResposta) {
       await (supabase.from("respostas_rapidas" as any).update(payload).eq("id", editResposta.id) as any);
     } else {
@@ -328,6 +329,7 @@ export default function AtendimentoConfiguracoes() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">Nome</TableHead>
+                      <TableHead className="text-xs">Categoria</TableHead>
                       <TableHead className="text-xs">Conteúdo</TableHead>
                       <TableHead className="text-xs text-right">Ações</TableHead>
                     </TableRow>
@@ -336,6 +338,7 @@ export default function AtendimentoConfiguracoes() {
                     {respostas.map(r => (
                       <TableRow key={r.id}>
                         <TableCell className="text-xs font-medium">{r.nome}</TableCell>
+                        <TableCell><Badge variant="secondary" className="text-[10px]">{r.categoria}</Badge></TableCell>
                         <TableCell className="text-xs text-muted-foreground max-w-[300px] truncate">{r.conteudo}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openRespostaSheet(r)}>
@@ -349,7 +352,7 @@ export default function AtendimentoConfiguracoes() {
                     ))}
                     {respostas.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground text-xs py-6">
+                        <TableCell colSpan={4} className="text-center text-muted-foreground text-xs py-6">
                           Nenhuma resposta rápida cadastrada
                         </TableCell>
                       </TableRow>
@@ -589,6 +592,10 @@ export default function AtendimentoConfiguracoes() {
               <div className="space-y-2">
                 <Label className="text-xs">Nome (atalho)</Label>
                 <Input value={rNome} onChange={e => setRNome(e.target.value)} placeholder="Ex: Saudação" className="h-9 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Categoria</Label>
+                <Input value={rCategoria} onChange={e => setRCategoria(e.target.value)} placeholder="Ex: Geral, Suporte, Vendas" className="h-9 text-sm" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">Conteúdo da mensagem</Label>

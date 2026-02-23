@@ -930,6 +930,7 @@ export type Database = {
       respostas_rapidas: {
         Row: {
           ativo: boolean
+          categoria: string
           conteudo: string
           created_at: string
           id: string
@@ -938,6 +939,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          categoria?: string
           conteudo: string
           created_at?: string
           id?: string
@@ -946,6 +948,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          categoria?: string
           conteudo?: string
           created_at?: string
           id?: string

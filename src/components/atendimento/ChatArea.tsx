@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -73,8 +74,9 @@ export default function ChatArea({
   const [sending, setSending] = useState(false);
   const [closeDialog, setCloseDialog] = useState(false);
   const [rating, setRating] = useState(0);
-  const [quickReplies, setQuickReplies] = useState<{ id: string; nome: string; conteudo: string }[]>([]);
+  const [quickReplies, setQuickReplies] = useState<{ id: string; nome: string; conteudo: string; categoria: string }[]>([]);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [quickSearch, setQuickSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -289,25 +291,41 @@ export default function ChatArea({
                   <Zap className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-72 p-0">
-                <div className="p-2 border-b border-border/30">
+              <PopoverContent side="top" align="start" className="w-80 p-0">
+                <div className="p-2 border-b border-border/30 space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground">Respostas Rápidas</p>
+                  <Input
+                    value={quickSearch}
+                    onChange={e => setQuickSearch(e.target.value)}
+                    placeholder="Buscar..."
+                    className="h-7 text-xs"
+                    autoFocus
+                  />
                 </div>
-                <ScrollArea className="max-h-[200px]">
-                  {quickReplies.length === 0 ? (
-                    <p className="text-xs text-muted-foreground p-3 text-center">Nenhuma resposta cadastrada. Adicione em Configurações.</p>
-                  ) : (
-                    quickReplies.map(qr => (
-                      <button
-                        key={qr.id}
-                        className="w-full text-left px-3 py-2 hover:bg-secondary/60 transition-colors border-b border-border/10 last:border-0"
-                        onClick={() => { setText(prev => prev + qr.conteudo); setQuickOpen(false); }}
-                      >
-                        <p className="text-xs font-medium">{qr.nome}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">{qr.conteudo}</p>
-                      </button>
-                    ))
-                  )}
+                <ScrollArea className="max-h-[240px]">
+                  {(() => {
+                    const s = quickSearch.toLowerCase();
+                    const filtered = quickReplies.filter(qr =>
+                      !s || qr.nome.toLowerCase().includes(s) || qr.conteudo.toLowerCase().includes(s) || qr.categoria.toLowerCase().includes(s)
+                    );
+                    if (filtered.length === 0) return <p className="text-xs text-muted-foreground p-3 text-center">Nenhuma resposta encontrada.</p>;
+                    const categories = [...new Set(filtered.map(qr => qr.categoria))];
+                    return categories.map(cat => (
+                      <div key={cat}>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-2 pb-1">{cat}</p>
+                        {filtered.filter(qr => qr.categoria === cat).map(qr => (
+                          <button
+                            key={qr.id}
+                            className="w-full text-left px-3 py-1.5 hover:bg-secondary/60 transition-colors"
+                            onClick={() => { setText(prev => prev + qr.conteudo); setQuickOpen(false); setQuickSearch(""); }}
+                          >
+                            <p className="text-xs font-medium">{qr.nome}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{qr.conteudo}</p>
+                          </button>
+                        ))}
+                      </div>
+                    ));
+                  })()}
                 </ScrollArea>
               </PopoverContent>
             </Popover>
