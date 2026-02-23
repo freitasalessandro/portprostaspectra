@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, Image, FileText, X, Download, Wifi, WifiOff,
+  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, Image, FileText, X, Download, Wifi, WifiOff, UserCheck,
 } from "lucide-react";
 import { Ticket, Mensagem, Motivo, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -296,6 +296,17 @@ export default function ChatArea({
     }
   };
 
+  const handleAssumir = async () => {
+    if (!ticket || !perfil) return;
+    await supabase.from("tickets").update({
+      atendente_id: perfil.id,
+      status: "EM_ATENDIMENTO" as any,
+      assumed_at: new Date().toISOString(),
+    }).eq("id", ticket.id);
+    onTicketUpdate();
+    toast({ title: "Ticket assumido com sucesso" });
+  };
+
   const handleStatusChange = async (newStatus: string) => {
     if (!ticket) return;
     await supabase.from("tickets").update({ status: newStatus as any }).eq("id", ticket.id);
@@ -397,6 +408,16 @@ export default function ChatArea({
 
         {ticket.status !== "ENCERRADO" && ticket.status !== "CANCELADO" && (
           <>
+            {(!ticket.atendente_id || ticket.status === "ABERTO") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-emerald-400 hover:bg-emerald-500/10"
+                onClick={handleAssumir}
+              >
+                <UserCheck className="w-3.5 h-3.5 mr-1" /> Assumir
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
