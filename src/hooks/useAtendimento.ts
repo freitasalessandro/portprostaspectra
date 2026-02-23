@@ -36,6 +36,7 @@ export interface Ticket {
   contato?: Contato;
   ultima_mensagem?: string;
   ultima_mensagem_at?: string;
+  atendente_nome?: string;
 }
 
 export interface Mensagem {
@@ -107,16 +108,30 @@ export function useTickets(filter: string = "minha_fila") {
   const enrichTickets = async (data: any[]): Promise<Ticket[]> => {
     if (data.length === 0) return [];
     const ticketIds = data.map((t: any) => t.id);
-    const { data: lastMsgs } = await supabase
-      .from("mensagens")
-      .select("ticket_id, conteudo, tipo, created_at")
-      .in("ticket_id", ticketIds)
-      .order("created_at", { ascending: false });
+    const atendenteIds = [...new Set(data.map((t: any) => t.atendente_id).filter(Boolean))];
+
+    const [{ data: lastMsgs }, { data: atendentes }] = await Promise.all([
+      supabase
+        .from("mensagens")
+        .select("ticket_id, conteudo, tipo, created_at")
+        .in("ticket_id", ticketIds)
+        .order("created_at", { ascending: false }),
+      atendenteIds.length > 0
+        ? supabase.from("atendentes_perfil").select("user_id, nome_completo").in("user_id", atendenteIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
 
     const lastMsgMap: Record<string, { conteudo: string | null; tipo: string; created_at: string }> = {};
     if (lastMsgs) {
       for (const m of lastMsgs) {
         if (!lastMsgMap[m.ticket_id]) lastMsgMap[m.ticket_id] = m;
+      }
+    }
+
+    const atendenteMap: Record<string, string> = {};
+    if (atendentes) {
+      for (const a of atendentes) {
+        atendenteMap[a.user_id] = a.nome_completo;
       }
     }
 
@@ -128,6 +143,7 @@ export function useTickets(filter: string = "minha_fila") {
         tags: t.tags || [],
         ultima_mensagem: lm ? (lm.tipo !== "TEXT" ? `📎 ${lm.tipo.toLowerCase()}` : lm.conteudo) : null,
         ultima_mensagem_at: lm?.created_at || null,
+        atendente_nome: t.atendente_id ? atendenteMap[t.atendente_id] || null : null,
       };
     });
   };
