@@ -1,19 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, User, Plus } from "lucide-react";
+import { Search, User, Plus, UserCheck } from "lucide-react";
 import { Ticket, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+interface Contato {
+  id: string;
+  nome: string | null;
+  whatsapp_number: string;
+  empresa: string | null;
+}
 
 interface TicketListProps {
   tickets: Ticket[];
@@ -58,7 +66,57 @@ export default function TicketList({
   const [newNumber, setNewNumber] = useState("");
   const [newNome, setNewNome] = useState("");
   const [creating, setCreating] = useState(false);
+  const [contatoSearch, setContatoSearch] = useState("");
+  const [contatoResults, setContatoResults] = useState<Contato[]>([]);
+  const [searchingContatos, setSearchingContatos] = useState(false);
+  const [selectedContato, setSelectedContato] = useState<Contato | null>(null);
   const { toast } = useToast();
+
+  // Debounced contact search
+  useEffect(() => {
+    if (!contatoSearch || contatoSearch.length < 2) {
+      setContatoResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearchingContatos(true);
+      const term = contatoSearch.toLowerCase();
+      const cleanDigits = contatoSearch.replace(/\D/g, "");
+      const { data } = await supabase
+        .from("contatos")
+        .select("id, nome, whatsapp_number, empresa")
+        .or(`nome.ilike.%${term}%,whatsapp_number.ilike.%${cleanDigits || term}%,empresa.ilike.%${term}%`)
+        .limit(8);
+      setContatoResults(data || []);
+      setSearchingContatos(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [contatoSearch]);
+
+  const formatWhatsApp = (digits: string) => {
+    let formatted = digits;
+    if (digits.length > 2) formatted = `+${digits.slice(0, 2)} (${digits.slice(2)}`;
+    if (digits.length > 4) formatted = `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4)}`;
+    if (digits.length > 9) formatted = `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+    return formatted;
+  };
+
+  const selectContato = (c: Contato) => {
+    setSelectedContato(c);
+    const digits = c.whatsapp_number.replace(/\D/g, "").slice(0, 13);
+    setNewNumber(formatWhatsApp(digits));
+    setNewNome(c.nome || "");
+    setContatoSearch("");
+    setContatoResults([]);
+  };
+
+  const resetDialog = () => {
+    setNewNumber("");
+    setNewNome("");
+    setContatoSearch("");
+    setContatoResults([]);
+    setSelectedContato(null);
+  };
 
   const handleCreateTicket = async () => {
     if (!newNumber.trim()) return;
@@ -85,8 +143,7 @@ export default function TicketList({
 
       onNewTicket({ ...ticket, contato: ticket.contatos, tags: ticket.tags || [] } as any);
       setNewDialog(false);
-      setNewNumber("");
-      setNewNome("");
+      resetDialog();
       toast({ title: "Conversa iniciada" });
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -228,17 +285,65 @@ export default function TicketList({
       </div>
 
       {/* New conversation dialog */}
-      <Dialog open={newDialog} onOpenChange={setNewDialog}>
-        <DialogContent>
+      <Dialog open={newDialog} onOpenChange={(open) => { setNewDialog(open); if (!open) resetDialog(); }}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Nova Conversa</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Contact search */}
+            <div className="space-y-2">
+              <Label className="text-xs">Buscar contato existente</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  value={contatoSearch}
+                  onChange={e => { setContatoSearch(e.target.value); setSelectedContato(null); }}
+                  placeholder="Nome, número ou empresa..."
+                  className="pl-8 h-9 text-sm"
+                />
+              </div>
+              {searchingContatos && <p className="text-[11px] text-muted-foreground">Buscando...</p>}
+              {contatoResults.length > 0 && (
+                <ScrollArea className="max-h-[140px] border border-border/50 rounded-md">
+                  {contatoResults.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => selectContato(c)}
+                      className="w-full text-left px-3 py-2 hover:bg-accent/10 transition-colors flex items-center gap-2 border-b border-border/10 last:border-0"
+                    >
+                      <UserCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium truncate">{c.nome || c.whatsapp_number}</p>
+                        <p className="text-[10px] text-muted-foreground">{c.whatsapp_number}{c.empresa ? ` · ${c.empresa}` : ""}</p>
+                      </div>
+                    </button>
+                  ))}
+                </ScrollArea>
+              )}
+              {selectedContato && (
+                <div className="flex items-center gap-2 px-2 py-1.5 bg-primary/10 rounded-md">
+                  <UserCheck className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-medium">{selectedContato.nome || selectedContato.whatsapp_number}</span>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 ml-auto" onClick={() => { setSelectedContato(null); setNewNumber(""); setNewNome(""); }}>
+                    <span className="text-xs">✕</span>
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="relative flex items-center gap-2">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[10px] text-muted-foreground uppercase">ou preencha manualmente</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
             <div className="space-y-2">
               <Label className="text-xs">Número WhatsApp *</Label>
               <Input
                 value={newNumber}
                 onChange={e => {
+                  setSelectedContato(null);
                   const digits = e.target.value.replace(/\D/g, "").slice(0, 13);
                   let formatted = digits;
                   if (digits.length > 2) formatted = `+${digits.slice(0, 2)} (${digits.slice(2)}`;
