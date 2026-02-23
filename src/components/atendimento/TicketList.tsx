@@ -268,7 +268,7 @@ export default function TicketList({
             <button
               key={tab.key}
               onClick={() => onFilterChange(tab.key)}
-              className={`flex-1 py-2 text-[11px] font-medium transition-all whitespace-nowrap px-1.5 relative ${
+              className={`flex-1 py-2 text-[11px] font-medium transition-colors whitespace-nowrap px-1.5 relative ${
                 isActive
                   ? "text-foreground"
                   : "text-muted-foreground/60 hover:text-muted-foreground"
@@ -276,7 +276,7 @@ export default function TicketList({
             >
               {tab.label}
               {count != null && count > 0 && (
-                <span className={`ml-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                <span className={`ml-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full transition-colors ${
                   isActive
                     ? "bg-primary/15 text-primary"
                     : "bg-muted/60 text-muted-foreground/60"
@@ -285,15 +285,26 @@ export default function TicketList({
                 </span>
               )}
               {isActive && (
-                <span className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-primary rounded-full" />
+                <motion.span
+                  layoutId="tab-indicator"
+                  className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-primary rounded-full"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
               )}
             </button>
           );
         })}
       </div>
 
-      {/* ─── LIST ─── */}
-      <div className="flex-1 overflow-y-auto">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={filter}
+          initial={{ opacity: 0, x: 6 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -6 }}
+          transition={{ duration: 0.15 }}
+          className="flex-1 overflow-y-auto"
+        >
         {loading ? (
           <div className="p-2 space-y-1">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -403,7 +414,8 @@ export default function TicketList({
             )}
           </div>
         )}
-      </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* ─── NEW CONVERSATION DIALOG ─── */}
       <Dialog open={newDialog} onOpenChange={(open) => { setNewDialog(open); if (!open) resetDialog(); }}>
