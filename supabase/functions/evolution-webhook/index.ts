@@ -3,8 +3,53 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+function extractMessageContent(msg: any): { tipo: string; conteudo: string; midiaUrl: string | null } {
+  const message = msg.message;
+  if (!message) return { tipo: "TEXT", conteudo: "", midiaUrl: null };
+
+  // Text messages
+  if (message.conversation) return { tipo: "TEXT", conteudo: message.conversation, midiaUrl: null };
+  if (message.extendedTextMessage?.text) return { tipo: "TEXT", conteudo: message.extendedTextMessage.text, midiaUrl: null };
+
+  // Image
+  if (message.imageMessage) {
+    const caption = message.imageMessage.caption || "";
+    const url = message.imageMessage.url || msg.mediaUrl || null;
+    return { tipo: "IMAGE", conteudo: caption, midiaUrl: url };
+  }
+
+  // Video
+  if (message.videoMessage) {
+    const caption = message.videoMessage.caption || "";
+    const url = message.videoMessage.url || msg.mediaUrl || null;
+    return { tipo: "VIDEO", conteudo: caption, midiaUrl: url };
+  }
+
+  // Audio / PTT (voice note)
+  if (message.audioMessage) {
+    const url = message.audioMessage.url || msg.mediaUrl || null;
+    return { tipo: "AUDIO", conteudo: "", midiaUrl: url };
+  }
+
+  // Document
+  if (message.documentMessage) {
+    const fileName = message.documentMessage.fileName || "Documento";
+    const url = message.documentMessage.url || msg.mediaUrl || null;
+    return { tipo: "DOCUMENT", conteudo: fileName, midiaUrl: url };
+  }
+
+  // Sticker (treat as image)
+  if (message.stickerMessage) {
+    const url = message.stickerMessage.url || msg.mediaUrl || null;
+    return { tipo: "IMAGE", conteudo: "", midiaUrl: url };
+  }
+
+  // Fallback: any text-like content
+  return { tipo: "TEXT", conteudo: "", midiaUrl: null };
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -19,6 +64,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const event = body.event;
+    console.log("Webhook event:", event);
 
     // Always return 200 to prevent Evolution API retries
     if (event === "messages.upsert") {
@@ -29,10 +75,17 @@ Deno.serve(async (req) => {
       const isFromMe = msg.key.fromMe === true;
       const messageId = msg.key.id;
       const pushName = msg.pushName || null;
-      const messageText = msg.message?.conversation || msg.message?.extendedTextMessage?.text || "";
-      const instanceOwner = body.instance?.owner || "";
 
       if (!remoteJid || isFromMe) {
+        return new Response("ok", { headers: corsHeaders });
+      }
+
+      // Extract message content (text, image, audio, video, document)
+      const { tipo, conteudo, midiaUrl } = extractMessageContent(msg);
+
+      // Skip empty messages
+      if (!conteudo && !midiaUrl) {
+        console.log("Skipping empty message");
         return new Response("ok", { headers: corsHeaders });
       }
 
@@ -72,6 +125,12 @@ Deno.serve(async (req) => {
 
       if (existingTicket) {
         ticketId = existingTicket.id;
+        // Reopen if AGUARDANDO
+        await supabase
+          .from("tickets")
+          .update({ status: "EM_ATENDIMENTO" })
+          .eq("id", ticketId)
+          .eq("status", "AGUARDANDO");
       } else {
         const { data: newTicket, error: ticketError } = await supabase
           .from("tickets")
@@ -89,21 +148,49 @@ Deno.serve(async (req) => {
           return new Response("ticket error", { headers: corsHeaders });
         }
         ticketId = newTicket.id;
+      }
 
-        // Increment total_tickets on contato
-        await supabase.rpc("increment_total_tickets" as any, { contato_id: contato.id }).catch(() => {});
+      // Download media from Evolution API if we have a URL
+      let finalMediaUrl = midiaUrl;
+      if (midiaUrl && tipo !== "TEXT") {
+        try {
+          // Try to download and store in Supabase Storage
+          const mediaRes = await fetch(midiaUrl);
+          if (mediaRes.ok) {
+            const blob = await mediaRes.blob();
+            const ext = tipo === "IMAGE" ? "jpg" : tipo === "VIDEO" ? "mp4" : tipo === "AUDIO" ? "ogg" : "bin";
+            const path = `${ticketId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from("chat-media")
+              .upload(path, blob, { contentType: blob.type || "application/octet-stream", upsert: false });
+
+            if (!uploadError) {
+              const { data: urlData } = supabase.storage.from("chat-media").getPublicUrl(path);
+              finalMediaUrl = urlData.publicUrl;
+            } else {
+              console.error("Media upload error:", uploadError);
+            }
+          }
+        } catch (mediaErr) {
+          console.error("Media download error:", mediaErr);
+          // Keep original URL as fallback
+        }
       }
 
       // Insert message
-      await supabase.from("mensagens").insert({
+      const { error: msgError } = await supabase.from("mensagens").insert({
         ticket_id: ticketId,
         evolution_id: messageId,
         sentido: "ENTRADA",
-        tipo: "TEXT",
-        conteudo: messageText,
+        tipo,
+        conteudo: conteudo || null,
+        midia_url: finalMediaUrl,
         timestamp_wa: new Date().toISOString(),
         status_envio: "ENTREGUE",
       });
+
+      if (msgError) console.error("Message insert error:", msgError);
 
       return new Response("ok", { headers: corsHeaders });
     }

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Check, Wifi, WifiOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Wifi, WifiOff, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -524,6 +524,30 @@ export default function AtendimentoConfiguracoes() {
                 <CardTitle className="text-sm">Instância WhatsApp (Evolution API)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Webhook URL */}
+                <div className="space-y-2">
+                  <Label className="text-xs">URL do Webhook (configure na Evolution API)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evolution-webhook`}
+                      className="h-9 text-xs bg-muted/50 font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evolution-webhook`);
+                        toast({ title: "URL copiada!" });
+                      }}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Cole esta URL no campo "Webhook URL" da sua instância na Evolution API. Eventos suportados: <code>messages.upsert</code>, <code>messages.update</code></p>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="text-xs">URL da API</Label>
                   <Input value={waUrl} onChange={e => setWaUrl(e.target.value)} placeholder="https://..." className="h-9 text-sm" />
