@@ -214,7 +214,7 @@ export function useAtendentePerfil() {
       const { data: p } = await supabase
         .from("atendentes_perfil")
         .select("*")
-        .eq("id", data.user.id)
+        .eq("user_id", data.user.id)
         .maybeSingle();
       if (p) setPerfil(p as AtendentePerfil);
       setLoading(false);
