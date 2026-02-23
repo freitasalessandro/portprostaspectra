@@ -36,22 +36,25 @@ Deno.serve(async (req) => {
 
     const { data: settings } = await supabase
       .from("company_settings")
-      .select("evolution_api_url, evolution_api_instance, evolution_api_token")
+      .select("atendimento_api_url, atendimento_api_instance, atendimento_api_token")
       .eq("user_id", userId)
       .single();
 
-    if (!settings?.evolution_api_url || !settings?.evolution_api_instance || !settings?.evolution_api_token) {
-      return new Response(JSON.stringify({ connected: false, error: "Evolution API não configurada" }), {
+    const evoUrl = settings?.atendimento_api_url;
+    const evoInstance = settings?.atendimento_api_instance;
+    const evoToken = settings?.atendimento_api_token;
+
+    if (!evoUrl || !evoInstance || !evoToken) {
+      return new Response(JSON.stringify({ connected: false, error: "Instância WhatsApp de atendimento não configurada" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Remove trailing slash from URL to avoid double-slash
-    const baseUrl = settings.evolution_api_url.replace(/\/+$/, "");
+    const baseUrl = evoUrl.replace(/\/+$/, "");
 
     const resp = await fetch(
-      `${baseUrl}/instance/connectionState/${settings.evolution_api_instance}`,
-      { headers: { apikey: settings.evolution_api_token } }
+      `${baseUrl}/instance/connectionState/${evoInstance}`,
+      { headers: { apikey: evoToken } }
     );
 
     const data = await resp.json();
