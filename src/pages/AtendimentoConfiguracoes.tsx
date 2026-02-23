@@ -149,11 +149,11 @@ export default function AtendimentoConfiguracoes() {
 
   const fetchWaConfig = async () => {
     if (!userId) return;
-    const { data } = await supabase.from("company_settings").select("evolution_api_url, evolution_api_instance, evolution_api_token").eq("user_id", userId).maybeSingle();
+    const { data } = await supabase.from("company_settings").select("atendimento_api_url, atendimento_api_instance, atendimento_api_token").eq("user_id", userId).maybeSingle();
     if (data) {
-      setWaUrl(data.evolution_api_url || "");
-      setWaInstance(data.evolution_api_instance || "");
-      setWaKey(data.evolution_api_token || "");
+      setWaUrl((data as any).atendimento_api_url || "");
+      setWaInstance((data as any).atendimento_api_instance || "");
+      setWaKey((data as any).atendimento_api_token || "");
     }
   };
 
@@ -252,8 +252,8 @@ export default function AtendimentoConfiguracoes() {
   const saveWaConfig = async () => {
     if (!userId) return;
     await supabase.from("company_settings").update({
-      evolution_api_url: waUrl, evolution_api_instance: waInstance, evolution_api_token: waKey,
-    }).eq("user_id", userId);
+      atendimento_api_url: waUrl, atendimento_api_instance: waInstance, atendimento_api_token: waKey,
+    } as any).eq("user_id", userId);
     toast({ title: "Configuração salva" });
   };
 

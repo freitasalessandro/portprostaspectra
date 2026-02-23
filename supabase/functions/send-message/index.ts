@@ -65,15 +65,19 @@ Deno.serve(async (req) => {
       finalText += "\n\n" + perfil.assinatura_padrao;
     }
 
-    // Get Evolution API config
+    // Get Evolution API config (use atendimento-specific instance)
     const { data: settings } = await supabase
       .from("company_settings")
-      .select("evolution_api_url, evolution_api_instance, evolution_api_token")
+      .select("atendimento_api_url, atendimento_api_instance, atendimento_api_token")
       .eq("user_id", ticket.user_id)
       .single();
 
-    if (settings?.evolution_api_url && settings?.evolution_api_instance && settings?.evolution_api_token) {
-      const baseUrl = settings.evolution_api_url.replace(/\/+$/, "");
+    const evoUrl = settings?.atendimento_api_url;
+    const evoInstance = settings?.atendimento_api_instance;
+    const evoToken = settings?.atendimento_api_token;
+
+    if (evoUrl && evoInstance && evoToken) {
+      const baseUrl = evoUrl.replace(/\/+$/, "");
       try {
         const waNumber = ticket.whatsapp_number.includes("@")
           ? ticket.whatsapp_number
@@ -81,24 +85,24 @@ Deno.serve(async (req) => {
 
         if (msgTipo === "TEXT") {
           await fetch(
-            `${baseUrl}/message/sendText/${settings.evolution_api_instance}`,
+            `${baseUrl}/message/sendText/${evoInstance}`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                apikey: settings.evolution_api_token,
+                apikey: evoToken,
               },
               body: JSON.stringify({ number: waNumber, text: finalText }),
             }
           );
         } else if (msgTipo === "IMAGE" && midia_url) {
           await fetch(
-            `${baseUrl}/message/sendMedia/${settings.evolution_api_instance}`,
+            `${baseUrl}/message/sendMedia/${evoInstance}`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                apikey: settings.evolution_api_token,
+                apikey: evoToken,
               },
               body: JSON.stringify({
                 number: waNumber,
@@ -110,12 +114,12 @@ Deno.serve(async (req) => {
           );
         } else if ((msgTipo === "DOCUMENT" || msgTipo === "AUDIO" || msgTipo === "VIDEO") && midia_url) {
           await fetch(
-            `${baseUrl}/message/sendMedia/${settings.evolution_api_instance}`,
+            `${baseUrl}/message/sendMedia/${evoInstance}`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                apikey: settings.evolution_api_token,
+                apikey: evoToken,
               },
               body: JSON.stringify({
                 number: waNumber,

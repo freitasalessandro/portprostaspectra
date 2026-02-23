@@ -210,6 +210,9 @@ export type Database = {
           address: string | null
           ai_provider: string
           anthropic_api_key: string | null
+          atendimento_api_instance: string | null
+          atendimento_api_token: string | null
+          atendimento_api_url: string | null
           bdi_admin: number
           bdi_profit: number
           bdi_risk: number
@@ -236,6 +239,9 @@ export type Database = {
           address?: string | null
           ai_provider?: string
           anthropic_api_key?: string | null
+          atendimento_api_instance?: string | null
+          atendimento_api_token?: string | null
+          atendimento_api_url?: string | null
           bdi_admin?: number
           bdi_profit?: number
           bdi_risk?: number
@@ -262,6 +268,9 @@ export type Database = {
           address?: string | null
           ai_provider?: string
           anthropic_api_key?: string | null
+          atendimento_api_instance?: string | null
+          atendimento_api_token?: string | null
+          atendimento_api_url?: string | null
           bdi_admin?: number
           bdi_profit?: number
           bdi_risk?: number

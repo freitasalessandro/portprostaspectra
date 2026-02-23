@@ -70,13 +70,23 @@ Deno.serve(async (req) => {
     // Resolve owner by matching the instance name to company_settings
     async function resolveOwner(): Promise<string | null> {
       if (instanceName) {
-        const { data } = await supabase
+        // First check atendimento instance (chat/support)
+        const { data: atendimentoMatch } = await supabase
+          .from("company_settings")
+          .select("user_id")
+          .eq("atendimento_api_instance", instanceName)
+          .limit(1)
+          .maybeSingle();
+        if (atendimentoMatch) return atendimentoMatch.user_id;
+
+        // Then check proposals instance
+        const { data: proposalMatch } = await supabase
           .from("company_settings")
           .select("user_id")
           .eq("evolution_api_instance", instanceName)
           .limit(1)
           .maybeSingle();
-        if (data) return data.user_id;
+        if (proposalMatch) return proposalMatch.user_id;
       }
       // Fallback: single-tenant (first record)
       const { data } = await supabase

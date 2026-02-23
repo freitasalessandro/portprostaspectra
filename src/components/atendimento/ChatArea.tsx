@@ -145,19 +145,20 @@ export default function ChatArea({
     });
   }, []);
 
-  // Fetch WhatsApp instance info
+  // Fetch WhatsApp instance info (atendimento-specific)
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
       const { data: settings } = await supabase
         .from("company_settings")
-        .select("evolution_api_instance, evolution_api_url")
+        .select("atendimento_api_instance, atendimento_api_url")
         .eq("user_id", data.user.id)
         .maybeSingle();
-      if (settings?.evolution_api_instance) {
+      const s = settings as any;
+      if (s?.atendimento_api_instance) {
         setInstanceInfo({
-          name: settings.evolution_api_instance,
-          url: (settings.evolution_api_url || "").replace(/\/+$/, ""),
+          name: s.atendimento_api_instance,
+          url: (s.atendimento_api_url || "").replace(/\/+$/, ""),
         });
       } else {
         setInstanceInfo(null);
