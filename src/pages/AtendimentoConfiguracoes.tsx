@@ -1,0 +1,496 @@
+import { useState, useEffect } from "react";
+import AdminLayout from "@/components/AdminLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Pencil, Trash2, Check, Wifi, WifiOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Motivo {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  sla_minutos: number;
+  prioridade: string;
+  cor_hex: string;
+  ativo: boolean;
+  user_id: string;
+}
+
+interface Atendente {
+  id: string;
+  nome_completo: string;
+  setor: string | null;
+  assinatura_padrao: string | null;
+  assinatura_ativa: boolean;
+  max_tickets: number;
+  disponivel: boolean;
+  user_id: string;
+}
+
+export default function AtendimentoConfiguracoes() {
+  const { toast } = useToast();
+  const [motivos, setMotivos] = useState<Motivo[]>([]);
+  const [atendentes, setAtendentes] = useState<Atendente[]>([]);
+  const [motivoSheet, setMotivoSheet] = useState(false);
+  const [atendenteSheet, setAtendenteSheet] = useState(false);
+  const [editMotivo, setEditMotivo] = useState<Motivo | null>(null);
+  const [editAtendente, setEditAtendente] = useState<Atendente | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Minha assinatura
+  const [meuPerfil, setMeuPerfil] = useState<Atendente | null>(null);
+  const [sigPreview, setSigPreview] = useState("");
+
+  // WhatsApp config
+  const [waUrl, setWaUrl] = useState("");
+  const [waInstance, setWaInstance] = useState("");
+  const [waKey, setWaKey] = useState("");
+  const [waConnected, setWaConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserId(data.user.id);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetchMotivos();
+    fetchAtendentes();
+    fetchMeuPerfil();
+    fetchWaConfig();
+  }, [userId]);
+
+  const fetchMotivos = async () => {
+    const { data } = await supabase.from("motivos_atendimento").select("*").order("nome");
+    if (data) setMotivos(data as Motivo[]);
+  };
+
+  const fetchAtendentes = async () => {
+    const { data } = await supabase.from("atendentes_perfil").select("*").order("nome_completo");
+    if (data) setAtendentes(data as Atendente[]);
+  };
+
+  const fetchMeuPerfil = async () => {
+    if (!userId) return;
+    const { data } = await supabase.from("atendentes_perfil").select("*").eq("id", userId).maybeSingle();
+    if (data) {
+      setMeuPerfil(data as Atendente);
+      setSigPreview(data.assinatura_padrao || "");
+    }
+  };
+
+  const fetchWaConfig = async () => {
+    if (!userId) return;
+    const { data } = await supabase.from("company_settings").select("evolution_api_url, evolution_api_instance, evolution_api_token").eq("user_id", userId).maybeSingle();
+    if (data) {
+      setWaUrl(data.evolution_api_url || "");
+      setWaInstance(data.evolution_api_instance || "");
+      setWaKey(data.evolution_api_token || "");
+    }
+  };
+
+  // Motivo form
+  const [mNome, setMNome] = useState("");
+  const [mDesc, setMDesc] = useState("");
+  const [mSla, setMSla] = useState("60");
+  const [mPrio, setMPrio] = useState("2");
+  const [mCor, setMCor] = useState("#3B82F6");
+
+  const openMotivoSheet = (m?: Motivo) => {
+    if (m) {
+      setEditMotivo(m);
+      setMNome(m.nome);
+      setMDesc(m.descricao || "");
+      setMSla(String(m.sla_minutos));
+      setMPrio(m.prioridade);
+      setMCor(m.cor_hex);
+    } else {
+      setEditMotivo(null);
+      setMNome(""); setMDesc(""); setMSla("60"); setMPrio("2"); setMCor("#3B82F6");
+    }
+    setMotivoSheet(true);
+  };
+
+  const saveMotivo = async () => {
+    if (!mNome || !userId) return;
+    const payload = {
+      nome: mNome, descricao: mDesc || null, sla_minutos: parseInt(mSla),
+      prioridade: mPrio as any, cor_hex: mCor, user_id: userId,
+    };
+    if (editMotivo) {
+      await supabase.from("motivos_atendimento").update(payload).eq("id", editMotivo.id);
+    } else {
+      await supabase.from("motivos_atendimento").insert(payload);
+    }
+    setMotivoSheet(false);
+    fetchMotivos();
+    toast({ title: editMotivo ? "Motivo atualizado" : "Motivo criado" });
+  };
+
+  const toggleMotivo = async (m: Motivo) => {
+    await supabase.from("motivos_atendimento").update({ ativo: !m.ativo }).eq("id", m.id);
+    fetchMotivos();
+  };
+
+  const deleteMotivo = async (id: string) => {
+    await supabase.from("motivos_atendimento").delete().eq("id", id);
+    fetchMotivos();
+    toast({ title: "Motivo excluído" });
+  };
+
+  // Atendente form
+  const [aNome, setANome] = useState("");
+  const [aSetor, setASetor] = useState("");
+  const [aSig, setASig] = useState("");
+  const [aSigAtiva, setASigAtiva] = useState(true);
+  const [aMax, setAMax] = useState("10");
+
+  const openAtendenteSheet = (a?: Atendente) => {
+    if (a) {
+      setEditAtendente(a);
+      setANome(a.nome_completo); setASetor(a.setor || ""); setASig(a.assinatura_padrao || "");
+      setASigAtiva(a.assinatura_ativa); setAMax(String(a.max_tickets));
+    } else {
+      setEditAtendente(null);
+      setANome(""); setASetor(""); setASig(""); setASigAtiva(true); setAMax("10");
+    }
+    setAtendenteSheet(true);
+  };
+
+  const saveAtendente = async () => {
+    if (!aNome || !editAtendente) return;
+    await supabase.from("atendentes_perfil").update({
+      nome_completo: aNome, setor: aSetor || null, assinatura_padrao: aSig || null,
+      assinatura_ativa: aSigAtiva, max_tickets: parseInt(aMax),
+    }).eq("id", editAtendente.id);
+    setAtendenteSheet(false);
+    fetchAtendentes();
+    toast({ title: "Atendente atualizado" });
+  };
+
+  // Minha assinatura
+  const saveMeuPerfil = async () => {
+    if (!meuPerfil) return;
+    await supabase.from("atendentes_perfil").update({
+      nome_completo: meuPerfil.nome_completo,
+      setor: meuPerfil.setor,
+      assinatura_padrao: meuPerfil.assinatura_padrao,
+      assinatura_ativa: meuPerfil.assinatura_ativa,
+    }).eq("id", meuPerfil.id);
+    toast({ title: "Assinatura salva" });
+  };
+
+  // WhatsApp
+  const saveWaConfig = async () => {
+    if (!userId) return;
+    await supabase.from("company_settings").update({
+      evolution_api_url: waUrl, evolution_api_instance: waInstance, evolution_api_token: waKey,
+    }).eq("user_id", userId);
+    toast({ title: "Configuração salva" });
+  };
+
+  const testWaConnection = async () => {
+    try {
+      const resp = await fetch(`${waUrl}/instance/connectionState/${waInstance}`, {
+        headers: { apikey: waKey },
+      });
+      const data = await resp.json();
+      setWaConnected(data?.instance?.state === "open");
+    } catch {
+      setWaConnected(false);
+    }
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-display font-bold">Configurações de Atendimento</h1>
+
+        <Tabs defaultValue="motivos">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="motivos">Motivos</TabsTrigger>
+            <TabsTrigger value="atendentes">Atendentes</TabsTrigger>
+            <TabsTrigger value="assinatura">Minha Assinatura</TabsTrigger>
+            <TabsTrigger value="whatsapp">Instância WhatsApp</TabsTrigger>
+          </TabsList>
+
+          {/* Motivos */}
+          <TabsContent value="motivos">
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm">Motivos de Atendimento</CardTitle>
+                <Button size="sm" onClick={() => openMotivoSheet()}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Novo Motivo
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Cor</TableHead>
+                      <TableHead className="text-xs">Nome</TableHead>
+                      <TableHead className="text-xs text-center">SLA (min)</TableHead>
+                      <TableHead className="text-xs text-center">Prioridade</TableHead>
+                      <TableHead className="text-xs text-center">Ativo</TableHead>
+                      <TableHead className="text-xs text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {motivos.map(m => (
+                      <TableRow key={m.id}>
+                        <TableCell><span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: m.cor_hex }} /></TableCell>
+                        <TableCell className="text-xs font-medium">{m.nome}</TableCell>
+                        <TableCell className="text-xs text-center">{m.sla_minutos}</TableCell>
+                        <TableCell className="text-xs text-center">{m.prioridade === "1" ? "Alta" : m.prioridade === "2" ? "Média" : "Baixa"}</TableCell>
+                        <TableCell className="text-center">
+                          <Switch checked={m.ativo} onCheckedChange={() => toggleMotivo(m)} className="scale-75" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openMotivoSheet(m)}>
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteMotivo(m.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Atendentes */}
+          <TabsContent value="atendentes">
+            <Card className="glass-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Atendentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Nome</TableHead>
+                      <TableHead className="text-xs">Setor</TableHead>
+                      <TableHead className="text-xs text-center">Max Tickets</TableHead>
+                      <TableHead className="text-xs text-center">Disponível</TableHead>
+                      <TableHead className="text-xs text-center">Assinatura</TableHead>
+                      <TableHead className="text-xs text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {atendentes.map(a => (
+                      <TableRow key={a.id}>
+                        <TableCell className="text-xs font-medium">{a.nome_completo}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{a.setor || "-"}</TableCell>
+                        <TableCell className="text-xs text-center">{a.max_tickets}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={a.disponivel ? "default" : "secondary"} className="text-[10px]">
+                            {a.disponivel ? "Online" : "Ausente"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {a.assinatura_ativa ? <Check className="w-3 h-3 text-green-400 mx-auto" /> : "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAtendenteSheet(a)}>
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {atendentes.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground text-xs py-6">
+                          Nenhum atendente cadastrado
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Minha Assinatura */}
+          <TabsContent value="assinatura">
+            <Card className="glass-card max-w-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Minha Assinatura</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {meuPerfil ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Nome Completo</Label>
+                      <Input value={meuPerfil.nome_completo} onChange={e => setMeuPerfil({ ...meuPerfil, nome_completo: e.target.value })} className="h-9 text-sm" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Setor</Label>
+                      <Input value={meuPerfil.setor || ""} onChange={e => setMeuPerfil({ ...meuPerfil, setor: e.target.value })} className="h-9 text-sm" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Assinatura</Label>
+                      <Textarea
+                        value={meuPerfil.assinatura_padrao || ""}
+                        onChange={e => { setMeuPerfil({ ...meuPerfil, assinatura_padrao: e.target.value }); setSigPreview(e.target.value); }}
+                        className="text-sm min-h-[60px]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={meuPerfil.assinatura_ativa} onCheckedChange={v => setMeuPerfil({ ...meuPerfil, assinatura_ativa: v })} />
+                      <Label className="text-xs">Assinatura ativa</Label>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="mt-4">
+                      <p className="text-[11px] text-muted-foreground mb-2">Preview:</p>
+                      <div className="flex justify-end">
+                        <div className="bg-primary text-primary-foreground rounded-xl rounded-tr-none px-3 py-2 text-sm max-w-[300px]">
+                          <p>Olá! Segue a informação solicitada.</p>
+                          {meuPerfil.assinatura_ativa && sigPreview && (
+                            <p className="text-[10px] mt-1 text-primary-foreground/50">— {sigPreview}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button size="sm" onClick={saveMeuPerfil}>Salvar</Button>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Perfil de atendente não encontrado. Peça ao administrador para cadastrá-lo.</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* WhatsApp */}
+          <TabsContent value="whatsapp">
+            <Card className="glass-card max-w-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Instância WhatsApp (Evolution API)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">URL da API</Label>
+                  <Input value={waUrl} onChange={e => setWaUrl(e.target.value)} placeholder="https://..." className="h-9 text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Instância</Label>
+                  <Input value={waInstance} onChange={e => setWaInstance(e.target.value)} className="h-9 text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">API Key</Label>
+                  <Input value={waKey} onChange={e => setWaKey(e.target.value)} type="password" className="h-9 text-sm" />
+                </div>
+
+                {waConnected !== null && (
+                  <div className="flex items-center gap-2">
+                    {waConnected ? (
+                      <><Wifi className="w-4 h-4 text-green-400" /><span className="text-sm text-green-400">Conectado</span></>
+                    ) : (
+                      <><WifiOff className="w-4 h-4 text-destructive" /><span className="text-sm text-destructive">Desconectado</span></>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={saveWaConfig}>Salvar</Button>
+                  <Button size="sm" variant="outline" onClick={testWaConnection}>Testar Conexão</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Motivo Sheet */}
+        <Sheet open={motivoSheet} onOpenChange={setMotivoSheet}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>{editMotivo ? "Editar Motivo" : "Novo Motivo"}</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Nome</Label>
+                <Input value={mNome} onChange={e => setMNome(e.target.value)} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Descrição</Label>
+                <Textarea value={mDesc} onChange={e => setMDesc(e.target.value)} className="text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">SLA (minutos)</Label>
+                  <Input type="number" value={mSla} onChange={e => setMSla(e.target.value)} className="h-9 text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Prioridade</Label>
+                  <Select value={mPrio} onValueChange={setMPrio}>
+                    <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Alta</SelectItem>
+                      <SelectItem value="2">Média</SelectItem>
+                      <SelectItem value="3">Baixa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Cor</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={mCor} onChange={e => setMCor(e.target.value)} className="w-8 h-8 rounded cursor-pointer" />
+                  <Input value={mCor} onChange={e => setMCor(e.target.value)} className="h-9 text-sm flex-1" />
+                </div>
+              </div>
+              <Button onClick={saveMotivo} className="w-full">Salvar</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Atendente Sheet */}
+        <Sheet open={atendenteSheet} onOpenChange={setAtendenteSheet}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Editar Atendente</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Nome Completo</Label>
+                <Input value={aNome} onChange={e => setANome(e.target.value)} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Setor</Label>
+                <Input value={aSetor} onChange={e => setASetor(e.target.value)} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Assinatura</Label>
+                <Textarea value={aSig} onChange={e => setASig(e.target.value)} className="text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={aSigAtiva} onCheckedChange={setASigAtiva} />
+                <Label className="text-xs">Assinatura ativa</Label>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Max Tickets</Label>
+                <Input type="number" value={aMax} onChange={e => setAMax(e.target.value)} className="h-9 text-sm" />
+              </div>
+              <Button onClick={saveAtendente} className="w-full">Salvar</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </AdminLayout>
+  );
+}

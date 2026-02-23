@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      atendentes_perfil: {
+        Row: {
+          assinatura_ativa: boolean
+          assinatura_padrao: string | null
+          created_at: string
+          disponivel: boolean
+          id: string
+          max_tickets: number
+          nome_completo: string
+          setor: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assinatura_ativa?: boolean
+          assinatura_padrao?: string | null
+          created_at?: string
+          disponivel?: boolean
+          id: string
+          max_tickets?: number
+          nome_completo: string
+          setor?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assinatura_ativa?: boolean
+          assinatura_padrao?: string | null
+          created_at?: string
+          disponivel?: boolean
+          id?: string
+          max_tickets?: number
+          nome_completo?: string
+          setor?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -247,6 +286,45 @@ export type Database = {
         }
         Relationships: []
       }
+      contatos: {
+        Row: {
+          created_at: string
+          email: string | null
+          empresa: string | null
+          id: string
+          nome: string | null
+          notas: string | null
+          total_tickets: number
+          updated_at: string
+          user_id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          nome?: string | null
+          notas?: string | null
+          total_tickets?: number
+          updated_at?: string
+          user_id: string
+          whatsapp_number: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          nome?: string | null
+          notas?: string | null
+          total_tickets?: number
+          updated_at?: string
+          user_id?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       contract_signatures: {
         Row: {
           contract_id: string
@@ -366,6 +444,95 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mensagens: {
+        Row: {
+          assinatura: string | null
+          atendente_id: string | null
+          conteudo: string | null
+          created_at: string
+          evolution_id: string | null
+          id: string
+          midia_url: string | null
+          sentido: Database["public"]["Enums"]["msg_sentido"]
+          status_envio: Database["public"]["Enums"]["msg_status_envio"] | null
+          ticket_id: string
+          timestamp_wa: string | null
+          tipo: Database["public"]["Enums"]["msg_tipo"]
+        }
+        Insert: {
+          assinatura?: string | null
+          atendente_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          evolution_id?: string | null
+          id?: string
+          midia_url?: string | null
+          sentido: Database["public"]["Enums"]["msg_sentido"]
+          status_envio?: Database["public"]["Enums"]["msg_status_envio"] | null
+          ticket_id: string
+          timestamp_wa?: string | null
+          tipo?: Database["public"]["Enums"]["msg_tipo"]
+        }
+        Update: {
+          assinatura?: string | null
+          atendente_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          evolution_id?: string | null
+          id?: string
+          midia_url?: string | null
+          sentido?: Database["public"]["Enums"]["msg_sentido"]
+          status_envio?: Database["public"]["Enums"]["msg_status_envio"] | null
+          ticket_id?: string
+          timestamp_wa?: string | null
+          tipo?: Database["public"]["Enums"]["msg_tipo"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      motivos_atendimento: {
+        Row: {
+          ativo: boolean
+          cor_hex: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          prioridade: Database["public"]["Enums"]["prioridade"]
+          sla_minutos: number
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor_hex?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          prioridade?: Database["public"]["Enums"]["prioridade"]
+          sla_minutos?: number
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          cor_hex?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          prioridade?: Database["public"]["Enums"]["prioridade"]
+          sla_minutos?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       payment_plans: {
         Row: {
@@ -879,6 +1046,87 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          assumed_at: string | null
+          atendente_id: string | null
+          avaliacao: number | null
+          closed_at: string | null
+          contato_id: string
+          created_at: string
+          first_response_at: string | null
+          id: string
+          motivo_id: string | null
+          numero: number
+          protocolo: string | null
+          sla_deadline: string | null
+          sla_status: Database["public"]["Enums"]["sla_status"]
+          status: Database["public"]["Enums"]["ticket_status"]
+          tags: string[] | null
+          tempo_resposta_min: number | null
+          tempo_total_min: number | null
+          user_id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          assumed_at?: string | null
+          atendente_id?: string | null
+          avaliacao?: number | null
+          closed_at?: string | null
+          contato_id: string
+          created_at?: string
+          first_response_at?: string | null
+          id?: string
+          motivo_id?: string | null
+          numero?: number
+          protocolo?: string | null
+          sla_deadline?: string | null
+          sla_status?: Database["public"]["Enums"]["sla_status"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          tags?: string[] | null
+          tempo_resposta_min?: number | null
+          tempo_total_min?: number | null
+          user_id: string
+          whatsapp_number: string
+        }
+        Update: {
+          assumed_at?: string | null
+          atendente_id?: string | null
+          avaliacao?: number | null
+          closed_at?: string | null
+          contato_id?: string
+          created_at?: string
+          first_response_at?: string | null
+          id?: string
+          motivo_id?: string | null
+          numero?: number
+          protocolo?: string | null
+          sla_deadline?: string | null
+          sla_status?: Database["public"]["Enums"]["sla_status"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          tags?: string[] | null
+          tempo_resposta_min?: number | null
+          tempo_total_min?: number | null
+          user_id?: string
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_contato_id_fkey"
+            columns: ["contato_id"]
+            isOneToOne: false
+            referencedRelation: "contatos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_motivo_id_fkey"
+            columns: ["motivo_id"]
+            isOneToOne: false
+            referencedRelation: "motivos_atendimento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -899,6 +1147,35 @@ export type Database = {
       }
     }
     Views: {
+      kpi_dashboard: {
+        Row: {
+          dia: string | null
+          encerrados: number | null
+          nps_medio: number | null
+          sla_ok: number | null
+          sla_violado: number | null
+          tma_minutos: number | null
+          tmr_minutos: number | null
+          total: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      kpi_por_atendente: {
+        Row: {
+          atendente_id: string | null
+          avaliacao_media: number | null
+          encerrados: number | null
+          nome_completo: string | null
+          setor: string | null
+          tma_medio: number | null
+          tmr_medio: number | null
+          total: number | null
+          user_id: string | null
+          violacoes_sla: number | null
+        }
+        Relationships: []
+      }
       public_contracts: {
         Row: {
           access_code: string | null
@@ -1039,6 +1316,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
+      msg_sentido: "ENTRADA" | "SAIDA" | "SISTEMA"
+      msg_status_envio: "ENVIANDO" | "ENVIADO" | "ENTREGUE" | "LIDO" | "ERRO"
+      msg_tipo: "TEXT" | "IMAGE" | "AUDIO" | "VIDEO" | "DOCUMENT"
+      prioridade: "1" | "2" | "3"
+      sla_status: "OK" | "ALERTA" | "VIOLADO"
+      ticket_status:
+        | "ABERTO"
+        | "EM_ATENDIMENTO"
+        | "AGUARDANDO"
+        | "ENCERRADO"
+        | "CANCELADO"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1167,6 +1455,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "viewer"],
+      msg_sentido: ["ENTRADA", "SAIDA", "SISTEMA"],
+      msg_status_envio: ["ENVIANDO", "ENVIADO", "ENTREGUE", "LIDO", "ERRO"],
+      msg_tipo: ["TEXT", "IMAGE", "AUDIO", "VIDEO", "DOCUMENT"],
+      prioridade: ["1", "2", "3"],
+      sla_status: ["OK", "ALERTA", "VIOLADO"],
+      ticket_status: [
+        "ABERTO",
+        "EM_ATENDIMENTO",
+        "AGUARDANDO",
+        "ENCERRADO",
+        "CANCELADO",
+      ],
     },
   },
 } as const
