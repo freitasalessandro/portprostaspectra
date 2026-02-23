@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag,
   CreditCard, Plug, ScrollText, MessageSquare, FileSignature, ChevronDown,
-  LayoutDashboard, Shield, Sun, Moon, MessageCircle, Headphones, Sliders,
+  LayoutDashboard, Shield, Sun, Moon, MessageCircle, Headphones, Sliders, Contact,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useOpenTicketCount } from "@/hooks/useAtendimento";
@@ -38,6 +38,7 @@ const menuGroups: MenuGroup[] = [
     basePaths: ["/atendimento"],
     items: [
       { title: "Chat", icon: Headphones, path: "/atendimento" },
+      { title: "Contatos", icon: Contact, path: "/atendimento/contatos" },
       { title: "Dashboard", icon: LayoutDashboard, path: "/atendimento/dashboard" },
       { title: "Configurações", icon: Sliders, path: "/atendimento/configuracoes" },
     ],
