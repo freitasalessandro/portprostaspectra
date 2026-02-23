@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, User, Plus, UserCheck, Loader2, Inbox } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Search, User, Plus, UserCheck, Loader2, Inbox, Filter } from "lucide-react";
 import { Ticket, AtendentePerfil, cargoLabels, cargoColors, AtendenteCargo } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -67,6 +70,7 @@ export default function TicketList({
   tickets, loading, loadingMore, hasMore, tabCounts, onLoadMore, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket,
 }: TicketListProps) {
   const [search, setSearch] = useState("");
+  const [atendenteFilter, setAtendenteFilter] = useState<string>("all");
   const [newDialog, setNewDialog] = useState(false);
   const [newNumber, setNewNumber] = useState("");
   const [newNome, setNewNome] = useState("");
@@ -77,6 +81,17 @@ export default function TicketList({
   const [selectedContato, setSelectedContato] = useState<Contato | null>(null);
   const { toast } = useToast();
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Extract unique atendentes from tickets for the filter dropdown
+  const atendentes = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const t of tickets) {
+      if (t.atendente_id && t.atendente_nome) {
+        map.set(t.atendente_id, t.atendente_nome);
+      }
+    }
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [tickets]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -158,6 +173,10 @@ export default function TicketList({
   };
 
   const filtered = tickets.filter(t => {
+    // Atendente filter
+    if (atendenteFilter === "unassigned" && t.atendente_id) return false;
+    if (atendenteFilter !== "all" && atendenteFilter !== "unassigned" && t.atendente_id !== atendenteFilter) return false;
+    // Text search
     if (!search) return true;
     const s = search.toLowerCase();
     return t.contato?.nome?.toLowerCase().includes(s) || t.whatsapp_number.includes(s) || t.protocolo?.toLowerCase().includes(s);
@@ -212,6 +231,32 @@ export default function TicketList({
             <Plus className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* Atendente filter */}
+        {atendentes.length > 0 && (
+          <div className="mt-1.5">
+            <Select value={atendenteFilter} onValueChange={setAtendenteFilter}>
+              <SelectTrigger className="h-7 text-[11px] bg-secondary/20 border-border/20 rounded-lg">
+                <div className="flex items-center gap-1.5 truncate">
+                  <Filter className="w-3 h-3 shrink-0 text-muted-foreground/60" />
+                  <SelectValue placeholder="Filtrar por atendente" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border z-50">
+                <SelectItem value="all" className="text-xs">Todos os atendentes</SelectItem>
+                <SelectItem value="unassigned" className="text-xs">Sem atendente</SelectItem>
+                {atendentes.map(([id, nome]) => (
+                  <SelectItem key={id} value={id} className="text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <UserCheck className="w-3 h-3 shrink-0 text-muted-foreground/60" />
+                      {nome}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {/* ─── TABS ─── */}
