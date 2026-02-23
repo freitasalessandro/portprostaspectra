@@ -38,40 +38,48 @@ export default function Atendimento() {
 
   return (
     <AdminLayout>
-      <div className="flex h-[calc(100vh-theme(spacing.14))] md:h-[calc(100vh-theme(spacing.0))] -m-6 md:-m-10">
-        <TicketList
-          tickets={tickets}
-          loading={loading}
-          loadingMore={loadingMore}
-          hasMore={hasMore}
-          tabCounts={tabCounts}
-          onLoadMore={fetchMore}
-          selectedId={selectedTicket?.id || null}
-          onSelect={setSelectedTicket}
-          filter={filter}
-          onFilterChange={setFilter}
-          perfil={perfil}
-          onToggleDisponivel={handleToggleDisponivel}
-          onNewTicket={(ticket) => { setSelectedTicket(ticket); refetch(); }}
-        />
+      <div className="flex h-[calc(100vh-theme(spacing.14))] md:h-screen -m-6 md:-m-10 overflow-hidden">
+        {/* Mobile: show list OR chat, not both */}
+        <div className={`${selectedTicket ? 'hidden md:flex' : 'flex'} md:w-[310px] shrink-0 flex-col`}>
+          <TicketList
+            tickets={tickets}
+            loading={loading}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            tabCounts={tabCounts}
+            onLoadMore={fetchMore}
+            selectedId={selectedTicket?.id || null}
+            onSelect={setSelectedTicket}
+            filter={filter}
+            onFilterChange={setFilter}
+            perfil={perfil}
+            onToggleDisponivel={handleToggleDisponivel}
+            onNewTicket={(ticket) => { setSelectedTicket(ticket); refetch(); }}
+          />
+        </div>
 
-        <ChatArea
-          ticket={selectedTicket}
-          mensagens={mensagens}
-          loadingMensagens={loadingMensagens}
-          motivos={motivos}
-          perfil={perfil}
-          showPanel={showPanel}
-          onTogglePanel={() => setShowPanel(!showPanel)}
-          onTicketUpdate={refetch}
-        />
+        <div className={`${selectedTicket ? 'flex' : 'hidden md:flex'} flex-1 min-w-0 flex-col`}>
+          <ChatArea
+            ticket={selectedTicket}
+            mensagens={mensagens}
+            loadingMensagens={loadingMensagens}
+            motivos={motivos}
+            perfil={perfil}
+            showPanel={showPanel}
+            onTogglePanel={() => setShowPanel(!showPanel)}
+            onTicketUpdate={refetch}
+            onBack={() => setSelectedTicket(null)}
+          />
+        </div>
 
         {showPanel && selectedTicket && (
-          <DetailPanel
-            ticket={selectedTicket}
-            motivos={motivos}
-            onTicketUpdate={refetch}
-          />
+          <div className="hidden lg:flex">
+            <DetailPanel
+              ticket={selectedTicket}
+              motivos={motivos}
+              onTicketUpdate={refetch}
+            />
+          </div>
         )}
       </div>
     </AdminLayout>
