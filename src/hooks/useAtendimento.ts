@@ -63,6 +63,20 @@ export interface Motivo {
   ativo: boolean;
 }
 
+export type AtendenteCargo = "n1_triagem" | "n2_tecnico" | "supervisor";
+
+export const cargoLabels: Record<AtendenteCargo, string> = {
+  n1_triagem: "N1 · Triagem",
+  n2_tecnico: "N2 · Técnico",
+  supervisor: "Supervisor",
+};
+
+export const cargoColors: Record<AtendenteCargo, string> = {
+  n1_triagem: "bg-sky-500/15 text-sky-400 border-sky-500/25",
+  n2_tecnico: "bg-violet-500/15 text-violet-400 border-violet-500/25",
+  supervisor: "bg-amber-500/15 text-amber-400 border-amber-500/25",
+};
+
 export interface AtendentePerfil {
   id: string;
   nome_completo: string;
@@ -71,6 +85,7 @@ export interface AtendentePerfil {
   assinatura_ativa: boolean;
   max_tickets: number;
   disponivel: boolean;
+  cargo: AtendenteCargo;
 }
 
 export function useTickets(filter: string = "minha_fila") {
