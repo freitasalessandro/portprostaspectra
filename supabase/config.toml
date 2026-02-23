@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.evolution-status]
 verify_jwt = false
+
+[functions.sync-contact-names]
+verify_jwt = false
