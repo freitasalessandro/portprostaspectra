@@ -78,6 +78,7 @@ export function useTickets(filter: string = "minha_fila") {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [encerradosCount, setEncerradosCount] = useState<number>(0);
   const [userId, setUserId] = useState<string | null>(null);
 
   const PAGE_SIZE = 30;
@@ -144,8 +145,16 @@ export function useTickets(filter: string = "minha_fila") {
     setLoading(true);
     setHasMore(false);
 
+    // Fetch encerrados count in parallel
+    const countPromise = supabase
+      .from("tickets")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "ENCERRADO");
+
     const query = buildQuery().range(0, PAGE_SIZE - 1);
-    const { data, error } = await query;
+    const [{ data, error }, { count }] = await Promise.all([query, countPromise]);
+
+    setEncerradosCount(count ?? 0);
 
     if (!error && data) {
       const enriched = await enrichTickets(data);
@@ -189,7 +198,7 @@ export function useTickets(filter: string = "minha_fila") {
     return () => { supabase.removeChannel(channel); };
   }, [fetchTickets]);
 
-  return { tickets, loading, loadingMore, hasMore, refetch: fetchTickets, fetchMore, userId };
+  return { tickets, loading, loadingMore, hasMore, encerradosCount, refetch: fetchTickets, fetchMore, userId };
 }
 
 export function useMensagens(ticketId: string | null) {
