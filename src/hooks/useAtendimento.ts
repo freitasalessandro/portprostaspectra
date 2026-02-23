@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 export interface Contato {
   id: string;
@@ -141,6 +142,7 @@ export function useTickets(filter: string = "minha_fila") {
 export function useMensagens(ticketId: string | null) {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(false);
+  const playSound = useNotificationSound();
 
   const fetchMensagens = useCallback(async () => {
     if (!ticketId) { setMensagens([]); return; }
@@ -167,7 +169,12 @@ export function useMensagens(ticketId: string | null) {
         table: "mensagens",
         filter: `ticket_id=eq.${ticketId}`,
       }, (payload) => {
-        setMensagens(prev => [...prev, payload.new as Mensagem]);
+        const newMsg = payload.new as Mensagem;
+        setMensagens(prev => [...prev, newMsg]);
+        // Play sound for incoming messages
+        if (newMsg.sentido === "ENTRADA") {
+          playSound();
+        }
       })
       .on("postgres_changes", {
         event: "UPDATE",
@@ -180,7 +187,7 @@ export function useMensagens(ticketId: string | null) {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [ticketId]);
+  }, [ticketId, playSound]);
 
   return { mensagens, loading, refetch: fetchMensagens };
 }
