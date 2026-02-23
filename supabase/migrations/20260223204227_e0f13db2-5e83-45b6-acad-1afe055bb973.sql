@@ -1,0 +1,1 @@
+ALTER TABLE public.ticket_transfers ADD COLUMN motivo TEXT;
