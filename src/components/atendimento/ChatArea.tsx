@@ -96,34 +96,31 @@ export default function ChatArea({
     if (!text.trim() || !ticket || !perfil) return;
     setSending(true);
 
-    const sig = perfil.assinatura_ativa && perfil.assinatura_padrao
-      ? `\n\n${perfil.assinatura_padrao}`
-      : "";
-
-    // Insert message locally
-    const { error } = await supabase.from("mensagens").insert({
-      ticket_id: ticket.id,
-      sentido: "SAIDA",
-      tipo: "TEXT",
-      conteudo: text.trim(),
-      atendente_id: perfil.id,
-      assinatura: perfil.assinatura_ativa ? perfil.assinatura_padrao : null,
-      status_envio: "ENVIADO",
-    });
-
-    if (error) {
-      toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
-    } else {
-      // Update ticket status if needed
-      if (ticket.status === "ABERTO") {
-        await supabase.from("tickets").update({
-          status: "EM_ATENDIMENTO" as any,
-          atendente_id: perfil.id,
-          assumed_at: new Date().toISOString(),
-        }).eq("id", ticket.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({ title: "Erro", description: "Sessão expirada. Faça login novamente.", variant: "destructive" });
+        setSending(false);
+        return;
       }
-      setText("");
-      onTicketUpdate();
+
+      const { data, error } = await supabase.functions.invoke("send-message", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          ticket_id: ticket.id,
+          conteudo: text.trim(),
+          atendente_id: perfil.id,
+        },
+      });
+
+      if (error) {
+        toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
+      } else {
+        setText("");
+        onTicketUpdate();
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar", description: err.message || "Falha no envio", variant: "destructive" });
     }
     setSending(false);
   };
