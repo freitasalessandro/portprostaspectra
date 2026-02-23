@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, KeyboardEvent } from "react";
+import { useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2,
+  Send, PauseCircle, XCircle, ChevronRight, ChevronLeft, Check, CheckCheck, Star, Zap, Loader2, Paperclip, Image, FileText, X, Download,
 } from "lucide-react";
 import { Ticket, Mensagem, Motivo, AtendentePerfil } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,12 @@ interface ChatAreaProps {
   showPanel: boolean;
   onTogglePanel: () => void;
   onTicketUpdate: () => void;
+}
+
+interface PendingFile {
+  file: File;
+  preview: string | null;
+  tipo: "IMAGE" | "DOCUMENT" | "AUDIO" | "VIDEO";
 }
 
 function formatPhone(n: string) {
@@ -67,6 +73,53 @@ function StatusIcon({ status }: { status: string | null }) {
   return null;
 }
 
+function getFileType(file: File): PendingFile["tipo"] {
+  if (file.type.startsWith("image/")) return "IMAGE";
+  if (file.type.startsWith("video/")) return "VIDEO";
+  if (file.type.startsWith("audio/")) return "AUDIO";
+  return "DOCUMENT";
+}
+
+function MediaBubble({ msg }: { msg: Mensagem }) {
+  const isOut = msg.sentido === "SAIDA";
+
+  if (msg.tipo === "IMAGE" && msg.midia_url) {
+    return (
+      <div className="space-y-1">
+        <img
+          src={msg.midia_url}
+          alt="Imagem"
+          className="max-w-full rounded-lg cursor-pointer"
+          style={{ maxHeight: 280 }}
+          onClick={() => window.open(msg.midia_url!, "_blank")}
+        />
+        {msg.conteudo && <p className="whitespace-pre-wrap break-words text-sm">{msg.conteudo}</p>}
+      </div>
+    );
+  }
+
+  if ((msg.tipo === "DOCUMENT" || msg.tipo === "AUDIO" || msg.tipo === "VIDEO") && msg.midia_url) {
+    const fileName = msg.midia_url.split("/").pop() || "Arquivo";
+    return (
+      <div className="space-y-1">
+        <a
+          href={msg.midia_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${isOut ? "bg-primary-foreground/10" : "bg-background/30"}`}
+        >
+          {msg.tipo === "AUDIO" ? "🎵" : msg.tipo === "VIDEO" ? "🎬" : <FileText className="w-4 h-4 shrink-0" />}
+          <span className="text-xs truncate flex-1">{decodeURIComponent(fileName)}</span>
+          <Download className="w-3.5 h-3.5 shrink-0 opacity-60" />
+        </a>
+        {msg.conteudo && <p className="whitespace-pre-wrap break-words text-sm">{msg.conteudo}</p>}
+      </div>
+    );
+  }
+
+  return <p className="whitespace-pre-wrap break-words">{msg.conteudo}</p>;
+}
+
 export default function ChatArea({
   ticket, mensagens, loadingMensagens, motivos, perfil, showPanel, onTogglePanel, onTicketUpdate,
 }: ChatAreaProps) {
@@ -77,7 +130,9 @@ export default function ChatArea({
   const [quickReplies, setQuickReplies] = useState<{ id: string; nome: string; conteudo: string; categoria: string }[]>([]);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickSearch, setQuickSearch] = useState("");
+  const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,8 +147,49 @@ export default function ChatArea({
     }
   }, [mensagens]);
 
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 16 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "Máximo de 16MB", variant: "destructive" });
+      return;
+    }
+
+    const tipo = getFileType(file);
+    const preview = tipo === "IMAGE" ? URL.createObjectURL(file) : null;
+    setPendingFile({ file, preview, tipo });
+
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const clearPendingFile = () => {
+    if (pendingFile?.preview) URL.revokeObjectURL(pendingFile.preview);
+    setPendingFile(null);
+  };
+
+  const uploadFile = async (file: File): Promise<string | null> => {
+    const ext = file.name.split(".").pop() || "bin";
+    const path = `${ticket!.id}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    const { error } = await supabase.storage.from("chat-media").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (error) {
+      console.error("Upload error:", error);
+      toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("chat-media").getPublicUrl(path);
+    return urlData.publicUrl;
+  };
+
   const handleSend = async () => {
-    if (!text.trim() || !ticket || !perfil) return;
+    if ((!text.trim() && !pendingFile) || !ticket || !perfil) return;
     setSending(true);
 
     try {
@@ -104,12 +200,26 @@ export default function ChatArea({
         return;
       }
 
+      let midiaUrl: string | null = null;
+      let tipo = "TEXT";
+
+      if (pendingFile) {
+        midiaUrl = await uploadFile(pendingFile.file);
+        if (!midiaUrl) {
+          setSending(false);
+          return;
+        }
+        tipo = pendingFile.tipo;
+      }
+
       const { data, error } = await supabase.functions.invoke("send-message", {
         headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           ticket_id: ticket.id,
-          conteudo: text.trim(),
+          conteudo: text.trim() || null,
           atendente_id: perfil.id,
+          tipo,
+          midia_url: midiaUrl,
         },
       });
 
@@ -117,6 +227,7 @@ export default function ChatArea({
         toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
       } else {
         setText("");
+        clearPendingFile();
         onTicketUpdate();
       }
     } catch (err: any) {
@@ -257,7 +368,7 @@ export default function ChatArea({
                           : "bg-secondary text-foreground rounded-xl rounded-tl-none"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap break-words">{msg.conteudo}</p>
+                      <MediaBubble msg={msg} />
                       <div className={`flex items-center gap-1 mt-1 ${isOut ? "justify-end" : "justify-start"}`}>
                         <span className={`text-[10px] ${isOut ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                           {format(new Date(msg.created_at), "HH:mm")}
@@ -292,6 +403,25 @@ export default function ChatArea({
       {/* Input bar */}
       {ticket.status !== "ENCERRADO" && ticket.status !== "CANCELADO" && (
         <div className="p-3 border-t border-border/30 bg-card/20 shrink-0">
+          {/* File preview */}
+          {pendingFile && (
+            <div className="mb-2 p-2 bg-secondary/40 rounded-lg flex items-center gap-2">
+              {pendingFile.tipo === "IMAGE" && pendingFile.preview ? (
+                <img src={pendingFile.preview} alt="Preview" className="w-16 h-16 object-cover rounded" />
+              ) : (
+                <div className="w-12 h-12 bg-secondary rounded flex items-center justify-center">
+                  {pendingFile.tipo === "AUDIO" ? "🎵" : pendingFile.tipo === "VIDEO" ? "🎬" : <FileText className="w-5 h-5 text-muted-foreground" />}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate">{pendingFile.file.name}</p>
+                <p className="text-[10px] text-muted-foreground">{(pendingFile.file.size / 1024).toFixed(0)} KB</p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={clearPendingFile}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          )}
           <div className="flex items-end gap-2">
             <Popover open={quickOpen} onOpenChange={setQuickOpen}>
               <PopoverTrigger asChild>
@@ -337,18 +467,37 @@ export default function ChatArea({
                 </ScrollArea>
               </PopoverContent>
             </Popover>
+
+            {/* Attachment button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+              title="Anexar arquivo"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
+              onChange={handleFileSelect}
+            />
+
             <Textarea
               value={text}
               onChange={e => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Digite uma mensagem..."
+              placeholder={pendingFile ? "Legenda (opcional)..." : "Digite uma mensagem..."}
               className="min-h-[36px] max-h-[120px] resize-none text-sm bg-background/50"
               rows={1}
             />
             <Button
               size="icon"
               className="h-9 w-9 shrink-0"
-              disabled={!text.trim() || sending}
+              disabled={(!text.trim() && !pendingFile) || sending}
               onClick={handleSend}
             >
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

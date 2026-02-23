@@ -31,14 +31,15 @@ Deno.serve(async (req) => {
     }
 
     const userId = user.id;
-
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const { ticket_id, conteudo, atendente_id } = await req.json();
+    const { ticket_id, conteudo, atendente_id, tipo, midia_url } = await req.json();
 
-    if (!ticket_id || !conteudo) {
+    if (!ticket_id || (!conteudo && !midia_url)) {
       return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
     }
+
+    const msgTipo = tipo || "TEXT";
 
     // Get ticket
     const { data: ticket } = await supabase
@@ -58,9 +59,9 @@ Deno.serve(async (req) => {
       .eq("id", atendente_id || userId)
       .maybeSingle();
 
-    // Build message with signature
-    let finalText = conteudo;
-    if (perfil?.assinatura_ativa && perfil?.assinatura_padrao) {
+    // Build message with signature (only for text)
+    let finalText = conteudo || "";
+    if (msgTipo === "TEXT" && perfil?.assinatura_ativa && perfil?.assinatura_padrao) {
       finalText += "\n\n" + perfil.assinatura_padrao;
     }
 
@@ -78,20 +79,54 @@ Deno.serve(async (req) => {
           ? ticket.whatsapp_number
           : ticket.whatsapp_number + "@s.whatsapp.net";
 
-        await fetch(
-          `${baseUrl}/message/sendText/${settings.evolution_api_instance}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: settings.evolution_api_token,
-            },
-            body: JSON.stringify({
-              number: waNumber,
-              text: finalText,
-            }),
-          }
-        );
+        if (msgTipo === "TEXT") {
+          await fetch(
+            `${baseUrl}/message/sendText/${settings.evolution_api_instance}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: settings.evolution_api_token,
+              },
+              body: JSON.stringify({ number: waNumber, text: finalText }),
+            }
+          );
+        } else if (msgTipo === "IMAGE" && midia_url) {
+          await fetch(
+            `${baseUrl}/message/sendMedia/${settings.evolution_api_instance}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: settings.evolution_api_token,
+              },
+              body: JSON.stringify({
+                number: waNumber,
+                mediatype: "image",
+                media: midia_url,
+                caption: conteudo || "",
+              }),
+            }
+          );
+        } else if ((msgTipo === "DOCUMENT" || msgTipo === "AUDIO" || msgTipo === "VIDEO") && midia_url) {
+          await fetch(
+            `${baseUrl}/message/sendMedia/${settings.evolution_api_instance}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: settings.evolution_api_token,
+              },
+              body: JSON.stringify({
+                number: waNumber,
+                mediatype: msgTipo === "DOCUMENT" ? "document" : msgTipo === "VIDEO" ? "video" : "audio",
+                media: midia_url,
+                caption: conteudo || "",
+                fileName: midia_url.split("/").pop() || "file",
+              }),
+            }
+          );
+        }
       } catch (err) {
         console.error("Evolution API error:", err);
       }
@@ -101,10 +136,11 @@ Deno.serve(async (req) => {
     const { data: msg, error: msgError } = await supabase.from("mensagens").insert({
       ticket_id,
       sentido: "SAIDA",
-      tipo: "TEXT",
-      conteudo,
+      tipo: msgTipo,
+      conteudo: conteudo || null,
+      midia_url: midia_url || null,
       atendente_id: atendente_id || userId,
-      assinatura: perfil?.assinatura_ativa ? perfil.assinatura_padrao : null,
+      assinatura: msgTipo === "TEXT" && perfil?.assinatura_ativa ? perfil.assinatura_padrao : null,
       status_envio: "ENVIADO",
     }).select().single();
 
