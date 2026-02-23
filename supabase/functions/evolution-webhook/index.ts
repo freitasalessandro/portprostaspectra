@@ -64,7 +64,28 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const event = body.event;
-    console.log("Webhook event:", event);
+    const instanceName = body.instance || body.instanceName || body.instance_name || null;
+    console.log("Webhook event:", event, "instance:", instanceName);
+
+    // Resolve owner by matching the instance name to company_settings
+    async function resolveOwner(): Promise<string | null> {
+      if (instanceName) {
+        const { data } = await supabase
+          .from("company_settings")
+          .select("user_id")
+          .eq("evolution_api_instance", instanceName)
+          .limit(1)
+          .maybeSingle();
+        if (data) return data.user_id;
+      }
+      // Fallback: single-tenant (first record)
+      const { data } = await supabase
+        .from("company_settings")
+        .select("user_id")
+        .limit(1)
+        .single();
+      return data?.user_id || null;
+    }
 
     // Always return 200 to prevent Evolution API retries
     if (event === "messages.upsert") {
@@ -89,15 +110,8 @@ Deno.serve(async (req) => {
         return new Response("ok", { headers: corsHeaders });
       }
 
-      // Find the owner user (the one who set up this Evolution instance)
-      const { data: settings } = await supabase
-        .from("company_settings")
-        .select("user_id")
-        .limit(1)
-        .single();
-
-      if (!settings) return new Response("no settings", { headers: corsHeaders });
-      const ownerId = settings.user_id;
+      const ownerId = await resolveOwner();
+      if (!ownerId) return new Response("no settings", { headers: corsHeaders });
 
       // Upsert contato
       const { data: contato } = await supabase
