@@ -164,13 +164,13 @@ const AdminPagamentos = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <motion.div className="flex items-center justify-between" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <motion.div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div>
             <p className="text-primary/60 tracking-[0.3em] uppercase text-[11px] mb-1.5 font-body flex items-center gap-2">
               <span className="w-6 h-px bg-primary/40" />
               Financeiro
             </p>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">Condições de Pagamento</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Condições de Pagamento</h1>
             <p className="text-sm text-muted-foreground/50 mt-2 font-body">Configure planos de parcelamento para propostas de setup</p>
           </div>
           {!editingPlan && (
@@ -208,23 +208,23 @@ const AdminPagamentos = () => {
 
               <div className="space-y-2">
                 {editingPlan.installments.map((inst, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 border border-border/30 rounded-sm bg-card/40">
-                    <GripVertical className="w-4 h-4 text-muted-foreground/30 shrink-0" />
-                    <span className="text-xs text-muted-foreground/60 font-display font-bold w-6">{idx + 1}.</span>
+                  <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 p-3 border border-border/30 rounded-sm bg-card/40">
+                    <GripVertical className="w-4 h-4 text-muted-foreground/30 shrink-0 hidden sm:block" />
+                    <span className="text-xs text-muted-foreground/60 font-display font-bold w-6 shrink-0">{idx + 1}.</span>
                     <Input
                       value={inst.label}
                       onChange={(e) => updateInstallment(idx, "label", e.target.value)}
                       placeholder="Nome da parcela"
-                      className="flex-1"
+                      className="flex-1 min-w-[120px]"
                     />
-                    <div className="flex items-center gap-1 w-28">
+                    <div className="flex items-center gap-1 w-24 sm:w-28 shrink-0">
                       <Input
                         type="number"
                         min={0}
                         max={100}
                         value={inst.percent}
                         onChange={(e) => updateInstallment(idx, "percent", e.target.value)}
-                        className="w-20"
+                        className="w-16 sm:w-20"
                       />
                       <Percent className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                     </div>
@@ -251,7 +251,7 @@ const AdminPagamentos = () => {
             {editingPlan.installments.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-muted-foreground text-xs uppercase tracking-wider">Prévia (para R$ 10.000)</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                   {editingPlan.installments.map((inst, idx) => (
                     <div key={idx} className="border border-border/20 p-3 rounded-sm text-center">
                       <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider block">{inst.label}</span>

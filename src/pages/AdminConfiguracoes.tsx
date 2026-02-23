@@ -274,7 +274,7 @@ const AdminConfiguracoes = () => {
               <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Endereço</label>
               <Input value={settings.address} onChange={e => update("address", e.target.value)} placeholder="Rua Exemplo, 123 - Sala 1" />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Cidade</label>
                 <Input value={settings.city} onChange={e => update("city", e.target.value)} placeholder="São Paulo" />
@@ -283,7 +283,7 @@ const AdminConfiguracoes = () => {
                 <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Estado</label>
                 <Input value={settings.state} onChange={e => update("state", e.target.value)} placeholder="SP" />
               </div>
-              <div>
+              <div className="col-span-2 sm:col-span-1">
                 <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">CEP</label>
                 <Input value={settings.zip_code} onChange={e => update("zip_code", e.target.value)} placeholder="00000-000" />
               </div>
@@ -296,7 +296,7 @@ const AdminConfiguracoes = () => {
           <h2 className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
             <Calculator className="w-4 h-4" /> BDI Global (Padrão)
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <div>
               <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Imposto (%)</label>
               <Input type="number" step="0.01" min="0" max="100" value={settings.bdi_tax || ""} onChange={e => updateNum("bdi_tax", e.target.value)} placeholder="0" />

@@ -164,7 +164,7 @@ const AdminUsuarios = () => {
     <AdminLayout>
       <div className="max-w-4xl">
         <motion.div
-          className="flex items-center justify-between mb-10"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -174,7 +174,7 @@ const AdminUsuarios = () => {
               <span className="w-6 h-px bg-primary/40" />
               Equipe
             </p>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">Usuários</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Usuários</h1>
           </div>
           <Button
             onClick={() => setShowInvite(true)}
@@ -198,13 +198,13 @@ const AdminUsuarios = () => {
               >
                 <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/30 to-transparent transition-all duration-500" />
 
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary font-display font-bold text-sm">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary font-display font-bold text-xs sm:text-sm">
                     {(u.display_name || u.email || "?")[0].toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-display font-bold text-sm truncate">
+                      <h3 className="font-display font-bold text-xs sm:text-sm truncate">
                         {u.display_name || "Sem nome"}
                       </h3>
                       {u.user_id === currentUserId && (
@@ -213,13 +213,13 @@ const AdminUsuarios = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground/60 font-body flex items-center gap-1">
-                      <Mail className="w-3 h-3" /> {u.email}
+                    <p className="text-[10px] sm:text-xs text-muted-foreground/60 font-body flex items-center gap-1 truncate">
+                      <Mail className="w-3 h-3 shrink-0" /> <span className="truncate">{u.email}</span>
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {u.user_id === currentUserId ? (
                     <span className={`text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm font-bold ${roleColors[u.role]}`}>
                       <Shield className="w-3 h-3 inline mr-1" />
