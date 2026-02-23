@@ -80,7 +80,7 @@ function getFileType(file: File): PendingFile["tipo"] {
   return "DOCUMENT";
 }
 
-function MediaBubble({ msg }: { msg: Mensagem }) {
+function MediaBubble({ msg, onImageClick }: { msg: Mensagem; onImageClick?: (url: string) => void }) {
   const isOut = msg.sentido === "SAIDA";
 
   if (msg.tipo === "IMAGE" && msg.midia_url) {
@@ -89,9 +89,9 @@ function MediaBubble({ msg }: { msg: Mensagem }) {
         <img
           src={msg.midia_url}
           alt="Imagem"
-          className="max-w-full rounded-lg cursor-pointer"
+          className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
           style={{ maxHeight: 280 }}
-          onClick={() => window.open(msg.midia_url!, "_blank")}
+          onClick={() => onImageClick?.(msg.midia_url!)}
         />
         {msg.conteudo && <p className="whitespace-pre-wrap break-words text-sm">{msg.conteudo}</p>}
       </div>
@@ -132,6 +132,7 @@ export default function ChatArea({
   const [quickSearch, setQuickSearch] = useState("");
   const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const dragCounter = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -413,7 +414,7 @@ export default function ChatArea({
                           : "bg-secondary text-foreground rounded-xl rounded-tl-none"
                       }`}
                     >
-                      <MediaBubble msg={msg} />
+                      <MediaBubble msg={msg} onImageClick={setLightboxUrl} />
                       <div className={`flex items-center gap-1 mt-1 ${isOut ? "justify-end" : "justify-start"}`}>
                         <span className={`text-[10px] ${isOut ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                           {format(new Date(msg.created_at), "HH:mm")}
@@ -582,6 +583,26 @@ export default function ChatArea({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center cursor-pointer"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/80 hover:text-white z-10"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <X className="w-8 h-8" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Preview"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
