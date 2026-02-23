@@ -62,12 +62,20 @@ Deno.serve(async (req) => {
     }
 
     const chats = await chatsRes.json();
-    console.log(`Found ${chats.length} chats`);
+    const chatArray = Array.isArray(chats) ? chats : [];
+    console.log(`Found ${chatArray.length} chats`);
 
-    // Filter only individual chats (not groups)
-    const individualChats = Array.isArray(chats) 
-      ? chats.filter((c: any) => c.id?.endsWith("@s.whatsapp.net"))
-      : [];
+    // Log first chat structure for debugging
+    if (chatArray.length > 0) {
+      console.log("Sample chat keys:", JSON.stringify(Object.keys(chatArray[0])));
+      console.log("Sample chat:", JSON.stringify(chatArray[0]).substring(0, 500));
+    }
+
+    // Filter only individual chats (not groups) - check multiple possible field names
+    const individualChats = chatArray.filter((c: any) => {
+      const jid = c.id || c.remoteJid || c.jid || c.chatId || "";
+      return jid.endsWith("@s.whatsapp.net");
+    });
 
     console.log(`${individualChats.length} individual chats to process`);
 
@@ -77,7 +85,7 @@ Deno.serve(async (req) => {
 
     for (const chat of individualChats) {
       try {
-        const remoteJid = chat.id;
+        const remoteJid = chat.id || chat.remoteJid || chat.jid || chat.chatId || "";
         const waNumber = remoteJid.replace("@s.whatsapp.net", "");
 
         if (!waNumber || waNumber.length < 10) {
