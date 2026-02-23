@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag,
   CreditCard, Plug, ScrollText, MessageSquare, FileSignature, ChevronDown,
-  LayoutDashboard, Shield, Sun, Moon, MessageCircle, Headphones, Sliders, Contact,
+  LayoutDashboard, Shield, Sun, Moon, MessageCircle, Headphones, Sliders, Contact, UserCircle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useOpenTicketCount } from "@/hooks/useAtendimento";
@@ -243,6 +243,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Theme + Logout */}
         <div className="px-3 pb-5 shrink-0 relative z-10">
           <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border/30 to-transparent mb-4" />
+          <NavLink
+            to="/admin/perfil"
+            className={linkClasses}
+            activeClassName={activeLinkClasses}
+            onClick={() => setMobileOpen(false)}
+          >
+            <UserCircle className="w-4 h-4 shrink-0 group-hover:text-primary transition-colors" strokeWidth={1.5} />
+            <span className="tracking-wide">Meu Perfil</span>
+          </NavLink>
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="flex items-center gap-3 px-4 py-2.5 rounded-md text-[13px] font-medium text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-all duration-200 w-full group"
