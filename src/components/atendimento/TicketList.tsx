@@ -255,12 +255,14 @@ export default function TicketList({
                     <div className="flex items-center justify-between gap-1">
                       <span className="text-sm font-medium truncate">{nome}</span>
                       <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: false, locale: ptBR })}
+                        {formatDistanceToNow(new Date(ticket.ultima_mensagem_at || ticket.created_at), { addSuffix: false, locale: ptBR })}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      #{ticket.protocolo}
-                    </p>
+                    {ticket.ultima_mensagem ? (
+                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">{ticket.ultima_mensagem}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">#{ticket.protocolo}</p>
+                    )}
                     <div className="flex items-center gap-1 mt-1.5">
                       <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${statusColors[ticket.status] || ""}`}>
                         {statusLabels[ticket.status] || ticket.status}
