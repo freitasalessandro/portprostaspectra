@@ -108,14 +108,36 @@ Deno.serve(async (req) => {
       const messageId = msg.key.id;
       const pushName = msg.pushName || null;
 
-      // Skip group messages and own messages
-      if (!remoteJid || isFromMe || isGroup) {
-        console.log("Skipping:", isGroup ? "group message" : isFromMe ? "own message" : "empty jid");
+      // Skip own messages and empty JIDs
+      if (!remoteJid || isFromMe) {
+        console.log("Skipping:", isFromMe ? "own message" : "empty jid");
         return new Response("ok", { headers: corsHeaders });
       }
 
-      // Clean number (remove @s.whatsapp.net suffix)
-      const cleanNumber = remoteJid.replace("@s.whatsapp.net", "");
+      const ownerId = await resolveOwner();
+      if (!ownerId) return new Response("no settings", { headers: corsHeaders });
+
+      // For group messages, check if group is allowed
+      if (isGroup) {
+        const { data: allowedGroup } = await supabase
+          .from("allowed_groups")
+          .select("id")
+          .eq("user_id", ownerId)
+          .eq("group_jid", remoteJid)
+          .eq("ativo", true)
+          .maybeSingle();
+
+        if (!allowedGroup) {
+          console.log("Skipping: group not allowed", remoteJid);
+          return new Response("ok", { headers: corsHeaders });
+        }
+        console.log("Processing allowed group message:", remoteJid);
+      }
+
+      // Clean number: for private chats remove suffix, for groups use JID as identifier
+      const cleanNumber = isGroup
+        ? remoteJid.replace("@g.us", "")
+        : remoteJid.replace("@s.whatsapp.net", "");
 
       // Extract message content (text, image, audio, video, document)
       const { tipo, conteudo, midiaUrl } = extractMessageContent(msg);
@@ -126,8 +148,8 @@ Deno.serve(async (req) => {
         return new Response("ok", { headers: corsHeaders });
       }
 
-      const ownerId = await resolveOwner();
-      if (!ownerId) return new Response("no settings", { headers: corsHeaders });
+      // For groups, use group name as contact name; for private, use pushName
+      const contactName = isGroup ? (remoteJid.replace("@g.us", "") + " (Grupo)") : pushName;
 
       // Find or create contato, only update nome if pushName is present and contato has no name
       let contatoId: string;
@@ -139,14 +161,14 @@ Deno.serve(async (req) => {
 
       if (existingContato) {
         contatoId = existingContato.id;
-        // Update name only if contact has no name and pushName is available
-        if (!existingContato.nome && pushName) {
-          await supabase.from("contatos").update({ nome: pushName }).eq("id", contatoId);
+        // Update name only if contact has no name and contactName is available
+        if (!existingContato.nome && contactName) {
+          await supabase.from("contatos").update({ nome: contactName }).eq("id", contatoId);
         }
       } else {
         const { data: newContato } = await supabase
           .from("contatos")
-          .insert({ whatsapp_number: cleanNumber, nome: pushName, user_id: ownerId })
+          .insert({ whatsapp_number: cleanNumber, nome: contactName, user_id: ownerId })
           .select("id")
           .single();
         if (!newContato) return new Response("contato error", { headers: corsHeaders });

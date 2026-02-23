@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      allowed_groups: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          group_jid: string
+          group_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          group_jid: string
+          group_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          group_jid?: string
+          group_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       atendentes_perfil: {
         Row: {
           assinatura_ativa: boolean

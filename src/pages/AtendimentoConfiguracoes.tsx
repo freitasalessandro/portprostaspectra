@@ -59,6 +59,12 @@ export default function AtendimentoConfiguracoes() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ imported: number; skipped: number; total: number } | null>(null);
 
+  // Grupos permitidos
+  interface AllowedGroup { id: string; group_jid: string; group_name: string | null; ativo: boolean; user_id: string; }
+  const [grupos, setGrupos] = useState<AllowedGroup[]>([]);
+  const [newGroupJid, setNewGroupJid] = useState("");
+  const [newGroupName, setNewGroupName] = useState("");
+
   // Respostas rápidas
   interface RespostaRapida { id: string; nome: string; conteudo: string; categoria: string; ativo: boolean; user_id: string; }
   const [respostas, setRespostas] = useState<RespostaRapida[]>([]);
@@ -81,6 +87,7 @@ export default function AtendimentoConfiguracoes() {
     fetchMeuPerfil();
     fetchWaConfig();
     fetchRespostas();
+    fetchGrupos();
   }, [userId]);
 
   const seedMotivos = async () => {
@@ -126,6 +133,32 @@ export default function AtendimentoConfiguracoes() {
     await seedRespostas();
     const { data } = await (supabase.from("respostas_rapidas" as any).select("*").eq("user_id", userId).order("nome") as any);
     if (data) setRespostas(data);
+  };
+
+  const fetchGrupos = async () => {
+    if (!userId) return;
+    const { data } = await supabase.from("allowed_groups").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+    if (data) setGrupos(data as any[]);
+  };
+
+  const addGrupo = async () => {
+    if (!newGroupJid.trim() || !userId) return;
+    const jid = newGroupJid.trim().includes("@") ? newGroupJid.trim() : newGroupJid.trim() + "@g.us";
+    await supabase.from("allowed_groups").insert({ user_id: userId, group_jid: jid, group_name: newGroupName.trim() || null });
+    setNewGroupJid(""); setNewGroupName("");
+    fetchGrupos();
+    toast({ title: "Grupo adicionado" });
+  };
+
+  const toggleGrupo = async (g: AllowedGroup) => {
+    await supabase.from("allowed_groups").update({ ativo: !g.ativo }).eq("id", g.id);
+    fetchGrupos();
+  };
+
+  const deleteGrupo = async (id: string) => {
+    await supabase.from("allowed_groups").delete().eq("id", id);
+    fetchGrupos();
+    toast({ title: "Grupo removido" });
   };
 
   const fetchMotivos = async () => {
@@ -316,6 +349,7 @@ export default function AtendimentoConfiguracoes() {
             <TabsTrigger value="motivos">Motivos</TabsTrigger>
             <TabsTrigger value="respostas">Respostas Rápidas</TabsTrigger>
             <TabsTrigger value="atendentes">Atendentes</TabsTrigger>
+            <TabsTrigger value="grupos">Grupos WA</TabsTrigger>
             <TabsTrigger value="assinatura">Minha Assinatura</TabsTrigger>
             <TabsTrigger value="whatsapp">Instância WhatsApp</TabsTrigger>
           </TabsList>
@@ -610,8 +644,79 @@ export default function AtendimentoConfiguracoes() {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
 
+          {/* Grupos WhatsApp */}
+          <TabsContent value="grupos">
+            <Card className="glass-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Grupos WhatsApp Permitidos</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Adicione os JIDs dos grupos cujas mensagens devem ser recebidas no sistema de atendimento. Mensagens de grupos não listados são ignoradas automaticamente.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2 flex-wrap">
+                  <div className="flex-1 min-w-[180px] space-y-1">
+                    <Label className="text-xs">JID do Grupo</Label>
+                    <Input
+                      value={newGroupJid}
+                      onChange={e => setNewGroupJid(e.target.value)}
+                      placeholder="5511999...@g.us"
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[140px] space-y-1">
+                    <Label className="text-xs">Nome (opcional)</Label>
+                    <Input
+                      value={newGroupName}
+                      onChange={e => setNewGroupName(e.target.value)}
+                      placeholder="Ex: Suporte Clientes"
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button size="sm" onClick={addGrupo} disabled={!newGroupJid.trim()}>
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+                    </Button>
+                  </div>
+                </div>
+
+                {grupos.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/60 italic py-4 text-center">
+                    Nenhum grupo configurado. Apenas mensagens privadas serão recebidas.
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">JID</TableHead>
+                        <TableHead className="text-xs">Nome</TableHead>
+                        <TableHead className="text-xs text-center">Ativo</TableHead>
+                        <TableHead className="text-xs text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {grupos.map(g => (
+                        <TableRow key={g.id}>
+                          <TableCell className="text-xs font-mono">{g.group_jid}</TableCell>
+                          <TableCell className="text-xs">{g.group_name || "—"}</TableCell>
+                          <TableCell className="text-center">
+                            <Switch checked={g.ativo} onCheckedChange={() => toggleGrupo(g)} className="scale-75" />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteGrupo(g.id)}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
         {/* Motivo Sheet */}
         <Sheet open={motivoSheet} onOpenChange={setMotivoSheet}>
           <SheetContent>
