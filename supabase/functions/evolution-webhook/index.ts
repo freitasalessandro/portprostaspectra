@@ -123,15 +123,31 @@ Deno.serve(async (req) => {
       const ownerId = await resolveOwner();
       if (!ownerId) return new Response("no settings", { headers: corsHeaders });
 
-      // Upsert contato
-      const { data: contato } = await supabase
+      // Find or create contato, only update nome if pushName is present and contato has no name
+      let contatoId: string;
+      const { data: existingContato } = await supabase
         .from("contatos")
-        .upsert(
-          { whatsapp_number: remoteJid, nome: pushName, user_id: ownerId },
-          { onConflict: "whatsapp_number", ignoreDuplicates: false }
-        )
-        .select("id")
-        .single();
+        .select("id, nome")
+        .eq("whatsapp_number", remoteJid)
+        .maybeSingle();
+
+      if (existingContato) {
+        contatoId = existingContato.id;
+        // Update name only if contact has no name and pushName is available
+        if (!existingContato.nome && pushName) {
+          await supabase.from("contatos").update({ nome: pushName }).eq("id", contatoId);
+        }
+      } else {
+        const { data: newContato } = await supabase
+          .from("contatos")
+          .insert({ whatsapp_number: remoteJid, nome: pushName, user_id: ownerId })
+          .select("id")
+          .single();
+        if (!newContato) return new Response("contato error", { headers: corsHeaders });
+        contatoId = newContato.id;
+      }
+
+      const contato = { id: contatoId };
 
       if (!contato) return new Response("contato error", { headers: corsHeaders });
 
