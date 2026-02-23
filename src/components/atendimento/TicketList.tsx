@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Search, User, Plus, UserCheck, Loader2, Inbox } from "lucide-react";
-import { Ticket, AtendentePerfil } from "@/hooks/useAtendimento";
+import { Ticket, AtendentePerfil, cargoLabels, cargoColors, AtendenteCargo } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -171,9 +171,16 @@ export default function TicketList({
             <User className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-display)" }}>
-              {perfil?.nome_completo || "Atendente"}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-display)" }}>
+                {perfil?.nome_completo || "Atendente"}
+              </p>
+              {perfil?.cargo && (
+                <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-[16px] font-semibold border ${cargoColors[perfil.cargo]}`}>
+                  {cargoLabels[perfil.cargo]}
+                </Badge>
+              )}
+            </div>
             {perfil?.setor && <p className="text-[10px] text-muted-foreground/60">{perfil.setor}</p>}
           </div>
           <div className="flex items-center gap-1.5">

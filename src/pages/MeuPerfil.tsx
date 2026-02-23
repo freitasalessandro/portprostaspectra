@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, User, Mail, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Camera, Save, User, Mail, Lock, Eye, EyeOff, MessageSquare, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { cargoLabels, cargoColors, type AtendenteCargo } from "@/hooks/useAtendimento";
 
 export default function MeuPerfil() {
   const { toast } = useToast();
@@ -24,6 +26,7 @@ export default function MeuPerfil() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [assinaturaAtiva, setAssinaturaAtiva] = useState(true);
   const [assinaturaPadrao, setAssinaturaPadrao] = useState("");
+  const [cargo, setCargo] = useState<AtendenteCargo>("n1_triagem");
 
   // Password change
   const [newPassword, setNewPassword] = useState("");
@@ -54,13 +57,14 @@ export default function MeuPerfil() {
 
     const { data: atendente } = await supabase
       .from("atendentes_perfil")
-      .select("assinatura_ativa, assinatura_padrao")
+      .select("assinatura_ativa, assinatura_padrao, cargo")
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (atendente) {
       setAssinaturaAtiva(atendente.assinatura_ativa);
       setAssinaturaPadrao(atendente.assinatura_padrao || "");
+      setCargo((atendente as any).cargo || "n1_triagem");
     }
     setLoading(false);
   };
@@ -206,6 +210,30 @@ export default function MeuPerfil() {
               <Save className="w-4 h-4 mr-2" />
               {saving ? "Salvando..." : "Salvar Alterações"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Cargo / Nível */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Shield className="w-4 h-4" /> Nível de Atendimento
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className={`text-xs px-3 py-1 font-semibold border ${cargoColors[cargo]}`}>
+                {cargoLabels[cargo]}
+              </Badge>
+              <p className="text-[11px] text-muted-foreground">
+                {cargo === "n1_triagem" && "Responsável pela triagem inicial e encaminhamento de tickets."}
+                {cargo === "n2_tecnico" && "Atendimento técnico especializado e resolução avançada."}
+                {cargo === "supervisor" && "Supervisão da equipe, acesso a todos os tickets e métricas."}
+              </p>
+            </div>
+            <p className="text-[10px] text-muted-foreground/50 mt-3">
+              Seu cargo é definido pelo administrador do sistema.
+            </p>
           </CardContent>
         </Card>
 

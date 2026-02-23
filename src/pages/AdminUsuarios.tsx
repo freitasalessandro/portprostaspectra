@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { cargoLabels, cargoColors, type AtendenteCargo } from "@/hooks/useAtendimento";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,6 +32,7 @@ interface UserProfile {
   avatar_url: string | null;
   created_at: string;
   role: string;
+  cargo: AtendenteCargo;
 }
 
 const roleLabels: Record<string, string> = {
@@ -67,9 +69,10 @@ const AdminUsuarios = () => {
   }, [navigate]);
 
   const fetchUsers = async () => {
-    const [profilesRes, rolesRes] = await Promise.all([
+    const [profilesRes, rolesRes, atendenteRes] = await Promise.all([
       supabase.from("profiles").select("user_id, display_name, email, avatar_url, created_at"),
       supabase.from("user_roles").select("user_id, role"),
+      supabase.from("atendentes_perfil").select("user_id, cargo"),
     ]);
 
     if (profilesRes.error) {
@@ -83,9 +86,15 @@ const AdminUsuarios = () => {
       roleMap[r.user_id] = r.role;
     });
 
+    const cargoMap: Record<string, AtendenteCargo> = {};
+    ((atendenteRes.data as any[]) || []).forEach((a: any) => {
+      cargoMap[a.user_id] = a.cargo || "n1_triagem";
+    });
+
     const merged: UserProfile[] = ((profilesRes.data as any[]) || []).map((p: any) => ({
       ...p,
       role: roleMap[p.user_id] || "viewer",
+      cargo: cargoMap[p.user_id] || "n1_triagem",
     }));
 
     // Sort: admins first, then by name
@@ -160,6 +169,32 @@ const AdminUsuarios = () => {
     }
   };
 
+  const handleCargoChange = async (userId: string, newCargo: AtendenteCargo) => {
+    try {
+      // Upsert atendentes_perfil with new cargo
+      const { error } = await supabase
+        .from("atendentes_perfil")
+        .update({ cargo: newCargo as any })
+        .eq("user_id", userId);
+      
+      if (error) {
+        // If no row exists, create one
+        const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle();
+        await supabase.from("atendentes_perfil").insert({
+          id: userId,
+          user_id: userId,
+          nome_completo: (profile as any)?.display_name || "Atendente",
+          cargo: newCargo as any,
+        } as any);
+      }
+
+      toast({ title: "Cargo atualizado" });
+      fetchUsers();
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-4xl">
@@ -220,6 +255,18 @@ const AdminUsuarios = () => {
                 </div>
 
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {/* Cargo selector */}
+                  <Select value={u.cargo} onValueChange={(val) => handleCargoChange(u.user_id, val as AtendenteCargo)}>
+                    <SelectTrigger className="w-[120px] h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="n1_triagem">N1 · Triagem</SelectItem>
+                      <SelectItem value="n2_tecnico">N2 · Técnico</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   {u.user_id === currentUserId ? (
                     <span className={`text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm font-bold ${roleColors[u.role]}`}>
                       <Shield className="w-3 h-3 inline mr-1" />

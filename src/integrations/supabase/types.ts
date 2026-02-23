@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           assinatura_ativa: boolean
           assinatura_padrao: string | null
+          cargo: Database["public"]["Enums"]["atendente_cargo"]
           created_at: string
           disponivel: boolean
           id: string
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           assinatura_ativa?: boolean
           assinatura_padrao?: string | null
+          cargo?: Database["public"]["Enums"]["atendente_cargo"]
           created_at?: string
           disponivel?: boolean
           id: string
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           assinatura_ativa?: boolean
           assinatura_padrao?: string | null
+          cargo?: Database["public"]["Enums"]["atendente_cargo"]
           created_at?: string
           disponivel?: boolean
           id?: string
@@ -1355,6 +1358,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
+      atendente_cargo: "n1_triagem" | "n2_tecnico" | "supervisor"
       msg_sentido: "ENTRADA" | "SAIDA" | "SISTEMA"
       msg_status_envio: "ENVIANDO" | "ENVIADO" | "ENTREGUE" | "LIDO" | "ERRO"
       msg_tipo: "TEXT" | "IMAGE" | "AUDIO" | "VIDEO" | "DOCUMENT"
@@ -1494,6 +1498,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "viewer"],
+      atendente_cargo: ["n1_triagem", "n2_tecnico", "supervisor"],
       msg_sentido: ["ENTRADA", "SAIDA", "SISTEMA"],
       msg_status_envio: ["ENVIANDO", "ENVIADO", "ENTREGUE", "LIDO", "ERRO"],
       msg_tipo: ["TEXT", "IMAGE", "AUDIO", "VIDEO", "DOCUMENT"],
