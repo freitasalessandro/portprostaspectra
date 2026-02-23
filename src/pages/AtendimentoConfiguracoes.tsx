@@ -218,11 +218,12 @@ export default function AtendimentoConfiguracoes() {
 
   const testWaConnection = async () => {
     try {
-      const resp = await fetch(`${waUrl}/instance/connectionState/${waInstance}`, {
-        headers: { apikey: waKey },
-      });
-      const data = await resp.json();
-      setWaConnected(data?.instance?.state === "open");
+      const { data, error } = await supabase.functions.invoke("evolution-status");
+      if (error) {
+        setWaConnected(false);
+      } else {
+        setWaConnected(data?.connected === true);
+      }
     } catch {
       setWaConnected(false);
     }
