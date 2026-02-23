@@ -464,3 +464,38 @@ export function useOpenTicketCount() {
 
   return count;
 }
+
+export function useNewTicketNotification(userId: string | null, cargo?: AtendenteCargo) {
+  const playSound = useNotificationSound();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`new-ticket-notify-${userId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "tickets",
+      }, (payload) => {
+        const newTicket = payload.new as any;
+        // Notify if ticket is relevant to this agent's queue
+        const isRelevant =
+          cargo === "supervisor" || // supervisors see all
+          cargo === "n1_triagem" || // N1 sees unassigned (new tickets have no atendente)
+          newTicket.atendente_id === userId; // directly assigned
+
+        if (isRelevant && newTicket.status === "ABERTO") {
+          playSound();
+          toast({
+            title: "🆕 Novo ticket na fila",
+            description: `Ticket #${newTicket.protocolo || newTicket.numero} — novo atendimento aberto.`,
+          });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, cargo, playSound, toast]);
+}
