@@ -59,8 +59,18 @@ Deno.serve(async (req) => {
       .eq("id", atendente_id || userId)
       .maybeSingle();
 
-    // Build message with signature (only for text)
-    let finalText = conteudo || "";
+    // Build message with name prefix and optional signature
+    let finalText = "";
+    const atendenteName = perfil?.nome_completo || null;
+    
+    // Prepend atendente name (e.g. "Amanayara Carvalho:\nMensagem aqui")
+    if (msgTipo === "TEXT" && atendenteName && conteudo) {
+      finalText = `*${atendenteName}:*\n${conteudo}`;
+    } else {
+      finalText = conteudo || "";
+    }
+    
+    // Append signature if enabled
     if (msgTipo === "TEXT" && perfil?.assinatura_ativa && perfil?.assinatura_padrao) {
       finalText += "\n\n" + perfil.assinatura_padrao;
     }
@@ -144,7 +154,7 @@ Deno.serve(async (req) => {
       conteudo: conteudo || null,
       midia_url: midia_url || null,
       atendente_id: atendente_id || userId,
-      assinatura: msgTipo === "TEXT" && perfil?.assinatura_ativa ? perfil.assinatura_padrao : null,
+      assinatura: atendenteName || null,
       status_envio: "ENVIADO",
     }).select().single();
 
