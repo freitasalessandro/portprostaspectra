@@ -28,7 +28,7 @@ interface TicketListProps {
   loading: boolean;
   loadingMore?: boolean;
   hasMore?: boolean;
-  encerradosCount?: number;
+  tabCounts?: Record<string, number>;
   onLoadMore?: () => void;
   selectedId: string | null;
   onSelect: (ticket: Ticket) => void;
@@ -63,7 +63,7 @@ const tabs = [
 ];
 
 export default function TicketList({
-  tickets, loading, loadingMore, hasMore, encerradosCount, onLoadMore, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket,
+  tickets, loading, loadingMore, hasMore, tabCounts, onLoadMore, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket,
 }: TicketListProps) {
   const [search, setSearch] = useState("");
   const [newDialog, setNewDialog] = useState(false);
@@ -233,9 +233,9 @@ export default function TicketList({
             }`}
           >
             {tab.label}
-            {tab.key === "encerrados" && encerradosCount != null && encerradosCount > 0 && (
+            {tabCounts && tabCounts[tab.key] != null && tabCounts[tab.key] > 0 && (
               <span className="ml-1 text-[9px] bg-muted text-muted-foreground rounded-full px-1.5 py-0.5">
-                {encerradosCount > 999 ? "999+" : encerradosCount}
+                {tabCounts[tab.key] > 999 ? "999+" : tabCounts[tab.key]}
               </span>
             )}
           </button>
