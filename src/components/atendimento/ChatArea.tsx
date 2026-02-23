@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from "react";
+import { useState, useEffect, useRef, KeyboardEvent, ChangeEvent, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -131,6 +131,8 @@ export default function ChatArea({
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickSearch, setQuickSearch] = useState("");
   const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const dragCounter = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -150,23 +152,51 @@ export default function ChatArea({
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > 16 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande", description: "Máximo de 16MB", variant: "destructive" });
-      return;
-    }
-
-    const tipo = getFileType(file);
-    const preview = tipo === "IMAGE" ? URL.createObjectURL(file) : null;
-    setPendingFile({ file, preview, tipo });
-
-    // Reset input
+    processFile(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const clearPendingFile = () => {
     if (pendingFile?.preview) URL.revokeObjectURL(pendingFile.preview);
     setPendingFile(null);
+  };
+
+  const processFile = (file: File) => {
+    if (file.size > 16 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "Máximo de 16MB", variant: "destructive" });
+      return;
+    }
+    const tipo = getFileType(file);
+    const preview = tipo === "IMAGE" ? URL.createObjectURL(file) : null;
+    setPendingFile({ file, preview, tipo });
+  };
+
+  const handleDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.items?.length) setDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) setDragging(false);
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    dragCounter.current = 0;
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
   };
 
   const uploadFile = async (file: File): Promise<string | null> => {
@@ -282,7 +312,22 @@ export default function ChatArea({
   const groups = groupByDate(mensagens);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full">
+    <div
+      className="flex-1 flex flex-col min-w-0 h-full relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag overlay */}
+      {dragging && (
+        <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center backdrop-blur-sm">
+          <div className="text-center">
+            <Paperclip className="w-10 h-10 text-primary mx-auto mb-2" />
+            <p className="text-sm font-medium text-primary">Solte o arquivo aqui</p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center gap-3 p-3 border-b border-border/30 bg-card/20 shrink-0">
         <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-sm font-bold shrink-0">
