@@ -18,7 +18,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Pencil, Trash2, Phone, Mail, Building2, StickyNote, MessageCircle, RefreshCw } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Phone, Mail, Building2, StickyNote, MessageCircle, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -51,6 +51,8 @@ export default function AtendimentoContatos() {
   const [fNotas, setFNotas] = useState("");
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 30;
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -163,6 +165,10 @@ export default function AtendimentoContatos() {
     );
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -188,7 +194,7 @@ export default function AtendimentoContatos() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder="Buscar por nome, número, email ou empresa..."
             className="pl-9"
           />
@@ -222,7 +228,7 @@ export default function AtendimentoContatos() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map(c => (
+                paginated.map(c => (
                   <TableRow key={c.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -271,6 +277,23 @@ export default function AtendimentoContatos() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-muted-foreground">
+              {filtered.length} contato{filtered.length !== 1 ? "s" : ""} · Página {safePage} de {totalPages}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={safePage <= 1} onClick={() => setPage(p => p - 1)}>
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={safePage >= totalPages} onClick={() => setPage(p => p + 1)}>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit / Create Sheet */}
