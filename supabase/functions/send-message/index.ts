@@ -63,15 +63,16 @@ Deno.serve(async (req) => {
     let finalText = "";
     const atendenteName = perfil?.nome_completo || null;
     
-    // Prepend atendente name (e.g. "Amanayara Carvalho:\nMensagem aqui")
-    if (msgTipo === "TEXT" && atendenteName && conteudo) {
+    // Prepend atendente name only if assinatura_ativa is true
+    const sigActive = perfil?.assinatura_ativa !== false;
+    if (msgTipo === "TEXT" && sigActive && atendenteName && conteudo) {
       finalText = `*${atendenteName}:*\n${conteudo}`;
     } else {
       finalText = conteudo || "";
     }
     
-    // Append signature if enabled
-    if (msgTipo === "TEXT" && perfil?.assinatura_ativa && perfil?.assinatura_padrao) {
+    // Append custom signature if enabled and present
+    if (msgTipo === "TEXT" && sigActive && perfil?.assinatura_padrao) {
       finalText += "\n\n" + perfil.assinatura_padrao;
     }
 

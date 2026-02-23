@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Camera, Save, User, Mail, Lock, Eye, EyeOff, MessageSquare } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +22,8 @@ export default function MeuPerfil() {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [assinaturaAtiva, setAssinaturaAtiva] = useState(true);
+  const [assinaturaPadrao, setAssinaturaPadrao] = useState("");
 
   // Password change
   const [newPassword, setNewPassword] = useState("");
@@ -47,6 +51,17 @@ export default function MeuPerfil() {
       setDisplayName(profile.display_name || "");
       setAvatarUrl(profile.avatar_url || null);
     }
+
+    const { data: atendente } = await supabase
+      .from("atendentes_perfil")
+      .select("assinatura_ativa, assinatura_padrao")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (atendente) {
+      setAssinaturaAtiva(atendente.assinatura_ativa);
+      setAssinaturaPadrao(atendente.assinatura_padrao || "");
+    }
     setLoading(false);
   };
 
@@ -59,10 +74,14 @@ export default function MeuPerfil() {
       .update({ display_name: displayName.trim() })
       .eq("user_id", userId);
 
-    // Also update atendentes_perfil name
+    // Also update atendentes_perfil name + signature settings
     await supabase
       .from("atendentes_perfil")
-      .update({ nome_completo: displayName.trim() })
+      .update({
+        nome_completo: displayName.trim(),
+        assinatura_ativa: assinaturaAtiva,
+        assinatura_padrao: assinaturaPadrao.trim() || null,
+      })
       .eq("user_id", userId);
 
     if (error) {
@@ -187,6 +206,40 @@ export default function MeuPerfil() {
               <Save className="w-4 h-4 mr-2" />
               {saving ? "Salvando..." : "Salvar Alterações"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Signature */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" /> Assinatura no Atendimento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-xs">Assinar mensagens com meu nome</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Prefixar mensagens com <strong>*Seu Nome:*</strong> antes do conteúdo
+                </p>
+              </div>
+              <Switch checked={assinaturaAtiva} onCheckedChange={setAssinaturaAtiva} />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Assinatura personalizada (opcional)</Label>
+              <Textarea
+                value={assinaturaPadrao}
+                onChange={e => setAssinaturaPadrao(e.target.value)}
+                placeholder="Ex: Equipe Spectra — spectra.tec.br"
+                rows={2}
+                className="text-sm"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Se preenchida, será adicionada ao final das mensagens de texto.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
