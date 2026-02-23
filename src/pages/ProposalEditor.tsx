@@ -103,6 +103,7 @@ const ProposalEditor = () => {
 
   // BDI
   const [bdi, setBdi] = useState<BdiSettings>({ bdi_tax: 0, bdi_admin: 0, bdi_risk: 0, bdi_profit: 0 });
+  const [minBdi, setMinBdi] = useState<{ bdi_risk: number; bdi_profit: number }>({ bdi_risk: 0, bdi_profit: 0 });
 
   // Track if investment values (items or BDI) were modified — only save totals when true
   const [valuesChanged, setValuesChanged] = useState(false);
@@ -155,11 +156,14 @@ const ProposalEditor = () => {
         setDbCases((servicesRes.data as ServiceRecord[]).filter(s => s.is_case));
       }
       if (settingsRes.data) {
+        const globalRisk = Number(settingsRes.data.bdi_risk) || 0;
+        const globalProfit = Number(settingsRes.data.bdi_profit) || 0;
+        setMinBdi({ bdi_risk: globalRisk, bdi_profit: globalProfit });
         setBdi({
           bdi_tax: Number(settingsRes.data.bdi_tax) || 0,
           bdi_admin: Number(settingsRes.data.bdi_admin) || 0,
-          bdi_risk: Number(settingsRes.data.bdi_risk) || 0,
-          bdi_profit: Number(settingsRes.data.bdi_profit) || 0,
+          bdi_risk: globalRisk,
+          bdi_profit: globalProfit,
         });
       }
       if (plansRes.data) {
@@ -851,17 +855,25 @@ const ProposalEditor = () => {
           {/* Per-proposal BDI Risk & Profit overrides */}
             <div className="grid grid-cols-2 gap-3 mb-2">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Riscos (%)</Label>
-                <Input type="number" step="0.01" min={0} max={100} value={bdi.bdi_risk || ""} onChange={(e) => {
+                <Label className="text-xs text-muted-foreground">Riscos (%) <span className="text-[10px] text-muted-foreground/50">mín: {minBdi.bdi_risk}%</span></Label>
+                <Input type="number" step="0.01" min={minBdi.bdi_risk} max={100} value={bdi.bdi_risk || ""} onChange={(e) => {
                   const num = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                  if (!isNaN(num)) { setBdi(prev => ({ ...prev, bdi_risk: num })); setValuesChanged(true); }
+                  if (!isNaN(num)) {
+                    const clamped = Math.max(num, minBdi.bdi_risk);
+                    setBdi(prev => ({ ...prev, bdi_risk: clamped }));
+                    setValuesChanged(true);
+                  }
                 }} placeholder="0" />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Lucro (%)</Label>
-                <Input type="number" step="0.01" min={0} max={100} value={bdi.bdi_profit || ""} onChange={(e) => {
+                <Label className="text-xs text-muted-foreground">Lucro (%) <span className="text-[10px] text-muted-foreground/50">mín: {minBdi.bdi_profit}%</span></Label>
+                <Input type="number" step="0.01" min={minBdi.bdi_profit} max={100} value={bdi.bdi_profit || ""} onChange={(e) => {
                   const num = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                  if (!isNaN(num)) { setBdi(prev => ({ ...prev, bdi_profit: num })); setValuesChanged(true); }
+                  if (!isNaN(num)) {
+                    const clamped = Math.max(num, minBdi.bdi_profit);
+                    setBdi(prev => ({ ...prev, bdi_profit: clamped }));
+                    setValuesChanged(true);
+                  }
                 }} placeholder="0" />
               </div>
             </div>
