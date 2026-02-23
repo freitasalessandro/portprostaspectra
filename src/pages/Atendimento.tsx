@@ -48,6 +48,7 @@ export default function Atendimento() {
           onFilterChange={setFilter}
           perfil={perfil}
           onToggleDisponivel={handleToggleDisponivel}
+          onNewTicket={(ticket) => { setSelectedTicket(ticket); refetch(); }}
         />
 
         <ChatArea
