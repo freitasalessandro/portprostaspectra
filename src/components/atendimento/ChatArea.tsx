@@ -132,7 +132,7 @@ export default function ChatArea({
   const [quickSearch, setQuickSearch] = useState("");
   const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const dragCounter = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -311,6 +311,11 @@ export default function ChatArea({
 
   const motivo = motivos.find(m => m.id === ticket.motivo_id);
   const groups = groupByDate(mensagens);
+  const allImageUrls = mensagens.filter(m => m.tipo === "IMAGE" && m.midia_url).map(m => m.midia_url!);
+  const openLightbox = (url: string) => {
+    const idx = allImageUrls.indexOf(url);
+    setLightboxIndex(idx >= 0 ? idx : null);
+  };
 
   return (
     <div
@@ -414,7 +419,7 @@ export default function ChatArea({
                           : "bg-secondary text-foreground rounded-xl rounded-tl-none"
                       }`}
                     >
-                      <MediaBubble msg={msg} onImageClick={setLightboxUrl} />
+                      <MediaBubble msg={msg} onImageClick={openLightbox} />
                       <div className={`flex items-center gap-1 mt-1 ${isOut ? "justify-end" : "justify-start"}`}>
                         <span className={`text-[10px] ${isOut ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                           {format(new Date(msg.created_at), "HH:mm")}
@@ -584,23 +589,44 @@ export default function ChatArea({
         </DialogContent>
       </Dialog>
       {/* Lightbox */}
-      {lightboxUrl && (
+      {lightboxIndex !== null && allImageUrls[lightboxIndex] && (
         <div
           className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center cursor-pointer"
-          onClick={() => setLightboxUrl(null)}
+          onClick={() => setLightboxIndex(null)}
         >
           <button
             className="absolute top-4 right-4 text-white/80 hover:text-white z-10"
-            onClick={() => setLightboxUrl(null)}
+            onClick={() => setLightboxIndex(null)}
           >
             <X className="w-8 h-8" />
           </button>
+          {allImageUrls.length > 1 && lightboxIndex > 0 && (
+            <button
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/40 rounded-full p-2 z-10"
+              onClick={e => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+          {allImageUrls.length > 1 && lightboxIndex < allImageUrls.length - 1 && (
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/40 rounded-full p-2 z-10"
+              onClick={e => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
           <img
-            src={lightboxUrl}
+            src={allImageUrls[lightboxIndex]}
             alt="Preview"
             className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
             onClick={e => e.stopPropagation()}
           />
+          {allImageUrls.length > 1 && (
+            <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-xs bg-black/50 px-3 py-1 rounded-full">
+              {lightboxIndex + 1} / {allImageUrls.length}
+            </span>
+          )}
         </div>
       )}
     </div>
