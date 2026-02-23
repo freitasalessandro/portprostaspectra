@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Check, Wifi, WifiOff, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Wifi, WifiOff, Copy, Download, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,6 +56,8 @@ export default function AtendimentoConfiguracoes() {
   const [waInstance, setWaInstance] = useState("");
   const [waKey, setWaKey] = useState("");
   const [waConnected, setWaConnected] = useState<boolean | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ imported: number; skipped: number; total: number } | null>(null);
 
   // Respostas rápidas
   interface RespostaRapida { id: string; nome: string; conteudo: string; categoria: string; ativo: boolean; user_id: string; }
@@ -571,10 +573,40 @@ export default function AtendimentoConfiguracoes() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button size="sm" onClick={saveWaConfig}>Salvar</Button>
                   <Button size="sm" variant="outline" onClick={testWaConnection}>Testar Conexão</Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      setSyncing(true);
+                      setSyncResult(null);
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (!session?.access_token) throw new Error("Não autenticado");
+                        const { data, error } = await supabase.functions.invoke("sync-whatsapp-history", {
+                          headers: { Authorization: `Bearer ${session.access_token}` },
+                        });
+                        if (error) throw error;
+                        setSyncResult({ imported: data.imported, skipped: data.skipped, total: data.total });
+                        toast({ title: `Histórico importado`, description: `${data.imported} conversas importadas, ${data.skipped} já existentes` });
+                      } catch (err: any) {
+                        toast({ title: "Erro ao sincronizar", description: err.message, variant: "destructive" });
+                      }
+                      setSyncing(false);
+                    }}
+                    disabled={syncing || !waInstance}
+                  >
+                    {syncing ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
+                    {syncing ? "Importando..." : "Importar Histórico"}
+                  </Button>
                 </div>
+                {syncResult && (
+                  <div className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2">
+                    ✅ {syncResult.imported} conversas importadas · {syncResult.skipped} já existentes · {syncResult.total} total encontradas
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
