@@ -558,38 +558,40 @@ const ProposalEditor = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/30 bg-card/60 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <img src={spectraLogo} alt="Spectra" className="w-6 h-4" />
-            <span className="font-display text-sm font-bold tracking-tight">
+            <img src={spectraLogo} alt="Spectra" className="w-5 h-3.5 sm:w-6 sm:h-4 hidden sm:block" />
+            <span className="font-display text-xs sm:text-sm font-bold tracking-tight truncate">
               {isNew ? "Nova Proposta" : "Editar Proposta"}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {!isNew && slug && (
               <>
-                <Button variant="ghost" size="sm" onClick={() => window.open(`/proposta/${slug}`, "_blank")}>
-                  <Eye className="w-4 h-4 mr-2" /> Visualizar
+                <Button variant="ghost" size="icon" onClick={() => window.open(`/proposta/${slug}`, "_blank")} title="Visualizar" className="w-8 h-8 sm:w-auto sm:h-auto sm:px-3">
+                  <Eye className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Visualizar</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={copyLink}>
-                  <Copy className="w-4 h-4 mr-2" /> Link
+                <Button variant="ghost" size="icon" onClick={copyLink} title="Copiar link" className="w-8 h-8 sm:w-auto sm:h-auto sm:px-3">
+                  <Copy className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Link</span>
                 </Button>
               </>
             )}
-            <Button variant="outline" size="sm" onClick={() => handleSave()} disabled={saving}>
-              <Save className="w-4 h-4 mr-2" /> Salvar
+            <Button variant="outline" size="sm" onClick={() => handleSave()} disabled={saving} className="text-xs px-2.5 sm:px-3">
+              <Save className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Salvar</span>
             </Button>
-            <Button size="sm" onClick={() => handleSave("sent")} disabled={saving} className="font-display uppercase tracking-widest text-xs">
-              <Send className="w-4 h-4 mr-2" /> Enviar
+            <Button size="sm" onClick={() => handleSave("sent")} disabled={saving} className="font-display uppercase tracking-widest text-[9px] sm:text-xs px-2.5 sm:px-3">
+              <Send className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Enviar</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-4">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4">
         {/* Proposal Type */}
         <ModuleBlock title="Tipo de Proposta" alwaysOn collapsed={!!collapsedBlocks["type"]}
           onToggleCollapse={() => setCollapsedBlocks((p) => ({ ...p, type: !p["type"] }))}>
@@ -834,12 +836,12 @@ const ProposalEditor = () => {
                     </div>
                   )}
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div className="space-y-2"><Label>Qtd</Label>
                     <Input type="number" min={1} value={item.quantity} onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)} /></div>
                   <div className="space-y-2"><Label>Valor Unit.</Label>
                     <Input type="number" min={0} step={0.01} value={item.unit_price} onChange={(e) => updateItem(index, "unit_price", parseFloat(e.target.value) || 0)} /></div>
-                  <div className="space-y-2"><Label>Subtotal</Label>
+                  <div className="space-y-2 col-span-2 sm:col-span-1"><Label>Subtotal</Label>
                     <div className="h-10 flex items-center text-primary font-display font-bold">{formatCurrency(item.quantity * item.unit_price)}</div></div>
                 </div>
               </div>

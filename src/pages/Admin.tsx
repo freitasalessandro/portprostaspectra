@@ -259,7 +259,7 @@ const Admin = () => {
     <AdminLayout>
       <div className="max-w-5xl">
         <motion.div
-          className="flex items-center justify-between mb-10"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -269,11 +269,11 @@ const Admin = () => {
               <span className="w-6 h-px bg-primary/40" />
               Gestão
             </p>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">Propostas</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Propostas</h1>
           </div>
           <Button
             onClick={() => navigate("/admin/proposta/nova")}
-            className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box"
+            className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box w-full sm:w-auto"
           >
             <span className="relative z-10 flex items-center gap-2">
               <Plus className="w-4 h-4" /> Nova Proposta

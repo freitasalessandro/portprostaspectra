@@ -286,15 +286,15 @@ const AdminServicos = () => {
   return (
     <AdminLayout>
       <div className="max-w-4xl">
-        <motion.div className="flex items-center justify-between mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <motion.div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div>
             <p className="text-primary/60 tracking-[0.3em] uppercase text-[11px] mb-1.5 font-body flex items-center gap-2">
               <span className="w-6 h-px bg-primary/40" />
               Catálogo
             </p>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">Serviços</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Serviços</h1>
           </div>
-          <Button onClick={openNew} className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box">
+          <Button onClick={openNew} className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box w-full sm:w-auto">
             <span className="relative z-10 flex items-center gap-2"><Plus className="w-4 h-4" /> Novo Serviço</span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
           </Button>
@@ -413,7 +413,7 @@ const AdminServicos = () => {
               <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Descrição</label>
               <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Seção</label>
                 <Select value={form.section} onValueChange={v => setForm(f => ({ ...f, section: v }))}>

@@ -110,7 +110,7 @@ const AdminContratos = () => {
     <AdminLayout>
       <div className="max-w-5xl">
         <motion.div
-          className="flex items-center justify-between mb-10"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -120,22 +120,22 @@ const AdminContratos = () => {
               <span className="w-6 h-px bg-primary/40" />
               Gestão
             </p>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">Contratos</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Contratos</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
               onClick={() => navigate("/admin/contratos/configuracoes")}
-              className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-5"
+              className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-3 sm:px-5 flex-1 sm:flex-none"
             >
-              <Settings className="w-4 h-4 mr-2" /> Configurações
+              <Settings className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Configurações</span>
             </Button>
             <Button
               onClick={() => navigate("/admin/contratos/novo")}
-              className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-6 relative overflow-hidden group glow-box"
+              className="font-display uppercase tracking-[0.2em] text-[10px] py-5 px-4 sm:px-6 relative overflow-hidden group glow-box flex-1 sm:flex-none"
             >
               <span className="relative z-10 flex items-center gap-2">
-                <Plus className="w-4 h-4" /> Novo Contrato
+                <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Novo</span> Contrato
               </span>
             </Button>
           </div>
