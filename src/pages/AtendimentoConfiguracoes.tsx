@@ -57,6 +57,14 @@ export default function AtendimentoConfiguracoes() {
   const [waKey, setWaKey] = useState("");
   const [waConnected, setWaConnected] = useState<boolean | null>(null);
 
+  // Respostas rápidas
+  interface RespostaRapida { id: string; nome: string; conteudo: string; ativo: boolean; user_id: string; }
+  const [respostas, setRespostas] = useState<RespostaRapida[]>([]);
+  const [respostaSheet, setRespostaSheet] = useState(false);
+  const [editResposta, setEditResposta] = useState<RespostaRapida | null>(null);
+  const [rNome, setRNome] = useState("");
+  const [rConteudo, setRConteudo] = useState("");
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUserId(data.user.id);
@@ -69,7 +77,14 @@ export default function AtendimentoConfiguracoes() {
     fetchAtendentes();
     fetchMeuPerfil();
     fetchWaConfig();
+    fetchRespostas();
   }, [userId]);
+
+  const fetchRespostas = async () => {
+    if (!userId) return;
+    const { data } = await (supabase.from("respostas_rapidas" as any).select("*").eq("user_id", userId).order("nome") as any);
+    if (data) setRespostas(data);
+  };
 
   const fetchMotivos = async () => {
     const { data } = await supabase.from("motivos_atendimento").select("*").order("nome");
@@ -212,14 +227,41 @@ export default function AtendimentoConfiguracoes() {
     }
   };
 
+  // Respostas rápidas CRUD
+  const openRespostaSheet = (r?: RespostaRapida) => {
+    if (r) { setEditResposta(r); setRNome(r.nome); setRConteudo(r.conteudo); }
+    else { setEditResposta(null); setRNome(""); setRConteudo(""); }
+    setRespostaSheet(true);
+  };
+
+  const saveResposta = async () => {
+    if (!rNome || !rConteudo || !userId) return;
+    const payload = { nome: rNome, conteudo: rConteudo, user_id: userId };
+    if (editResposta) {
+      await (supabase.from("respostas_rapidas" as any).update(payload).eq("id", editResposta.id) as any);
+    } else {
+      await (supabase.from("respostas_rapidas" as any).insert(payload) as any);
+    }
+    setRespostaSheet(false);
+    fetchRespostas();
+    toast({ title: editResposta ? "Resposta atualizada" : "Resposta criada" });
+  };
+
+  const deleteResposta = async (id: string) => {
+    await (supabase.from("respostas_rapidas" as any).delete().eq("id", id) as any);
+    fetchRespostas();
+    toast({ title: "Resposta excluída" });
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
         <h1 className="text-2xl font-display font-bold">Configurações de Atendimento</h1>
 
         <Tabs defaultValue="motivos">
-          <TabsList className="w-full sm:w-auto">
+          <TabsList className="w-full sm:w-auto flex-wrap">
             <TabsTrigger value="motivos">Motivos</TabsTrigger>
+            <TabsTrigger value="respostas">Respostas Rápidas</TabsTrigger>
             <TabsTrigger value="atendentes">Atendentes</TabsTrigger>
             <TabsTrigger value="assinatura">Minha Assinatura</TabsTrigger>
             <TabsTrigger value="whatsapp">Instância WhatsApp</TabsTrigger>
@@ -266,6 +308,52 @@ export default function AtendimentoConfiguracoes() {
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Respostas Rápidas */}
+          <TabsContent value="respostas">
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm">Respostas Rápidas</CardTitle>
+                <Button size="sm" onClick={() => openRespostaSheet()}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Nova Resposta
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Nome</TableHead>
+                      <TableHead className="text-xs">Conteúdo</TableHead>
+                      <TableHead className="text-xs text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {respostas.map(r => (
+                      <TableRow key={r.id}>
+                        <TableCell className="text-xs font-medium">{r.nome}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-[300px] truncate">{r.conteudo}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openRespostaSheet(r)}>
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteResposta(r.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {respostas.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-muted-foreground text-xs py-6">
+                          Nenhuma resposta rápida cadastrada
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -487,6 +575,26 @@ export default function AtendimentoConfiguracoes() {
                 <Input type="number" value={aMax} onChange={e => setAMax(e.target.value)} className="h-9 text-sm" />
               </div>
               <Button onClick={saveAtendente} className="w-full">Salvar</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Resposta Rápida Sheet */}
+        <Sheet open={respostaSheet} onOpenChange={setRespostaSheet}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>{editResposta ? "Editar Resposta" : "Nova Resposta Rápida"}</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Nome (atalho)</Label>
+                <Input value={rNome} onChange={e => setRNome(e.target.value)} placeholder="Ex: Saudação" className="h-9 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Conteúdo da mensagem</Label>
+                <Textarea value={rConteudo} onChange={e => setRConteudo(e.target.value)} placeholder="Olá! Como posso ajudar?" className="text-sm min-h-[100px]" />
+              </div>
+              <Button onClick={saveResposta} className="w-full">Salvar</Button>
             </div>
           </SheetContent>
         </Sheet>
