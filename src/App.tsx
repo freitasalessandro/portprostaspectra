@@ -29,6 +29,9 @@ const ContractEditor = lazy(() => import("./pages/ContractEditor"));
 const ContractView = lazy(() => import("./pages/ContractView"));
 const ProposalEditor = lazy(() => import("./pages/ProposalEditor"));
 const ProposalView = lazy(() => import("./pages/ProposalView"));
+const Atendimento = lazy(() => import("./pages/Atendimento"));
+const AtendimentoDashboard = lazy(() => import("./pages/AtendimentoDashboard"));
+const AtendimentoConfiguracoes = lazy(() => import("./pages/AtendimentoConfiguracoes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -65,6 +68,9 @@ const AnimatedRoutes = () => {
         <Route path="/proposta/:id" element={<LazyPage><ProposalView /></LazyPage>} />
         <Route path="/p/:id" element={<LazyPage><ProposalView /></LazyPage>} />
         <Route path="/contrato/:id" element={<LazyPage><ContractView /></LazyPage>} />
+        <Route path="/atendimento" element={<LazyPage><Atendimento /></LazyPage>} />
+        <Route path="/atendimento/dashboard" element={<LazyPage><AtendimentoDashboard /></LazyPage>} />
+        <Route path="/atendimento/configuracoes" element={<LazyPage><AtendimentoConfiguracoes /></LazyPage>} />
         <Route path="*" element={<LazyPage><NotFound /></LazyPage>} />
       </Routes>
     </AnimatePresence>

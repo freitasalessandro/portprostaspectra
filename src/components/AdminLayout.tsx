@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag,
   CreditCard, Plug, ScrollText, MessageSquare, FileSignature, ChevronDown,
-  LayoutDashboard, Shield, Sun, Moon,
+  LayoutDashboard, Shield, Sun, Moon, MessageCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useOpenTicketCount } from "@/hooks/useAtendimento";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import spectraLogo from "@/assets/spectra-logo.svg";
@@ -28,6 +29,7 @@ interface MenuGroup {
 const standaloneItems: MenuItem[] = [
   { title: "Propostas", icon: FileText, path: "/admin", end: true },
   { title: "Contratos", icon: FileSignature, path: "/admin/contratos" },
+  { title: "Atendimento", icon: MessageCircle, path: "/atendimento" },
 ];
 
 const menuGroups: MenuGroup[] = [
@@ -77,6 +79,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const openTicketCount = useOpenTicketCount();
 
   // Auto-open groups that contain the active route
   const initialOpen = menuGroups
@@ -108,7 +111,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           onClick={() => setMobileOpen(false)}
         >
           <item.icon className="w-4 h-4 shrink-0 group-hover:text-primary transition-colors duration-200" strokeWidth={1.5} />
-          <span className="tracking-wide">{item.title}</span>
+          <span className="tracking-wide flex-1">{item.title}</span>
+          {item.title === "Atendimento" && openTicketCount > 0 && (
+            <span className="ml-auto bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {openTicketCount > 99 ? "99+" : openTicketCount}
+            </span>
+          )}
         </NavLink>
       ))}
 
