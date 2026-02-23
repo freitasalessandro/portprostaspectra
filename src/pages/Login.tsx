@@ -14,7 +14,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -23,20 +23,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        toast({ title: "Conta criada com sucesso!", description: "Você já pode acessar o painel." });
-        navigate("/admin");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate("/admin");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      navigate("/admin");
     } catch (error: any) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
@@ -140,17 +129,10 @@ const Login = () => {
             disabled={loading}
           >
             <span className="relative z-10">
-              {loading ? "Carregando..." : isSignUp ? "Criar Conta" : "Entrar"}
+              {loading ? "Carregando..." : "Entrar"}
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
           </Button>
-          <button
-            type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="w-full text-center text-xs text-muted-foreground/40 hover:text-primary/80 transition-colors font-body tracking-wide"
-          >
-            {isSignUp ? "Já tem conta? Faça login" : "Primeiro acesso? Crie sua conta"}
-          </button>
         </motion.form>
       </motion.div>
     </div>
