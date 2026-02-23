@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { X } from "lucide-react";
+import { X, Clock, Tag, UserCircle, FileText } from "lucide-react";
 import { Ticket, Motivo } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -57,7 +56,6 @@ export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailP
     return () => clearInterval(iv);
   }, [ticket.sla_deadline, ticket.created_at]);
 
-  // Debounced save for contato
   const saveContato = useCallback(async (field: string, value: string) => {
     if (!ticket.contato_id) return;
     await supabase.from("contatos").update({ [field]: value }).eq("id", ticket.contato_id);
@@ -71,8 +69,7 @@ export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailP
   const handleAddTag = async () => {
     if (!newTag.trim()) return;
     const updated = [...tags, newTag.trim()];
-    setTags(updated);
-    setNewTag("");
+    setTags(updated); setNewTag("");
     await supabase.from("tickets").update({ tags: updated }).eq("id", ticket.id);
     onTicketUpdate();
   };
@@ -85,99 +82,124 @@ export default function DetailPanel({ ticket, motivos, onTicketUpdate }: DetailP
   };
 
   const motivo = motivos.find(m => m.id === ticket.motivo_id);
-  const slaColor = slaPercent < 80 ? "bg-green-500" : slaPercent < 100 ? "bg-amber-500" : "bg-destructive";
+  const slaColor = slaPercent < 80 ? "text-emerald-400" : slaPercent < 100 ? "text-amber-400" : "text-destructive";
+  const slaBarColor = slaPercent < 80 ? "bg-emerald-500" : slaPercent < 100 ? "bg-amber-500" : "bg-destructive";
 
   return (
-    <div className="w-[260px] shrink-0 border-l border-border/50 bg-card/20 overflow-y-auto p-4 space-y-5">
-      {/* Contato */}
-      <div>
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Contato</h4>
+    <div className="w-[270px] shrink-0 border-l border-border/15 bg-card/15 backdrop-blur-sm overflow-y-auto">
+      {/* ─── CONTATO ─── */}
+      <div className="p-4 border-b border-border/10">
+        <div className="flex items-center gap-2 mb-3">
+          <UserCircle className="w-3.5 h-3.5 text-muted-foreground/50" />
+          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50" style={{ fontFamily: "var(--font-display)" }}>
+            Contato
+          </h4>
+        </div>
         <div className="space-y-2">
           <Input
             value={nome}
             onChange={e => setNome(e.target.value)}
             onBlur={() => saveContato("nome", nome)}
             placeholder="Nome"
-            className="h-8 text-xs"
+            className="h-8 text-xs bg-secondary/15 border-border/15 rounded-lg placeholder:text-muted-foreground/30"
           />
           <Input
             value={empresa}
             onChange={e => setEmpresa(e.target.value)}
             onBlur={() => saveContato("empresa", empresa)}
             placeholder="Empresa"
-            className="h-8 text-xs"
+            className="h-8 text-xs bg-secondary/15 border-border/15 rounded-lg placeholder:text-muted-foreground/30"
           />
           <Input
             value={email}
             onChange={e => setEmail(e.target.value)}
             onBlur={() => saveContato("email", email)}
             placeholder="E-mail"
-            className="h-8 text-xs"
+            className="h-8 text-xs bg-secondary/15 border-border/15 rounded-lg placeholder:text-muted-foreground/30"
           />
           <Textarea
             value={notas}
             onChange={e => setNotas(e.target.value)}
             placeholder="Notas..."
-            className="text-xs min-h-[60px] resize-none"
+            className="text-xs min-h-[60px] resize-none bg-secondary/15 border-border/15 rounded-lg placeholder:text-muted-foreground/30"
           />
         </div>
       </div>
 
-      {/* Ticket */}
-      <div>
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Ticket</h4>
-        <div className="space-y-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Protocolo</span>
-            <span className="font-mono">#{ticket.protocolo}</span>
+      {/* ─── TICKET ─── */}
+      <div className="p-4 border-b border-border/10">
+        <div className="flex items-center gap-2 mb-3">
+          <FileText className="w-3.5 h-3.5 text-muted-foreground/50" />
+          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50" style={{ fontFamily: "var(--font-display)" }}>
+            Ticket
+          </h4>
+        </div>
+        <div className="space-y-2.5 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground/60">Protocolo</span>
+            <span className="font-mono text-foreground/70 bg-secondary/30 px-2 py-0.5 rounded">#{ticket.protocolo}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Abertura</span>
-            <span>{format(new Date(ticket.created_at), "dd/MM HH:mm")}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground/60">Abertura</span>
+            <span className="text-foreground/70">{format(new Date(ticket.created_at), "dd/MM HH:mm")}</span>
           </div>
           {motivo && (
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Motivo</span>
-              <Badge variant="outline" className="text-[10px] h-5" style={{ borderColor: motivo.cor_hex, color: motivo.cor_hex }}>
+              <span className="text-muted-foreground/60">Motivo</span>
+              <Badge variant="outline" className="text-[10px] h-5 font-medium" style={{ borderColor: `${motivo.cor_hex}40`, color: motivo.cor_hex }}>
                 {motivo.nome}
               </Badge>
             </div>
           )}
           {ticket.sla_deadline && (
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">SLA</span>
-                <span className={`font-medium ${slaPercent >= 100 ? "text-destructive" : slaPercent >= 80 ? "text-amber-400" : "text-green-400"}`}>
+            <div className="space-y-2 pt-1">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-muted-foreground/50" />
+                  <span className="text-muted-foreground/60">SLA</span>
+                </div>
+                <span className={`font-semibold text-[11px] ${slaColor}`}>
                   {slaRemaining}
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
-                <div className={`h-full ${slaColor} transition-all`} style={{ width: `${Math.min(slaPercent, 100)}%` }} />
+              <div className="w-full h-1 bg-secondary/30 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${slaBarColor} transition-all duration-500 ease-out rounded-full`}
+                  style={{ width: `${Math.min(slaPercent, 100)}%` }}
+                />
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Tags */}
-      <div>
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Tags</h4>
-        <div className="flex flex-wrap gap-1 mb-2">
+      {/* ─── TAGS ─── */}
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Tag className="w-3.5 h-3.5 text-muted-foreground/50" />
+          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50" style={{ fontFamily: "var(--font-display)" }}>
+            Tags
+          </h4>
+        </div>
+        <div className="flex flex-wrap gap-1 mb-2.5">
           {tags.map(tag => (
-            <Badge key={tag} variant="secondary" className="text-[10px] h-5 gap-1 pl-2 pr-1">
+            <Badge key={tag} variant="secondary" className="text-[10px] h-5 gap-1 pl-2 pr-1 bg-secondary/30 border border-border/15 text-foreground/70">
               {tag}
-              <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive">
+              <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive transition-colors">
                 <X className="w-3 h-3" />
               </button>
             </Badge>
           ))}
+          {tags.length === 0 && (
+            <span className="text-[10px] text-muted-foreground/30 italic">Nenhuma tag</span>
+          )}
         </div>
         <Input
           value={newTag}
           onChange={e => setNewTag(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") handleAddTag(); }}
           placeholder="Adicionar tag..."
-          className="h-7 text-xs"
+          className="h-7 text-xs bg-secondary/15 border-border/15 rounded-lg placeholder:text-muted-foreground/30"
         />
       </div>
     </div>
