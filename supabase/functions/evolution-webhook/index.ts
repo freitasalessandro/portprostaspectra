@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function extractMessageContent(msg: any): { tipo: string; conteudo: string; midiaUrl: string | null } {
+function extractMessageContent(msg: any): { tipo: string; conteudo: string; midiaUrl: string | null; isSticker?: boolean } {
   const message = msg.message;
   if (!message) return { tipo: "TEXT", conteudo: "", midiaUrl: null };
 
@@ -41,10 +41,10 @@ function extractMessageContent(msg: any): { tipo: string; conteudo: string; midi
     return { tipo: "DOCUMENT", conteudo: fileName, midiaUrl: url };
   }
 
-  // Sticker (treat as image)
+  // Sticker (treat as image, preserve webp)
   if (message.stickerMessage) {
     const url = message.stickerMessage.url || msg.mediaUrl || null;
-    return { tipo: "IMAGE", conteudo: "", midiaUrl: url };
+    return { tipo: "IMAGE", conteudo: "", midiaUrl: url, isSticker: true };
   }
 
   // Fallback: any text-like content
@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
         : remoteJid.replace("@s.whatsapp.net", "");
 
       // Extract message content (text, image, audio, video, document)
-      const { tipo, conteudo, midiaUrl } = extractMessageContent(msg);
+      const { tipo, conteudo, midiaUrl, isSticker } = extractMessageContent(msg);
 
       // Skip empty messages
       if (!conteudo && !midiaUrl) {
@@ -227,7 +227,7 @@ Deno.serve(async (req) => {
           const mediaRes = await fetch(midiaUrl);
           if (mediaRes.ok) {
             const blob = await mediaRes.blob();
-            const ext = tipo === "IMAGE" ? "jpg" : tipo === "VIDEO" ? "mp4" : tipo === "AUDIO" ? "ogg" : "bin";
+            const ext = isSticker ? "webp" : tipo === "IMAGE" ? "jpg" : tipo === "VIDEO" ? "mp4" : tipo === "AUDIO" ? "ogg" : "bin";
             const path = `${ticketId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
             
             const { error: uploadError } = await supabase.storage
