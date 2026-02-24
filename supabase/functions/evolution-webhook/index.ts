@@ -51,6 +51,218 @@ function extractMessageContent(msg: any): { tipo: string; conteudo: string; midi
   return { tipo: "TEXT", conteudo: "", midiaUrl: null };
 }
 
+interface EvolutionMediaConfig {
+  url: string;
+  instance: string;
+  token: string;
+}
+
+interface MediaPayload {
+  bytes: Uint8Array;
+  contentType: string | null;
+}
+
+function resolveEvolutionMediaConfig(settings: any, instanceName: string | null): EvolutionMediaConfig | null {
+  const trimUrl = (value: string | null | undefined) => (value || "").replace(/\/+$/, "");
+
+  const atendimentoConfig = settings?.atendimento_api_url && settings?.atendimento_api_instance && settings?.atendimento_api_token
+    ? {
+        url: trimUrl(settings.atendimento_api_url),
+        instance: settings.atendimento_api_instance,
+        token: settings.atendimento_api_token,
+      }
+    : null;
+
+  const proposalConfig = settings?.evolution_api_url && settings?.evolution_api_instance && settings?.evolution_api_token
+    ? {
+        url: trimUrl(settings.evolution_api_url),
+        instance: settings.evolution_api_instance,
+        token: settings.evolution_api_token,
+      }
+    : null;
+
+  if (instanceName) {
+    if (atendimentoConfig && atendimentoConfig.instance === instanceName) return atendimentoConfig;
+    if (proposalConfig && proposalConfig.instance === instanceName) return proposalConfig;
+  }
+
+  return atendimentoConfig || proposalConfig;
+}
+
+function extractBase64(payload: unknown): string | null {
+  if (!payload) return null;
+
+  if (typeof payload === "string") {
+    const value = payload.trim();
+    if (!value) return null;
+
+    if (value.includes("base64,")) {
+      const maybeDataUri = value.split("base64,").pop();
+      if (maybeDataUri) return maybeDataUri;
+    }
+
+    const normalized = value.replace(/\s/g, "");
+    if (/^[A-Za-z0-9+/=]+$/.test(normalized) && normalized.length > 300) {
+      return normalized;
+    }
+    return null;
+  }
+
+  if (Array.isArray(payload)) {
+    for (const item of payload) {
+      const found = extractBase64(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  if (typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    const priorityKeys = ["base64", "data", "media", "file", "buffer"];
+
+    for (const key of priorityKeys) {
+      if (key in record) {
+        const found = extractBase64(record[key]);
+        if (found) return found;
+      }
+    }
+
+    for (const value of Object.values(record)) {
+      const found = extractBase64(value);
+      if (found) return found;
+    }
+  }
+
+  return null;
+}
+
+function decodeBase64ToBytes(base64: string): Uint8Array {
+  const normalized = base64.replace(/\s/g, "");
+  const binary = atob(normalized);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function looksLikePlayableMedia(contentType: string | null, tipo: string, size: number): boolean {
+  if (!size) return false;
+
+  const cleanType = (contentType || "").split(";")[0].toLowerCase();
+  if (!cleanType) return true;
+
+  if (
+    cleanType.includes("application/json") ||
+    cleanType.includes("text/html") ||
+    cleanType.includes("text/plain")
+  ) {
+    return false;
+  }
+
+  if (tipo === "AUDIO") return cleanType.startsWith("audio/");
+  if (tipo === "IMAGE") return cleanType.startsWith("image/");
+  if (tipo === "VIDEO") return cleanType.startsWith("video/");
+
+  return true;
+}
+
+function resolveUploadContentType(tipo: string, isSticker: boolean, detectedContentType: string | null): string {
+  const cleanType = (detectedContentType || "").split(";")[0].toLowerCase();
+
+  if (tipo === "AUDIO") {
+    return cleanType.startsWith("audio/") ? cleanType : "audio/ogg";
+  }
+
+  if (tipo === "IMAGE") {
+    if (isSticker) return "image/webp";
+    return cleanType.startsWith("image/") ? cleanType : "image/jpeg";
+  }
+
+  if (tipo === "VIDEO") {
+    return cleanType.startsWith("video/") ? cleanType : "video/mp4";
+  }
+
+  if (tipo === "DOCUMENT") {
+    return cleanType || "application/octet-stream";
+  }
+
+  return cleanType || "application/octet-stream";
+}
+
+function resolveExtension(tipo: string, isSticker: boolean, contentType: string): string {
+  const cleanType = contentType.toLowerCase();
+
+  if (tipo === "AUDIO") {
+    if (cleanType.includes("mpeg")) return "mp3";
+    if (cleanType.includes("wav")) return "wav";
+    if (cleanType.includes("mp4") || cleanType.includes("m4a")) return "m4a";
+    return "ogg";
+  }
+
+  if (tipo === "IMAGE") {
+    if (isSticker || cleanType.includes("webp")) return "webp";
+    if (cleanType.includes("png")) return "png";
+    return "jpg";
+  }
+
+  if (tipo === "VIDEO") {
+    if (cleanType.includes("webm")) return "webm";
+    return "mp4";
+  }
+
+  return "bin";
+}
+
+async function fetchDecryptedMedia(
+  config: EvolutionMediaConfig,
+  messageId: string,
+  tipo: string,
+): Promise<MediaPayload | null> {
+  try {
+    const response = await fetch(`${config.url}/chat/getBase64FromMediaMessage/${config.instance}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: config.token,
+      },
+      body: JSON.stringify({
+        message: { key: { id: messageId } },
+        convertToMp4: tipo === "VIDEO",
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Decrypted media fetch failed:", response.status, errorText);
+      return null;
+    }
+
+    const responseType = (response.headers.get("content-type") || "").toLowerCase();
+
+    if (responseType.startsWith("audio/") || responseType.startsWith("video/") || responseType.startsWith("image/")) {
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      return { bytes, contentType: responseType };
+    }
+
+    if (responseType.includes("application/json")) {
+      const payload = await response.json();
+      const base64 = extractBase64(payload);
+      if (!base64) return null;
+      return { bytes: decodeBase64ToBytes(base64), contentType: null };
+    }
+
+    const textBody = await response.text();
+    const base64 = extractBase64(textBody);
+    if (!base64) return null;
+
+    return { bytes: decodeBase64ToBytes(base64), contentType: null };
+  } catch (error) {
+    console.error("Decrypted media fetch error:", error);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -116,6 +328,14 @@ Deno.serve(async (req) => {
 
       const ownerId = await resolveOwner();
       if (!ownerId) return new Response("no settings", { headers: corsHeaders });
+
+      const { data: companySettings } = await supabase
+        .from("company_settings")
+        .select("atendimento_api_url, atendimento_api_instance, atendimento_api_token, evolution_api_url, evolution_api_instance, evolution_api_token")
+        .eq("user_id", ownerId)
+        .maybeSingle();
+
+      const evolutionConfig = resolveEvolutionMediaConfig(companySettings, instanceName);
 
       // For group messages, check if group is allowed
       if (isGroup) {
@@ -223,25 +443,57 @@ Deno.serve(async (req) => {
       let finalMediaUrl = midiaUrl;
       if (midiaUrl && tipo !== "TEXT") {
         try {
-          // Try to download and store in Supabase Storage
-          const mediaRes = await fetch(midiaUrl);
+          let mediaBytes: Uint8Array | null = null;
+          let mediaContentType: string | null = null;
+          let rawBytes: Uint8Array | null = null;
+          let rawContentType: string | null = null;
+
+          // Attempt 1: direct media URL (with instance apikey when available)
+          const directHeaders = evolutionConfig?.token ? { apikey: evolutionConfig.token } : undefined;
+          const mediaRes = await fetch(midiaUrl, directHeaders ? { headers: directHeaders } : undefined);
+
           if (mediaRes.ok) {
-            const blob = await mediaRes.blob();
-            const ext = isSticker ? "webp" : tipo === "IMAGE" ? "jpg" : tipo === "VIDEO" ? "mp4" : tipo === "AUDIO" ? "ogg" : "bin";
+            rawContentType = mediaRes.headers.get("content-type");
+            rawBytes = new Uint8Array(await mediaRes.arrayBuffer());
+
+            if (looksLikePlayableMedia(rawContentType, tipo, rawBytes.byteLength)) {
+              mediaBytes = rawBytes;
+              mediaContentType = rawContentType;
+            } else {
+              console.warn("Direct media download looked invalid, trying decrypted endpoint", {
+                tipo,
+                contentType: rawContentType,
+                size: rawBytes.byteLength,
+              });
+            }
+          } else {
+            const errText = await mediaRes.text();
+            console.warn("Direct media download failed:", mediaRes.status, errText);
+          }
+
+          // Attempt 2: force decrypted media from Evolution API
+          if (!mediaBytes && evolutionConfig && messageId) {
+            const decrypted = await fetchDecryptedMedia(evolutionConfig, messageId, tipo);
+            if (decrypted && decrypted.bytes.byteLength > 0) {
+              mediaBytes = decrypted.bytes;
+              mediaContentType = decrypted.contentType;
+            }
+          }
+
+          // Last fallback keeps previous behavior if Evolution returns unusual content-type
+          if (!mediaBytes && rawBytes) {
+            mediaBytes = rawBytes;
+            mediaContentType = rawContentType;
+          }
+
+          if (mediaBytes) {
+            const contentType = resolveUploadContentType(tipo, !!isSticker, mediaContentType);
+            const ext = resolveExtension(tipo, !!isSticker, contentType);
             const path = `${ticketId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-            
-            // Force correct content type — Evolution API often returns application/octet-stream
-            const contentTypeMap: Record<string, string> = {
-              "IMAGE": isSticker ? "image/webp" : "image/jpeg",
-              "AUDIO": "audio/ogg; codecs=opus",
-              "VIDEO": "video/mp4",
-              "DOCUMENT": blob.type || "application/octet-stream",
-            };
-            const contentType = contentTypeMap[tipo] || blob.type || "application/octet-stream";
 
             const { error: uploadError } = await supabase.storage
               .from("chat-media")
-              .upload(path, blob, { contentType, upsert: false });
+              .upload(path, mediaBytes, { contentType, upsert: false });
 
             if (!uploadError) {
               const { data: urlData } = supabase.storage.from("chat-media").getPublicUrl(path);
