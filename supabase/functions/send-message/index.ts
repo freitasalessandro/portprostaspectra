@@ -52,29 +52,41 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Ticket not found" }), { status: 404, headers: corsHeaders });
     }
 
-    // Get atendente profile
-    const { data: perfil } = await supabase
-      .from("atendentes_perfil")
-      .select("*")
-      .eq("id", atendente_id || userId)
-      .maybeSingle();
+    // Get atendente profile — try by id first, then by user_id as fallback
+    let perfil = null;
+    if (atendente_id) {
+      const { data } = await supabase
+        .from("atendentes_perfil")
+        .select("*")
+        .eq("id", atendente_id)
+        .maybeSingle();
+      perfil = data;
+    }
+    if (!perfil) {
+      const { data } = await supabase
+        .from("atendentes_perfil")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      perfil = data;
+    }
 
     // Build message with name prefix and optional signature
-    let finalText = "";
+    let finalText = conteudo || "";
     const atendenteName = perfil?.nome_completo || null;
-    
-    // Prepend atendente name only if assinatura_ativa is true
     const sigActive = perfil?.assinatura_ativa !== false;
-    if (msgTipo === "TEXT" && sigActive && atendenteName && conteudo) {
-      finalText = `*${atendenteName}:*\n${conteudo}`;
-    } else {
-      finalText = conteudo || "";
+
+    // Always prepend operator name for TEXT messages when signature is active
+    if (msgTipo === "TEXT" && sigActive && atendenteName && finalText) {
+      finalText = `*${atendenteName}:*\n${finalText}`;
     }
     
     // Append custom signature if enabled and present
     if (msgTipo === "TEXT" && sigActive && perfil?.assinatura_padrao) {
       finalText += "\n\n" + perfil.assinatura_padrao;
     }
+
+    console.log("Signature debug:", { atendente_id, userId, perfilFound: !!perfil, atendenteName, sigActive, msgTipo, hasContent: !!conteudo });
 
     // Get Evolution API config (use atendimento-specific instance)
     const { data: settings } = await supabase
