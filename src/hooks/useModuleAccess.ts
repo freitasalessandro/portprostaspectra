@@ -21,14 +21,13 @@ export function useModuleAccess() {
   useEffect(() => {
     let cancelled = false;
 
-    const load = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session || cancelled) {
-          setIsLoading(false);
-          return;
-        }
+    const load = async (session: any) => {
+      if (!session || cancelled) {
+        setIsLoading(false);
+        return;
+      }
 
+      try {
         const uid = session.user.id;
         setUserId(uid);
 
@@ -82,15 +81,30 @@ export function useModuleAccess() {
         }
 
         setAccess(map);
-        setIsLoading(false);
       } catch (err) {
         console.error("useModuleAccess error:", err);
+      } finally {
         if (!cancelled) setIsLoading(false);
       }
     };
 
-    load();
-    return () => { cancelled = true; };
+    // Listen for auth state changes to handle session restore
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!cancelled) {
+        setIsLoading(true);
+        load(session);
+      }
+    });
+
+    // Also try immediately with current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!cancelled) load(session);
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const hasAccess = useCallback(
