@@ -214,9 +214,19 @@ function resolveExtension(tipo: string, isSticker: boolean, contentType: string)
   return "bin";
 }
 
+function isEphemeralWhatsappUrl(url: string | null): boolean {
+  if (!url) return false;
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.hostname === "web.whatsapp.net";
+  } catch {
+    return false;
+  }
+}
+
 async function fetchDecryptedMedia(
   config: EvolutionMediaConfig,
-  messageId: string,
+  messageKey: Record<string, unknown>,
   tipo: string,
 ): Promise<MediaPayload | null> {
   try {
@@ -227,7 +237,7 @@ async function fetchDecryptedMedia(
         apikey: config.token,
       },
       body: JSON.stringify({
-        message: { key: { id: messageId } },
+        message: { key: messageKey },
         convertToMp4: tipo === "VIDEO",
       }),
     });
@@ -448,42 +458,54 @@ Deno.serve(async (req) => {
           let rawBytes: Uint8Array | null = null;
           let rawContentType: string | null = null;
 
+          const shouldSkipDirectFetch = isEphemeralWhatsappUrl(midiaUrl);
+
           // Attempt 1: direct media URL (with instance apikey when available)
-          const directHeaders = evolutionConfig?.token ? { apikey: evolutionConfig.token } : undefined;
-          const mediaRes = await fetch(midiaUrl, directHeaders ? { headers: directHeaders } : undefined);
+          if (!shouldSkipDirectFetch) {
+            const directHeaders = evolutionConfig?.token ? { apikey: evolutionConfig.token } : undefined;
+            const mediaRes = await fetch(midiaUrl, directHeaders ? { headers: directHeaders } : undefined);
 
-          if (mediaRes.ok) {
-            rawContentType = mediaRes.headers.get("content-type");
-            rawBytes = new Uint8Array(await mediaRes.arrayBuffer());
+            if (mediaRes.ok) {
+              rawContentType = mediaRes.headers.get("content-type");
+              rawBytes = new Uint8Array(await mediaRes.arrayBuffer());
 
-            if (looksLikePlayableMedia(rawContentType, tipo, rawBytes.byteLength)) {
-              mediaBytes = rawBytes;
-              mediaContentType = rawContentType;
+              if (looksLikePlayableMedia(rawContentType, tipo, rawBytes.byteLength)) {
+                mediaBytes = rawBytes;
+                mediaContentType = rawContentType;
+              } else {
+                console.warn("Direct media download looked invalid, trying decrypted endpoint", {
+                  tipo,
+                  contentType: rawContentType,
+                  size: rawBytes.byteLength,
+                });
+              }
             } else {
-              console.warn("Direct media download looked invalid, trying decrypted endpoint", {
-                tipo,
-                contentType: rawContentType,
-                size: rawBytes.byteLength,
-              });
+              const errText = await mediaRes.text();
+              console.warn("Direct media download failed:", mediaRes.status, errText);
             }
-          } else {
-            const errText = await mediaRes.text();
-            console.warn("Direct media download failed:", mediaRes.status, errText);
           }
 
           // Attempt 2: force decrypted media from Evolution API
-          if (!mediaBytes && evolutionConfig && messageId) {
-            const decrypted = await fetchDecryptedMedia(evolutionConfig, messageId, tipo);
+          if (!mediaBytes && evolutionConfig && msg.key) {
+            const decrypted = await fetchDecryptedMedia(evolutionConfig, msg.key as Record<string, unknown>, tipo);
             if (decrypted && decrypted.bytes.byteLength > 0) {
               mediaBytes = decrypted.bytes;
               mediaContentType = decrypted.contentType;
             }
           }
 
-          // Last fallback keeps previous behavior if Evolution returns unusual content-type
-          if (!mediaBytes && rawBytes) {
+          // Last fallback keeps previous behavior only for non-ephemeral direct URLs
+          if (!mediaBytes && rawBytes && !shouldSkipDirectFetch) {
             mediaBytes = rawBytes;
             mediaContentType = rawContentType;
+          }
+
+          if (!mediaBytes && shouldSkipDirectFetch) {
+            finalMediaUrl = null;
+            console.warn("Could not decrypt ephemeral WhatsApp media URL", {
+              messageId,
+              tipo,
+            });
           }
 
           if (mediaBytes) {

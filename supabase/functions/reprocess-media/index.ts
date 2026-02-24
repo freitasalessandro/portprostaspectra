@@ -103,14 +103,54 @@ async function fetchDecryptedMedia(
   }
 }
 
-function resolveContentType(tipo: string): string {
-  if (tipo === "AUDIO") return "audio/ogg";
-  if (tipo === "IMAGE") return "image/jpeg";
-  if (tipo === "VIDEO") return "video/mp4";
-  return "application/octet-stream";
+function startsWithBytes(bytes: Uint8Array, signature: number[], offset = 0): boolean {
+  if (bytes.length < offset + signature.length) return false;
+  for (let i = 0; i < signature.length; i++) {
+    if (bytes[offset + i] !== signature[i]) return false;
+  }
+  return true;
 }
 
-function resolveExt(tipo: string): string {
+function resolveContentType(tipo: string, detectedContentType: string | null, bytes: Uint8Array): string {
+  const cleanDetected = (detectedContentType || "").split(";")[0].toLowerCase();
+
+  if (tipo === "AUDIO") {
+    if (cleanDetected.startsWith("audio/")) return cleanDetected;
+    if (startsWithBytes(bytes, [0x4f, 0x67, 0x67, 0x53])) return "audio/ogg"; // OggS
+    if (startsWithBytes(bytes, [0x49, 0x44, 0x33]) || startsWithBytes(bytes, [0xff, 0xfb])) return "audio/mpeg";
+    return "audio/ogg";
+  }
+
+  if (tipo === "IMAGE") {
+    if (cleanDetected.startsWith("image/")) return cleanDetected;
+    if (startsWithBytes(bytes, [0x52, 0x49, 0x46, 0x46]) && startsWithBytes(bytes, [0x57, 0x45, 0x42, 0x50], 8)) {
+      return "image/webp";
+    }
+    if (startsWithBytes(bytes, [0x89, 0x50, 0x4e, 0x47])) return "image/png";
+    if (startsWithBytes(bytes, [0xff, 0xd8, 0xff])) return "image/jpeg";
+    return "image/jpeg";
+  }
+
+  if (tipo === "VIDEO") {
+    if (cleanDetected.startsWith("video/")) return cleanDetected;
+    return "video/mp4";
+  }
+
+  return cleanDetected || "application/octet-stream";
+}
+
+function resolveExt(contentType: string, tipo: string): string {
+  const clean = contentType.toLowerCase();
+  if (clean.includes("webp")) return "webp";
+  if (clean.includes("png")) return "png";
+  if (clean.includes("jpeg") || clean.includes("jpg")) return "jpg";
+  if (clean.includes("mpeg")) return "mp3";
+  if (clean.includes("wav")) return "wav";
+  if (clean.includes("m4a") || clean.includes("mp4a")) return "m4a";
+  if (clean.includes("ogg")) return "ogg";
+  if (clean.includes("webm")) return "webm";
+  if (clean.includes("mp4")) return "mp4";
+
   if (tipo === "AUDIO") return "ogg";
   if (tipo === "IMAGE") return "jpg";
   if (tipo === "VIDEO") return "mp4";
@@ -161,16 +201,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Find media messages from user's tickets that are stored in our bucket
+    // Find user ticket ids to restrict reprocessing to the authenticated user
+    const { data: userTickets, error: ticketError } = await supabase
+      .from("tickets")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(5000);
+
+    if (ticketError) {
+      return new Response(JSON.stringify({ error: ticketError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const ticketIds = (userTickets || []).map((ticket) => ticket.id);
+    if (ticketIds.length === 0) {
+      return new Response(JSON.stringify({ success: true, reprocessed: 0, failed: 0, total: 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Find media messages from user's tickets
     const bucketUrlPrefix = `${supabaseUrl}/storage/v1/object/public/chat-media/`;
 
     const { data: mediaMessages, error: queryError } = await supabase
       .from("mensagens")
       .select("id, tipo, midia_url, evolution_id, ticket_id")
+      .in("ticket_id", ticketIds)
       .in("tipo", ["AUDIO", "IMAGE", "VIDEO"])
       .not("midia_url", "is", null)
       .not("evolution_id", "is", null)
-      .like("midia_url", `${bucketUrlPrefix}%`)
       .order("created_at", { ascending: false })
       .limit(500);
 
@@ -187,30 +248,43 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Filter only messages whose storage objects have invalid mimetypes
+    // Filter only messages that are likely broken
     const toReprocess: typeof mediaMessages = [];
 
     for (const msg of mediaMessages) {
-      const storagePath = msg.midia_url!.replace(bucketUrlPrefix, "");
-      const { data: objects } = await supabase.storage.from("chat-media").list(
-        storagePath.split("/").slice(0, -1).join("/"),
-        { limit: 100 }
-      );
+      const mediaUrl = msg.midia_url || "";
+      const isBucketUrl = mediaUrl.startsWith(bucketUrlPrefix);
 
-      const fileName = storagePath.split("/").pop();
-      const obj = objects?.find((o: any) => o.name === fileName);
-
-      if (obj) {
-        const mimetype = (obj as any).metadata?.mimetype || "";
-        if (
-          mimetype === "application/octet-stream" ||
-          mimetype === "" ||
-          (msg.tipo === "AUDIO" && !mimetype.startsWith("audio/")) ||
-          (msg.tipo === "IMAGE" && !mimetype.startsWith("image/")) ||
-          (msg.tipo === "VIDEO" && !mimetype.startsWith("video/"))
-        ) {
+      if (!isBucketUrl) {
+        // Explicitly include known ephemeral URLs that are not playable
+        if (mediaUrl.includes("web.whatsapp.net")) {
           toReprocess.push(msg);
         }
+        continue;
+      }
+
+      const storagePath = mediaUrl.replace(bucketUrlPrefix, "");
+      const folder = storagePath.split("/").slice(0, -1).join("/");
+      const fileName = storagePath.split("/").pop();
+
+      const { data: objects } = await supabase.storage.from("chat-media").list(folder, { limit: 100 });
+      const obj = objects?.find((o: any) => o.name === fileName);
+
+      if (!obj) {
+        toReprocess.push(msg);
+        continue;
+      }
+
+      const mimetype = ((obj as any).metadata?.mimetype || "").toLowerCase();
+      const invalidMime =
+        mimetype === "application/octet-stream" ||
+        mimetype === "" ||
+        (msg.tipo === "AUDIO" && !mimetype.startsWith("audio/")) ||
+        (msg.tipo === "IMAGE" && !mimetype.startsWith("image/")) ||
+        (msg.tipo === "VIDEO" && !mimetype.startsWith("video/"));
+
+      if (invalidMime) {
+        toReprocess.push(msg);
       }
     }
 
@@ -229,8 +303,8 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const contentType = resolveContentType(msg.tipo);
-        const ext = resolveExt(msg.tipo);
+        const contentType = resolveContentType(msg.tipo, result.contentType, result.bytes);
+        const ext = resolveExt(contentType, msg.tipo);
         const newPath = `${msg.ticket_id}/${Date.now()}_reprocessed_${Math.random().toString(36).slice(2, 6)}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
@@ -250,9 +324,11 @@ Deno.serve(async (req) => {
           .update({ midia_url: urlData.publicUrl })
           .eq("id", msg.id);
 
-        // Delete old file
-        const oldPath = msg.midia_url!.replace(bucketUrlPrefix, "");
-        await supabase.storage.from("chat-media").remove([oldPath]);
+        // Delete old file only when it belongs to our bucket
+        if (msg.midia_url?.startsWith(bucketUrlPrefix)) {
+          const oldPath = msg.midia_url.replace(bucketUrlPrefix, "");
+          await supabase.storage.from("chat-media").remove([oldPath]);
+        }
 
         reprocessed++;
       } catch (err) {
