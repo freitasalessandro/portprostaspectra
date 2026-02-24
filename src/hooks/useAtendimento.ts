@@ -154,37 +154,31 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
       .select("*, contatos(*)")
       .order("created_at", { ascending: false });
 
-    const activeStatuses = ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"] as const;
+    const activeStatuses = ["EM_ATENDIMENTO", "AGUARDANDO"] as const;
 
     switch (filter) {
       case "minha_fila":
-        if (cargo === "supervisor") {
-          // Supervisors: own tickets + unassigned
-          query = query.in("status", activeStatuses).or(`atendente_id.is.null,atendente_id.eq.${userId}`);
-        } else if (cargo === "n1_triagem") {
-          // N1 sees unassigned + own tickets
-          query = query.in("status", activeStatuses).or(`atendente_id.is.null,atendente_id.eq.${userId}`);
-        } else {
-          // N2 and default: only own tickets
-          query = query.eq("atendente_id", userId!).in("status", activeStatuses);
-        }
+        // Only show tickets assigned to the current user (EM_ATENDIMENTO or AGUARDANDO)
+        query = query.eq("atendente_id", userId!).in("status", activeStatuses);
         break;
       case "todos":
         if (cargo === "n1_triagem") {
-          // N1 only sees unassigned in "todos"
-          query = query.in("status", activeStatuses).is("atendente_id", null);
-      } else if (cargo === "supervisor") {
-          // Supervisor sees tickets assigned to others (not self)
+          // N1 sees tickets assigned to others
+          query = query.in("status", activeStatuses).not("atendente_id", "is", null).neq("atendente_id", userId!);
+        } else if (cargo === "supervisor") {
+          // Supervisor sees tickets assigned to others
           query = query.in("status", activeStatuses).neq("atendente_id", userId!);
         } else {
-          // N2 sees all tickets not assigned to self
+          // N2 sees tickets assigned to others
           query = query.in("status", activeStatuses).neq("atendente_id", userId!);
         }
         break;
       case "aguardando":
-        query = query.eq("status", "AGUARDANDO");
+        // ABERTO (unassigned) + AGUARDANDO tickets
         if (cargo === "n1_triagem") {
-          query = query.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
+          query = query.in("status", ["ABERTO", "AGUARDANDO"]).or(`atendente_id.is.null,atendente_id.eq.${userId}`);
+        } else {
+          query = query.in("status", ["ABERTO", "AGUARDANDO"]);
         }
         break;
       case "encerrados":
@@ -199,31 +193,23 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
     setLoading(true);
     setHasMore(false);
 
-    // Fetch all tab counts in parallel (respecting cargo permissions)
-    const activeStatuses = ["ABERTO", "EM_ATENDIMENTO", "AGUARDANDO"] as const;
+    const activeStatuses = ["EM_ATENDIMENTO", "AGUARDANDO"] as const;
     
-    // "Minha Fila" count
-    let minhaFilaQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
-    if (cargo === "supervisor") {
-      minhaFilaQuery = minhaFilaQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
-    } else if (cargo === "n1_triagem") {
-      minhaFilaQuery = minhaFilaQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
-    } else {
-      minhaFilaQuery = minhaFilaQuery.eq("atendente_id", userId!);
-    }
+    // "Minha Fila" count — only tickets assigned to current user
+    const minhaFilaQuery = supabase.from("tickets").select("id", { count: "exact", head: true })
+      .in("status", activeStatuses).eq("atendente_id", userId!);
 
-    // "Todos" count (excludes own tickets to avoid overlap with "Minha Fila")
+    // "Todos" count — tickets assigned to others
     let todosQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
     if (cargo === "n1_triagem") {
-      todosQuery = todosQuery.is("atendente_id", null);
-    } else if (cargo === "supervisor") {
-      todosQuery = todosQuery.neq("atendente_id", userId!);
+      todosQuery = todosQuery.not("atendente_id", "is", null).neq("atendente_id", userId!);
     } else {
       todosQuery = todosQuery.neq("atendente_id", userId!);
     }
 
-    // "Aguardando" count
-    let aguardandoQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "AGUARDANDO");
+    // "Aguardando" count — ABERTO (unassigned) + AGUARDANDO
+    let aguardandoQuery = supabase.from("tickets").select("id", { count: "exact", head: true })
+      .in("status", ["ABERTO", "AGUARDANDO"]);
     if (cargo === "n1_triagem") {
       aguardandoQuery = aguardandoQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
     }
