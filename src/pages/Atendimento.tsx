@@ -26,13 +26,18 @@ export default function Atendimento() {
     return () => { document.title = "Spectra"; };
   }, [openCount]);
 
-  // Keep selected ticket synced
+  // Keep selected ticket synced — deselect if transferred away from current user
   useEffect(() => {
     if (selectedTicket) {
       const updated = tickets.find(t => t.id === selectedTicket.id);
-      if (updated) setSelectedTicket(updated);
+      if (updated) {
+        setSelectedTicket(updated);
+      } else if (!loading) {
+        // Ticket no longer in current queue (e.g. forwarded to another operator)
+        setSelectedTicket(null);
+      }
     }
-  }, [tickets]);
+  }, [tickets, loading]);
 
   const handleToggleDisponivel = async (val: boolean) => {
     await updatePerfil({ disponivel: val });
