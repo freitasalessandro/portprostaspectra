@@ -114,7 +114,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, [collapsed]);
   const { theme, setTheme } = useTheme();
   const openTicketCount = useOpenTicketCount();
-  const { hasAccess, isLoading: accessLoading, isAdmin } = useModuleAccess();
+  const { hasAccess } = useModuleAccess();
 
   // Filter items based on permissions
   const visibleStandalone = useMemo(() =>

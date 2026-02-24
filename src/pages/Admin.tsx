@@ -59,67 +59,60 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate("/login");
-          return;
-        }
-        await fetchProposals();
-      } catch (error) {
-        console.error("Erro ao validar sessão no Admin:", error);
-        toast({
-          title: "Falha ao abrir Admin",
-          description: "Não foi possível validar sua sessão. Tente novamente.",
-          variant: "destructive",
-        });
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
+    // ProtectedRoute já garante autenticação e permissões; aqui só carregamos os dados.
+    void fetchProposals();
+  }, []);
 
   const fetchProposals = async () => {
     try {
       setLoading(true);
 
-      const [proposalsRes, sigsRes] = await Promise.all([
+      const [{ data: proposalsData, error: proposalsError }, { data: sigsData, error: sigsError }] = await Promise.all([
         supabase.from("proposals").select("*").order("created_at", { ascending: false }),
         supabase.from("proposal_signatures").select("*").order("signed_at", { ascending: false }),
       ]);
 
-      if (proposalsRes.error) {
-        toast({ title: "Erro ao carregar propostas", description: proposalsRes.error.message, variant: "destructive" });
+      if (proposalsError) {
+        toast({ title: "Erro ao carregar propostas", description: proposalsError.message, variant: "destructive" });
+        setProposals([]);
+        setViewCounts({});
       } else {
-        setProposals(proposalsRes.data || []);
+        const list = (proposalsData || []) as Proposal[];
+        setProposals(list);
 
-        const ids = (proposalsRes.data || []).map(p => p.id);
+        const ids = list.map((p) => p.id);
         if (ids.length > 0) {
-          const { data: views, error: viewsError } = await supabase
-            .from("proposal_views")
-            .select("proposal_id")
-            .in("proposal_id", ids);
+          try {
+            const { data: views, error: viewsError } = await supabase
+              .from("proposal_views")
+              .select("proposal_id")
+              .in("proposal_id", ids);
 
-          if (viewsError) {
-            console.error("Erro ao carregar visualizações:", viewsError);
-          }
+            if (viewsError) throw viewsError;
 
-          if (views) {
             const counts: Record<string, number> = {};
-            views.forEach((v: any) => { counts[v.proposal_id] = (counts[v.proposal_id] || 0) + 1; });
+            (views || []).forEach((v: any) => {
+              counts[v.proposal_id] = (counts[v.proposal_id] || 0) + 1;
+            });
             setViewCounts(counts);
+          } catch (error) {
+            console.error("Erro ao carregar visualizações:", error);
+            setViewCounts({});
           }
+        } else {
+          setViewCounts({});
         }
       }
 
-      if (!sigsRes.error && sigsRes.data) {
+      if (!sigsError && sigsData) {
         const sigMap: Record<string, ProposalSignature> = {};
-        (sigsRes.data as unknown as ProposalSignature[]).forEach(s => {
+        (sigsData as unknown as ProposalSignature[]).forEach((s) => {
           if (!sigMap[s.proposal_id]) sigMap[s.proposal_id] = s;
         });
         setSignatures(sigMap);
+      } else if (sigsError) {
+        console.error("Erro ao carregar assinaturas:", sigsError);
+        setSignatures({});
       }
     } catch (error) {
       console.error("Erro inesperado ao carregar propostas:", error);
