@@ -230,9 +230,18 @@ Deno.serve(async (req) => {
             const ext = isSticker ? "webp" : tipo === "IMAGE" ? "jpg" : tipo === "VIDEO" ? "mp4" : tipo === "AUDIO" ? "ogg" : "bin";
             const path = `${ticketId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
             
+            // Force correct content type — Evolution API often returns application/octet-stream
+            const contentTypeMap: Record<string, string> = {
+              "IMAGE": isSticker ? "image/webp" : "image/jpeg",
+              "AUDIO": "audio/ogg; codecs=opus",
+              "VIDEO": "video/mp4",
+              "DOCUMENT": blob.type || "application/octet-stream",
+            };
+            const contentType = contentTypeMap[tipo] || blob.type || "application/octet-stream";
+
             const { error: uploadError } = await supabase.storage
               .from("chat-media")
-              .upload(path, blob, { contentType: blob.type || "application/octet-stream", upsert: false });
+              .upload(path, blob, { contentType, upsert: false });
 
             if (!uploadError) {
               const { data: urlData } = supabase.storage.from("chat-media").getPublicUrl(path);
