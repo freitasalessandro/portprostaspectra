@@ -62,6 +62,31 @@ Deno.serve(async (req) => {
       return json({ success: true, user: inviteData?.user });
     }
 
+    // CREATE (with email + password)
+    if (action === "create") {
+      const { email, password, role, display_name } = body;
+      if (!email) return json({ error: "E-mail é obrigatório" }, 400);
+      if (!password || password.length < 6) return json({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
+
+      const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: display_name || "" },
+      });
+
+      if (createError) return json({ error: createError.message }, 400);
+
+      if (createData?.user) {
+        await supabaseAdmin.from("user_roles").upsert(
+          { user_id: createData.user.id, role: role || "viewer" },
+          { onConflict: "user_id,role" }
+        );
+      }
+
+      return json({ success: true, user: createData?.user });
+    }
+
     // DELETE
     if (action === "delete") {
       const { user_id } = body;

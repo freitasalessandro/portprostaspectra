@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fadeUp, staggerContainer } from "@/lib/motion";
-import { Plus, Trash2, Shield, UserCog, Mail, Loader2 } from "lucide-react";
+import { Plus, Trash2, Shield, UserCog, Mail, Loader2, Eye, EyeOff, UserPlus } from "lucide-react";
 
 interface UserProfile {
   user_id: string;
@@ -52,8 +52,10 @@ const AdminUsuarios = () => {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
+  const [createMode, setCreateMode] = useState<"invite" | "create">("create");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
   const [inviting, setInviting] = useState(false);
   const navigate = useNavigate();
@@ -110,29 +112,47 @@ const AdminUsuarios = () => {
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) return;
+    if (createMode === "create" && (!invitePassword || invitePassword.length < 6)) {
+      toast({ title: "Erro", description: "Senha deve ter no mínimo 6 caracteres", variant: "destructive" });
+      return;
+    }
     setInviting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("manage-users", {
-        body: {
-          action: "invite",
-          email: inviteEmail.trim(),
-          display_name: inviteName.trim(),
-          role: inviteRole,
-        },
-      });
+      const body = createMode === "create"
+        ? {
+            action: "create",
+            email: inviteEmail.trim(),
+            password: invitePassword,
+            display_name: inviteName.trim(),
+            role: inviteRole,
+          }
+        : {
+            action: "invite",
+            email: inviteEmail.trim(),
+            display_name: inviteName.trim(),
+            role: inviteRole,
+          };
+
+      const { data, error } = await supabase.functions.invoke("manage-users", { body });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast({ title: "Convite enviado!", description: `E-mail enviado para ${inviteEmail}` });
+      toast({
+        title: createMode === "create" ? "Usuário criado!" : "Convite enviado!",
+        description: createMode === "create"
+          ? `Conta criada para ${inviteEmail}`
+          : `E-mail enviado para ${inviteEmail}`,
+      });
       setShowInvite(false);
       setInviteEmail("");
       setInviteName("");
+      setInvitePassword("");
       setInviteRole("viewer");
       fetchUsers();
     } catch (e: any) {
-      toast({ title: "Erro ao convidar", description: e.message, variant: "destructive" });
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
     }
     setInviting(false);
   };
@@ -301,15 +321,39 @@ const AdminUsuarios = () => {
           </motion.div>
         )}
 
-        {/* Invite dialog */}
+        {/* Create/Invite dialog */}
         <Dialog open={showInvite} onOpenChange={setShowInvite}>
           <DialogContent className="glass-card border-border/30">
             <DialogHeader>
-              <DialogTitle className="font-display">Convidar usuário</DialogTitle>
+              <DialogTitle className="font-display">
+                {createMode === "create" ? "Criar usuário" : "Convidar usuário"}
+              </DialogTitle>
               <DialogDescription className="text-muted-foreground/60">
-                Um e-mail será enviado com o link de acesso.
+                {createMode === "create"
+                  ? "Crie uma conta com e-mail e senha definidos."
+                  : "Um e-mail será enviado com o link de acesso."}
               </DialogDescription>
             </DialogHeader>
+
+            {/* Mode toggle */}
+            <div className="flex gap-1 p-1 bg-muted/50 rounded-md">
+              <button
+                onClick={() => setCreateMode("create")}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                  createMode === "create" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <UserPlus className="w-3.5 h-3.5" /> Criar conta
+              </button>
+              <button
+                onClick={() => setCreateMode("invite")}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                  createMode === "invite" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Mail className="w-3.5 h-3.5" /> Enviar convite
+              </button>
+            </div>
 
             <div className="space-y-3 py-2">
               <div>
@@ -322,6 +366,18 @@ const AdminUsuarios = () => {
                   className="text-sm"
                 />
               </div>
+              {createMode === "create" && (
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Senha *</label>
+                  <Input
+                    value={invitePassword}
+                    onChange={(e) => setInvitePassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    type="password"
+                    className="text-sm"
+                  />
+                </div>
+              )}
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Nome</label>
                 <Input
@@ -349,8 +405,8 @@ const AdminUsuarios = () => {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowInvite(false)}>Cancelar</Button>
               <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()}>
-                {inviting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
-                Enviar convite
+                {inviting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : createMode === "create" ? <UserPlus className="w-4 h-4 mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+                {createMode === "create" ? "Criar usuário" : "Enviar convite"}
               </Button>
             </DialogFooter>
           </DialogContent>
