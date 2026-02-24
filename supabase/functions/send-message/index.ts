@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
       conteudo: conteudo || null,
       midia_url: midia_url || null,
       atendente_id: atendente_id || userId,
-      assinatura: atendenteName || null,
+      assinatura: operatorName || null,
       status_envio: "ENVIADO",
     }).select().single();
 
