@@ -1,4 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Permission = {
@@ -9,22 +18,39 @@ type Permission = {
 };
 
 type ModuleAccessMap = Record<string, Permission>;
+type ModuleAction = keyof Permission;
+
+interface ModuleAccessValue {
+  access: ModuleAccessMap;
+  isAdmin: boolean;
+  isLoading: boolean;
+  hasAccess: (module: string, action?: ModuleAction) => boolean;
+  userId: string | null;
+}
 
 const defaultPerm: Permission = { can_view: false, can_create: false, can_edit: false, can_delete: false };
 const QUERY_TIMEOUT_MS = 8000;
+const HARD_STOP_MS = 12000;
+
+const ModuleAccessContext = createContext<ModuleAccessValue | null>(null);
 
 async function withTimeout<T>(promiseLike: PromiseLike<T>, label: string): Promise<T> {
-  const timeout = new Promise<never>((_, reject) => {
-    const id = window.setTimeout(() => {
-      window.clearTimeout(id);
-      reject(new Error(`Timeout em ${label}`));
-    }, QUERY_TIMEOUT_MS);
-  });
+  let timeoutId: number | undefined;
 
-  return Promise.race([Promise.resolve(promiseLike), timeout]);
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        reject(new Error(`Timeout em ${label}`));
+      }, QUERY_TIMEOUT_MS);
+    });
+
+    return await Promise.race([Promise.resolve(promiseLike), timeoutPromise]);
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }
 }
 
-export function useModuleAccess() {
+function useModuleAccessState(): ModuleAccessValue {
   const [access, setAccess] = useState<ModuleAccessMap>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +60,15 @@ export function useModuleAccess() {
     let cancelled = false;
 
     const load = async (session: any) => {
+      const hardStopId = window.setTimeout(() => {
+        if (!cancelled) {
+          console.error("[ModuleAccess] Hard timeout ao carregar permissões");
+          setIsLoading(false);
+        }
+      }, HARD_STOP_MS);
+
       if (!session || cancelled) {
+        window.clearTimeout(hardStopId);
         setUserId(null);
         setIsAdmin(false);
         setAccess({});
@@ -103,23 +137,34 @@ export function useModuleAccess() {
           setAccess({});
         }
       } finally {
+        window.clearTimeout(hardStopId);
         if (!cancelled) setIsLoading(false);
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!cancelled) {
         setIsLoading(true);
-        load(session);
+        void load(session);
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!cancelled) {
-        setIsLoading(true);
-        load(session);
-      }
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (!cancelled) {
+          setIsLoading(true);
+          void load(session);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error("Error getting auth session:", error);
+          setIsLoading(false);
+        }
+      });
 
     return () => {
       cancelled = true;
@@ -128,12 +173,31 @@ export function useModuleAccess() {
   }, []);
 
   const hasAccess = useCallback(
-    (module: string, action: keyof Permission = "can_view"): boolean => {
+    (module: string, action: ModuleAction = "can_view"): boolean => {
       if (isAdmin) return true;
       return access[module]?.[action] ?? defaultPerm[action];
     },
-    [isAdmin, access]
+    [isAdmin, access],
   );
 
-  return { access, isAdmin, isLoading, hasAccess, userId };
+  return useMemo(
+    () => ({ access, isAdmin, isLoading, hasAccess, userId }),
+    [access, isAdmin, isLoading, hasAccess, userId],
+  );
 }
+
+export function ModuleAccessProvider({ children }: { children: ReactNode }) {
+  const value = useModuleAccessState();
+  return createElement(ModuleAccessContext.Provider, { value }, children);
+}
+
+export function useModuleAccess() {
+  const context = useContext(ModuleAccessContext);
+
+  if (!context) {
+    throw new Error("useModuleAccess deve ser usado dentro de ModuleAccessProvider");
+  }
+
+  return context;
+}
+

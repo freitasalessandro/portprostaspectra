@@ -12,6 +12,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { useNavigationTelemetry } from "@/hooks/useNavigationTelemetry";
 import { useRuntimeGuards } from "@/hooks/useRuntimeGuards";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ModuleAccessProvider } from "@/hooks/useModuleAccess";
 
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
@@ -112,9 +113,11 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <AnimatedRoutes />
-          </BrowserRouter>
+          <ModuleAccessProvider>
+            <BrowserRouter>
+              <AnimatedRoutes />
+            </BrowserRouter>
+          </ModuleAccessProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
