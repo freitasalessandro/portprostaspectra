@@ -63,7 +63,7 @@ const statusLabels: Record<string, string> = {
 const tabs = [
   { key: "minha_fila", label: "Minha Fila" },
   { key: "todos", label: "Todos" },
-  { key: "aguardando", label: "Aguardando" },
+  { key: "aguardando", label: "Fila de espera" },
   { key: "encerrados", label: "Encerrados" },
 ];
 
