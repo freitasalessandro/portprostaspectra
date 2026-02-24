@@ -1,0 +1,89 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+type Permission = {
+  can_view: boolean;
+  can_create: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+};
+
+type ModuleAccessMap = Record<string, Permission>;
+
+const defaultPerm: Permission = { can_view: false, can_create: false, can_edit: false, can_delete: false };
+
+export function useModuleAccess() {
+  const [access, setAccess] = useState<ModuleAccessMap>({});
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || cancelled) {
+        setIsLoading(false);
+        return;
+      }
+
+      const uid = session.user.id;
+      setUserId(uid);
+
+      // Check admin role
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (roleData) {
+        // Admins have full access to everything
+        setIsAdmin(true);
+        setAccess({});
+        setIsLoading(false);
+        return;
+      }
+
+      // Load module permissions
+      const { data } = await supabase
+        .from("user_module_access" as any)
+        .select("module, can_view, can_create, can_edit, can_delete")
+        .eq("user_id", uid);
+
+      if (cancelled) return;
+
+      const map: ModuleAccessMap = {};
+      if (data) {
+        (data as any[]).forEach((row: any) => {
+          map[row.module] = {
+            can_view: row.can_view,
+            can_create: row.can_create,
+            can_edit: row.can_edit,
+            can_delete: row.can_delete,
+          };
+        });
+      }
+
+      setAccess(map);
+      setIsLoading(false);
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const hasAccess = useCallback(
+    (module: string, action: keyof Permission = "can_view"): boolean => {
+      if (isAdmin) return true;
+      return access[module]?.[action] ?? false;
+    },
+    [isAdmin, access]
+  );
+
+  return { access, isAdmin, isLoading, hasAccess, userId };
+}
