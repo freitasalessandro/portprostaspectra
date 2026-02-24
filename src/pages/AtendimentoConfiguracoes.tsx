@@ -58,6 +58,8 @@ export default function AtendimentoConfiguracoes() {
   const [waConnected, setWaConnected] = useState<boolean | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ imported: number; skipped: number; total: number } | null>(null);
+  const [reprocessing, setReprocessing] = useState(false);
+  const [reprocessResult, setReprocessResult] = useState<{ reprocessed: number; failed: number; total: number } | null>(null);
 
   // Grupos permitidos
   interface AllowedGroup { id: string; group_jid: string; group_name: string | null; ativo: boolean; user_id: string; }
@@ -635,10 +637,40 @@ export default function AtendimentoConfiguracoes() {
                     {syncing ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
                     {syncing ? "Importando..." : "Importar Histórico"}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      setReprocessing(true);
+                      setReprocessResult(null);
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (!session?.access_token) throw new Error("Não autenticado");
+                        const { data, error } = await supabase.functions.invoke("reprocess-media", {
+                          headers: { Authorization: `Bearer ${session.access_token}` },
+                        });
+                        if (error) throw error;
+                        setReprocessResult({ reprocessed: data.reprocessed, failed: data.failed, total: data.total });
+                        toast({ title: `Mídia reprocessada`, description: `${data.reprocessed} arquivos corrigidos de ${data.total}` });
+                      } catch (err: any) {
+                        toast({ title: "Erro ao reprocessar", description: err.message, variant: "destructive" });
+                      }
+                      setReprocessing(false);
+                    }}
+                    disabled={reprocessing || !waInstance}
+                  >
+                    {reprocessing ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
+                    {reprocessing ? "Reprocessando..." : "Corrigir Mídias Antigas"}
+                  </Button>
                 </div>
                 {syncResult && (
                   <div className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2">
                     ✅ {syncResult.imported} conversas importadas · {syncResult.skipped} já existentes · {syncResult.total} total encontradas
+                  </div>
+                )}
+                {reprocessResult && (
+                  <div className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2">
+                    🔄 {reprocessResult.reprocessed} mídias corrigidas · {reprocessResult.failed} falhas · {reprocessResult.total} total analisadas
                   </div>
                 )}
               </CardContent>
