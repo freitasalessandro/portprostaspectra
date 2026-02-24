@@ -13,7 +13,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, User, Plus, UserCheck, Loader2, Inbox, Filter, Users } from "lucide-react";
+import { Search, User, Plus, UserCheck, Loader2, Inbox, Filter, Users, ArrowRightLeft } from "lucide-react";
 import { Ticket, AtendentePerfil, cargoLabels, cargoColors, AtendenteCargo } from "@/hooks/useAtendimento";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -391,6 +391,12 @@ export default function TicketList({
                         <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-[16px] font-semibold border ${statusColors[ticket.status] || ""}`}>
                           {statusLabels[ticket.status] || ticket.status}
                         </Badge>
+                        {isHighlighted && (
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] font-semibold bg-amber-500/15 text-amber-400 border-amber-500/25 animate-pulse">
+                            <ArrowRightLeft className="w-2.5 h-2.5 mr-0.5" />
+                            Encaminhado
+                          </Badge>
+                        )}
                         {ticket.atendente_nome && (
                           <span className="text-[9px] text-muted-foreground/50 flex items-center gap-0.5 truncate max-w-[90px]" title={ticket.atendente_nome}>
                             <UserCheck className="w-2.5 h-2.5 shrink-0" />
