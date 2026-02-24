@@ -73,12 +73,13 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Sistema",
     icon: Settings,
-    basePaths: ["/admin/usuarios", "/admin/integracoes", "/admin/auditoria", "/admin/configuracoes", "/admin/pagamentos"],
+    basePaths: ["/admin/usuarios", "/admin/integracoes", "/admin/auditoria", "/admin/configuracoes", "/admin/pagamentos", "/admin/diagnostico"],
     items: [
       { title: "Pagamentos", icon: CreditCard, path: "/admin/pagamentos", module: "pagamentos" },
       { title: "Usuários", icon: Users, path: "/admin/usuarios", module: "usuarios" },
       { title: "Integrações", icon: Plug, path: "/admin/integracoes", module: "integracoes" },
       { title: "Auditoria", icon: Shield, path: "/admin/auditoria", module: "auditoria" },
+      { title: "Diagnóstico", icon: LayoutDashboard, path: "/admin/diagnostico", module: "configuracoes" },
       { title: "Configurações", icon: Settings, path: "/admin/configuracoes", module: "configuracoes" },
     ],
   },

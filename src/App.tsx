@@ -23,6 +23,7 @@ const AdminConfiguracoes = lazy(() => import("./pages/AdminConfiguracoes"));
 const AdminPagamentos = lazy(() => import("./pages/AdminPagamentos"));
 const AdminIntegracoes = lazy(() => import("./pages/AdminIntegracoes"));
 const AdminAuditoria = lazy(() => import("./pages/AdminAuditoria"));
+const AdminDiagnostico = lazy(() => import("./pages/AdminDiagnostico"));
 const AdminComunicacoesModelos = lazy(() => import("./pages/AdminComunicacoesModelos"));
 const AdminComunicacoesGatilhos = lazy(() => import("./pages/AdminComunicacoesGatilhos"));
 const AdminComunicacoesHistorico = lazy(() => import("./pages/AdminComunicacoesHistorico"));
@@ -80,6 +81,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin/pagamentos" element={<LazyPage><ProtectedRoute module="pagamentos"><AdminPagamentos /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/integracoes" element={<LazyPage><ProtectedRoute module="integracoes"><AdminIntegracoes /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/auditoria" element={<LazyPage><ProtectedRoute module="auditoria"><AdminAuditoria /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/diagnostico" element={<LazyPage><ProtectedRoute module="configuracoes"><AdminDiagnostico /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/comunicacoes/modelos" element={<LazyPage><ProtectedRoute module="comunicacoes"><AdminComunicacoesModelos /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/comunicacoes/gatilhos" element={<LazyPage><ProtectedRoute module="comunicacoes"><AdminComunicacoesGatilhos /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/comunicacoes/historico" element={<LazyPage><ProtectedRoute module="comunicacoes"><AdminComunicacoesHistorico /></ProtectedRoute></LazyPage>} />
