@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
 import PageSkeleton from "@/components/PageSkeleton";
@@ -47,6 +47,20 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    window.history.scrollRestoration = "manual";
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll("main").forEach((element) => {
+        if (element instanceof HTMLElement) {
+          element.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        }
+      });
+    });
+  }, [location.pathname]);
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
