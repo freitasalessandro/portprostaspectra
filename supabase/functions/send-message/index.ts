@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     }
 
     // Get atendente profile — try by id first, then by user_id as fallback
-    let perfil = null;
+    let perfil: any = null;
     if (atendente_id) {
       const { data } = await supabase
         .from("atendentes_perfil")
@@ -71,24 +71,30 @@ Deno.serve(async (req) => {
       perfil = data;
     }
 
-    // Build message with name prefix and optional signature
-    let finalText = conteudo || "";
-    const atendenteName = perfil?.nome_completo || null;
-    const sigActive = perfil?.assinatura_ativa !== false;
+    // Fallback name from profile table if atendente profile is missing/incomplete
+    const { data: appProfile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    // Always prepend operator name for TEXT messages when signature is active
-    if (msgTipo === "TEXT" && sigActive && atendenteName && finalText) {
-      finalText = `*${atendenteName}:*\n${finalText}`;
+    // Build message with operator name prefix + optional footer signature
+    let finalText = conteudo || "";
+    const operatorName =
+      perfil?.nome_completo ||
+      appProfile?.display_name ||
+      (user.email ? user.email.split("@")[0] : null);
+
+    // Always prepend operator name before the message text
+    if (msgTipo === "TEXT" && operatorName && finalText) {
+      finalText = `*${operatorName}:*\n${finalText}`;
     }
-    
-    // Append custom signature if enabled and present
+
+    // Optional footer signature (keeps existing toggle behavior)
+    const sigActive = perfil?.assinatura_ativa !== false;
     if (msgTipo === "TEXT" && sigActive && perfil?.assinatura_padrao) {
       finalText += "\n\n" + perfil.assinatura_padrao;
     }
-
-    console.log("Signature debug:", { atendente_id, userId, perfilFound: !!perfil, atendenteName, sigActive, msgTipo, hasContent: !!conteudo });
-
-    // Get Evolution API config (use atendimento-specific instance)
     const { data: settings } = await supabase
       .from("company_settings")
       .select("atendimento_api_url, atendimento_api_instance, atendimento_api_token")
