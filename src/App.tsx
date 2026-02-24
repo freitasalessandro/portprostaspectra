@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
 import PageSkeleton from "@/components/PageSkeleton";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { useNavigationTelemetry } from "@/hooks/useNavigationTelemetry";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -50,6 +51,7 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+  useNavigationTelemetry();
 
   useEffect(() => {
     window.history.scrollRestoration = "manual";
