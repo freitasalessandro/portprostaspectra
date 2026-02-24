@@ -47,14 +47,14 @@ export default function UserPermissionsDialog({ open, onOpenChange, userId, user
     if (!open || !userId) return;
     setLoading(true);
     supabase
-      .from("user_module_access" as any)
+      .from("user_module_access")
       .select("module, can_view, can_create, can_edit, can_delete")
       .eq("user_id", userId)
       .then(({ data, error }) => {
         const map: PermissionsMap = {};
         MODULES.forEach((m) => (map[m.key] = defaultPerm()));
         if (!error && data) {
-          (data as any[]).forEach((row: any) => {
+          data.forEach((row) => {
             map[row.module] = {
               can_view: row.can_view,
               can_create: row.can_create,
@@ -91,7 +91,7 @@ export default function UserPermissionsDialog({ open, onOpenChange, userId, user
     setSaving(true);
     try {
       // Delete existing then insert all
-      await (supabase.from("user_module_access" as any) as any).delete().eq("user_id", userId);
+      await supabase.from("user_module_access").delete().eq("user_id", userId);
 
       const rows = MODULES.map((m) => ({
         user_id: userId,
@@ -99,7 +99,7 @@ export default function UserPermissionsDialog({ open, onOpenChange, userId, user
         ...perms[m.key],
       }));
 
-      const { error } = await (supabase.from("user_module_access" as any) as any).insert(rows);
+      const { error } = await supabase.from("user_module_access").insert(rows);
       if (error) throw error;
 
       toast({ title: "Permissões salvas" });
