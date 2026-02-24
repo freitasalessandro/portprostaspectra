@@ -41,6 +41,7 @@ interface TicketListProps {
   perfil: AtendentePerfil | null;
   onToggleDisponivel: (val: boolean) => void;
   onNewTicket: (ticket: Ticket) => void;
+  highlightedIds?: Set<string>;
 }
 
 const statusColors: Record<string, string> = {
@@ -67,7 +68,7 @@ const tabs = [
 ];
 
 export default function TicketList({
-  tickets, loading, loadingMore, hasMore, tabCounts, onLoadMore, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket,
+  tickets, loading, loadingMore, hasMore, tabCounts, onLoadMore, selectedId, onSelect, filter, onFilterChange, perfil, onToggleDisponivel, onNewTicket, highlightedIds,
 }: TicketListProps) {
   const [search, setSearch] = useState("");
   const [atendenteFilter, setAtendenteFilter] = useState<string>("all");
@@ -331,6 +332,7 @@ export default function TicketList({
           <AnimatePresence mode="popLayout">
             {filtered.map((ticket, index) => {
               const isSelected = selectedId === ticket.id;
+              const isHighlighted = highlightedIds?.has(ticket.id) || false;
               const nome = ticket.contato?.nome || ticket.whatsapp_number;
               const initial = nome.charAt(0).toUpperCase();
               const isGroup = ticket.whatsapp_number?.includes("@g.us") || ticket.contato?.nome?.endsWith("(Grupo)") || false;
@@ -345,9 +347,11 @@ export default function TicketList({
                   layout
                   onClick={() => onSelect(ticket)}
                   className={`w-full text-left p-2.5 rounded-xl transition-all group ${
-                    isSelected
-                      ? "bg-primary/8 border border-primary/15 shadow-sm"
-                      : "hover:bg-secondary/30 border border-transparent"
+                    isHighlighted
+                      ? "bg-amber-500/10 border border-amber-500/30 shadow-sm shadow-amber-500/10 animate-pulse"
+                      : isSelected
+                        ? "bg-primary/8 border border-primary/15 shadow-sm"
+                        : "hover:bg-secondary/30 border border-transparent"
                   }`}
                 >
                   <div className="flex items-start gap-2.5">

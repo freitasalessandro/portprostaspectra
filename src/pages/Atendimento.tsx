@@ -6,11 +6,13 @@ import ChatArea from "@/components/atendimento/ChatArea";
 import DetailPanel from "@/components/atendimento/DetailPanel";
 import { useTickets, useMensagens, useMotivos, useAtendentePerfil, useForwardNotification, useNewTicketNotification, Ticket } from "@/hooks/useAtendimento";
 import { useOpenTicketCount } from "@/hooks/useAtendimento";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Atendimento() {
   const [filter, setFilter] = useState("minha_fila");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showPanel, setShowPanel] = useState(true);
+  const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
 
   const { perfil, updatePerfil } = useAtendentePerfil();
   const { tickets, loading, loadingMore, hasMore, tabCounts, refetch, fetchMore, userId } = useTickets(filter, perfil?.cargo);
@@ -19,6 +21,35 @@ export default function Atendimento() {
   const openCount = useOpenTicketCount();
   useForwardNotification(perfil?.id || null);
   useNewTicketNotification(userId, perfil?.cargo);
+
+  // Track tickets forwarded to current user — highlight them temporarily
+  useEffect(() => {
+    if (!perfil?.id) return;
+    const channel = supabase
+      .channel(`forward-highlight-${perfil.id}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "tickets",
+        filter: `atendente_id=eq.${perfil.id}`,
+      }, (payload) => {
+        const oldAtendente = (payload.old as any)?.atendente_id;
+        const newAtendente = (payload.new as any)?.atendente_id;
+        if (newAtendente === perfil.id && oldAtendente !== perfil.id) {
+          const ticketId = (payload.new as any).id;
+          setHighlightedIds(prev => new Set(prev).add(ticketId));
+          setTimeout(() => {
+            setHighlightedIds(prev => {
+              const next = new Set(prev);
+              next.delete(ticketId);
+              return next;
+            });
+          }, 8000);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [perfil?.id]);
 
   // Update document title
   useEffect(() => {
@@ -62,6 +93,7 @@ export default function Atendimento() {
             perfil={perfil}
             onToggleDisponivel={handleToggleDisponivel}
             onNewTicket={(ticket) => { setSelectedTicket(ticket); refetch(); }}
+            highlightedIds={highlightedIds}
           />
         </div>
 
