@@ -7,8 +7,9 @@ import {
   LayoutDashboard, Shield, Sun, Moon, MessageCircle, Headphones, Sliders, Contact, UserCircle,
   PanelLeftClose, PanelLeft,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useOpenTicketCount } from "@/hooks/useAtendimento";
+import { useModuleAccess } from "@/hooks/useModuleAccess";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import spectraLogo from "@/assets/spectra-logo.svg";
@@ -18,18 +19,20 @@ interface MenuItem {
   icon: React.ElementType;
   path: string;
   end?: boolean;
+  module?: string; // maps to user_module_access.module
 }
 
 interface MenuGroup {
   label: string;
   icon: React.ElementType;
   basePaths: string[];
+  module?: string; // if all items share a module
   items: MenuItem[];
 }
 
 const standaloneItems: MenuItem[] = [
-  { title: "Propostas", icon: FileText, path: "/admin", end: true },
-  { title: "Contratos", icon: FileSignature, path: "/admin/contratos" },
+  { title: "Propostas", icon: FileText, path: "/admin", end: true, module: "propostas" },
+  { title: "Contratos", icon: FileSignature, path: "/admin/contratos", module: "contratos" },
 ];
 
 const menuGroups: MenuGroup[] = [
@@ -37,31 +40,34 @@ const menuGroups: MenuGroup[] = [
     label: "Atendimento",
     icon: MessageCircle,
     basePaths: ["/atendimento"],
+    module: "atendimento",
     items: [
-      { title: "Chat", icon: Headphones, path: "/atendimento" },
-      { title: "Contatos", icon: Contact, path: "/atendimento/contatos" },
-      { title: "Dashboard", icon: LayoutDashboard, path: "/atendimento/dashboard" },
-      { title: "Configurações", icon: Sliders, path: "/atendimento/configuracoes" },
+      { title: "Chat", icon: Headphones, path: "/atendimento", module: "atendimento" },
+      { title: "Contatos", icon: Contact, path: "/atendimento/contatos", module: "atendimento" },
+      { title: "Dashboard", icon: LayoutDashboard, path: "/atendimento/dashboard", module: "atendimento" },
+      { title: "Configurações", icon: Sliders, path: "/atendimento/configuracoes", module: "atendimento" },
     ],
   },
   {
     label: "Catálogo",
     icon: Briefcase,
     basePaths: ["/admin/cases", "/admin/servicos", "/admin/categorias"],
+    module: "servicos",
     items: [
-      { title: "Cases", icon: Briefcase, path: "/admin/cases" },
-      { title: "Serviços", icon: Wrench, path: "/admin/servicos" },
-      { title: "Categorias", icon: Tag, path: "/admin/categorias" },
+      { title: "Cases", icon: Briefcase, path: "/admin/cases", module: "servicos" },
+      { title: "Serviços", icon: Wrench, path: "/admin/servicos", module: "servicos" },
+      { title: "Categorias", icon: Tag, path: "/admin/categorias", module: "servicos" },
     ],
   },
   {
     label: "Comunicações",
     icon: MessageSquare,
     basePaths: ["/admin/comunicacoes"],
+    module: "comunicacoes",
     items: [
-      { title: "Gatilhos", icon: MessageSquare, path: "/admin/comunicacoes/gatilhos" },
-      { title: "Modelos", icon: FileText, path: "/admin/comunicacoes/modelos" },
-      { title: "Histórico", icon: ScrollText, path: "/admin/comunicacoes/historico" },
+      { title: "Gatilhos", icon: MessageSquare, path: "/admin/comunicacoes/gatilhos", module: "comunicacoes" },
+      { title: "Modelos", icon: FileText, path: "/admin/comunicacoes/modelos", module: "comunicacoes" },
+      { title: "Histórico", icon: ScrollText, path: "/admin/comunicacoes/historico", module: "comunicacoes" },
     ],
   },
   {
@@ -69,11 +75,11 @@ const menuGroups: MenuGroup[] = [
     icon: Settings,
     basePaths: ["/admin/usuarios", "/admin/integracoes", "/admin/auditoria", "/admin/configuracoes", "/admin/pagamentos"],
     items: [
-      { title: "Pagamentos", icon: CreditCard, path: "/admin/pagamentos" },
-      { title: "Usuários", icon: Users, path: "/admin/usuarios" },
-      { title: "Integrações", icon: Plug, path: "/admin/integracoes" },
-      { title: "Auditoria", icon: Shield, path: "/admin/auditoria" },
-      { title: "Configurações", icon: Settings, path: "/admin/configuracoes" },
+      { title: "Pagamentos", icon: CreditCard, path: "/admin/pagamentos", module: "pagamentos" },
+      { title: "Usuários", icon: Users, path: "/admin/usuarios", module: "usuarios" },
+      { title: "Integrações", icon: Plug, path: "/admin/integracoes", module: "integracoes" },
+      { title: "Auditoria", icon: Shield, path: "/admin/auditoria", module: "auditoria" },
+      { title: "Configurações", icon: Settings, path: "/admin/configuracoes", module: "configuracoes" },
     ],
   },
 ];
@@ -99,7 +105,27 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, [collapsed]);
   const { theme, setTheme } = useTheme();
   const openTicketCount = useOpenTicketCount();
+  const { hasAccess, isLoading: accessLoading, isAdmin } = useModuleAccess();
 
+  // Filter items based on permissions
+  const visibleStandalone = useMemo(() =>
+    standaloneItems.filter(i => !i.module || hasAccess(i.module)),
+    [hasAccess]
+  );
+
+  const visibleGroups = useMemo(() =>
+    menuGroups
+      .map(g => {
+        // If group has a module key, check it first
+        if (g.module && !hasAccess(g.module)) return null;
+        // Filter individual items
+        const items = g.items.filter(i => !i.module || hasAccess(i.module));
+        if (items.length === 0) return null;
+        return { ...g, items };
+      })
+      .filter(Boolean) as MenuGroup[],
+    [hasAccess]
+  );
   // Auto-open groups that contain the active route
   const initialOpen = menuGroups
     .filter(g => g.basePaths.some(bp => location.pathname.startsWith(bp)))
@@ -121,7 +147,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     if (collapsed) {
       return (
         <>
-          {standaloneItems.map((item) => (
+          {visibleStandalone.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -134,7 +160,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </NavLink>
           ))}
           <div className="h-px bg-sidebar-border/30 my-1" />
-          {menuGroups.map((group) => (
+          {visibleGroups.map((group) => (
             <div key={group.label}>
               {group.items.map((item) => (
                 <NavLink
@@ -160,7 +186,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
     return (
       <>
-        {standaloneItems.map((item) => (
+        {visibleStandalone.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -174,7 +200,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           </NavLink>
         ))}
 
-        {menuGroups.map((group) => {
+        {visibleGroups.map((group) => {
           const isOpen = openGroups.includes(group.label);
           const isGroupActive = group.basePaths.some(bp => location.pathname.startsWith(bp));
 
