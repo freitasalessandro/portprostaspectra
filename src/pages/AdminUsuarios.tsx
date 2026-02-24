@@ -57,6 +57,7 @@ const AdminUsuarios = () => {
   const [inviteName, setInviteName] = useState("");
   const [invitePassword, setInvitePassword] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
+  const [inviteCargo, setInviteCargo] = useState<AtendenteCargo>("n1_triagem");
   const [inviting, setInviting] = useState(false);
   const navigate = useNavigate();
 
@@ -126,12 +127,14 @@ const AdminUsuarios = () => {
             password: invitePassword,
             display_name: inviteName.trim(),
             role: inviteRole,
+            cargo: inviteCargo,
           }
         : {
             action: "invite",
             email: inviteEmail.trim(),
             display_name: inviteName.trim(),
             role: inviteRole,
+            cargo: inviteCargo,
           };
 
       const { data, error } = await supabase.functions.invoke("manage-users", { body });
@@ -150,6 +153,7 @@ const AdminUsuarios = () => {
       setInviteName("");
       setInvitePassword("");
       setInviteRole("viewer");
+      setInviteCargo("n1_triagem");
       fetchUsers();
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
@@ -397,6 +401,19 @@ const AdminUsuarios = () => {
                     <SelectItem value="admin">Admin — acesso total</SelectItem>
                     <SelectItem value="editor">Editor — pode criar e editar</SelectItem>
                     <SelectItem value="viewer">Visualizador — somente leitura</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Cargo</label>
+                <Select value={inviteCargo} onValueChange={(v) => setInviteCargo(v as AtendenteCargo)}>
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="n1_triagem">N1 · Triagem</SelectItem>
+                    <SelectItem value="n2_tecnico">N2 · Técnico</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
