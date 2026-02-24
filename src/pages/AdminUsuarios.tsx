@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { cargoLabels, type AtendenteCargo } from "@/hooks/useAtendimento";
+import { cargoLabels, cargoColors, type AtendenteCargo } from "@/hooks/useAtendimento";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -14,9 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fadeUp, staggerContainer } from "@/lib/motion";
-import { Plus, Trash2, Shield, Mail, KeyRound } from "lucide-react";
-import UserInviteDialog from "@/components/admin/UserInviteDialog";
-import UserPermissionsDialog from "@/components/admin/UserPermissionsDialog";
+import { Plus, Trash2, Shield, UserCog, Mail, Loader2 } from "lucide-react";
 
 interface UserProfile {
   user_id: string;
@@ -45,7 +52,10 @@ const AdminUsuarios = () => {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
-  const [permUser, setPermUser] = useState<{ id: string; name: string } | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState("viewer");
+  const [inviting, setInviting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,10 +82,14 @@ const AdminUsuarios = () => {
     }
 
     const roleMap: Record<string, string> = {};
-    ((rolesRes.data as any[]) || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
+    ((rolesRes.data as any[]) || []).forEach((r: any) => {
+      roleMap[r.user_id] = r.role;
+    });
 
     const cargoMap: Record<string, AtendenteCargo> = {};
-    ((atendenteRes.data as any[]) || []).forEach((a: any) => { cargoMap[a.user_id] = a.cargo || "n1_triagem"; });
+    ((atendenteRes.data as any[]) || []).forEach((a: any) => {
+      cargoMap[a.user_id] = a.cargo || "n1_triagem";
+    });
 
     const merged: UserProfile[] = ((profilesRes.data as any[]) || []).map((p: any) => ({
       ...p,
@@ -83,6 +97,7 @@ const AdminUsuarios = () => {
       cargo: cargoMap[p.user_id] || "n1_triagem",
     }));
 
+    // Sort: admins first, then by name
     merged.sort((a, b) => {
       if (a.role === "admin" && b.role !== "admin") return -1;
       if (b.role === "admin" && a.role !== "admin") return 1;
@@ -93,14 +108,45 @@ const AdminUsuarios = () => {
     setLoading(false);
   };
 
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-users", {
+        body: {
+          action: "invite",
+          email: inviteEmail.trim(),
+          display_name: inviteName.trim(),
+          role: inviteRole,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "Convite enviado!", description: `E-mail enviado para ${inviteEmail}` });
+      setShowInvite(false);
+      setInviteEmail("");
+      setInviteName("");
+      setInviteRole("viewer");
+      fetchUsers();
+    } catch (e: any) {
+      toast({ title: "Erro ao convidar", description: e.message, variant: "destructive" });
+    }
+    setInviting(false);
+  };
+
   const handleDelete = async (userId: string) => {
     if (!confirm("Tem certeza que deseja remover este usuário? Essa ação é irreversível.")) return;
+
     try {
       const { data, error } = await supabase.functions.invoke("manage-users", {
         body: { action: "delete", user_id: userId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
       toast({ title: "Usuário removido" });
       fetchUsers();
     } catch (e: any) {
@@ -115,6 +161,7 @@ const AdminUsuarios = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
       toast({ title: "Papel atualizado" });
       fetchUsers();
     } catch (e: any) {
@@ -124,12 +171,14 @@ const AdminUsuarios = () => {
 
   const handleCargoChange = async (userId: string, newCargo: AtendenteCargo) => {
     try {
+      // Upsert atendentes_perfil with new cargo
       const { error } = await supabase
         .from("atendentes_perfil")
         .update({ cargo: newCargo as any })
         .eq("user_id", userId);
-
+      
       if (error) {
+        // If no row exists, create one
         const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle();
         await supabase.from("atendentes_perfil").insert({
           id: userId,
@@ -148,7 +197,7 @@ const AdminUsuarios = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-5xl">
+      <div className="max-w-4xl">
         <motion.div
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10"
           initial={{ opacity: 0, y: 20 }}
@@ -160,7 +209,7 @@ const AdminUsuarios = () => {
               <span className="w-6 h-px bg-primary/40" />
               Equipe
             </p>
-            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Usuários & Permissões</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Usuários</h1>
           </div>
           <Button
             onClick={() => setShowInvite(true)}
@@ -180,7 +229,7 @@ const AdminUsuarios = () => {
               <motion.div
                 key={u.user_id}
                 variants={fadeUp}
-                className="glass-card-premium p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 transition-all duration-500 relative overflow-hidden"
+                className="glass-card-premium p-5 flex items-center justify-between gap-4 group hover:border-primary/30 transition-all duration-500 relative overflow-hidden"
               >
                 <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/30 to-transparent transition-all duration-500" />
 
@@ -205,7 +254,7 @@ const AdminUsuarios = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {/* Cargo selector */}
                   <Select value={u.cargo} onValueChange={(val) => handleCargoChange(u.user_id, val as AtendenteCargo)}>
                     <SelectTrigger className="w-[120px] h-8 text-xs">
@@ -235,18 +284,6 @@ const AdminUsuarios = () => {
                           <SelectItem value="viewer">Visualizador</SelectItem>
                         </SelectContent>
                       </Select>
-
-                      {/* Permissions button */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setPermUser({ id: u.user_id, name: u.display_name || u.email || "Usuário" })}
-                        title="Permissões de módulos"
-                        className="w-8 h-8 text-muted-foreground/60 hover:text-primary hover:bg-primary/10"
-                      >
-                        <KeyRound className="w-4 h-4" />
-                      </Button>
-
                       <Button
                         variant="ghost"
                         size="icon"
@@ -264,18 +301,60 @@ const AdminUsuarios = () => {
           </motion.div>
         )}
 
-        {/* Invite/Create dialog */}
-        <UserInviteDialog open={showInvite} onOpenChange={setShowInvite} onCreated={fetchUsers} />
+        {/* Invite dialog */}
+        <Dialog open={showInvite} onOpenChange={setShowInvite}>
+          <DialogContent className="glass-card border-border/30">
+            <DialogHeader>
+              <DialogTitle className="font-display">Convidar usuário</DialogTitle>
+              <DialogDescription className="text-muted-foreground/60">
+                Um e-mail será enviado com o link de acesso.
+              </DialogDescription>
+            </DialogHeader>
 
-        {/* Permissions dialog */}
-        {permUser && (
-          <UserPermissionsDialog
-            open={!!permUser}
-            onOpenChange={(open) => !open && setPermUser(null)}
-            userId={permUser.id}
-            userName={permUser.name}
-          />
-        )}
+            <div className="space-y-3 py-2">
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">E-mail *</label>
+                <Input
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="email@exemplo.com"
+                  type="email"
+                  className="text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Nome</label>
+                <Input
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  placeholder="Nome completo"
+                  className="text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Papel</label>
+                <Select value={inviteRole} onValueChange={setInviteRole}>
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin — acesso total</SelectItem>
+                    <SelectItem value="editor">Editor — pode criar e editar</SelectItem>
+                    <SelectItem value="viewer">Visualizador — somente leitura</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowInvite(false)}>Cancelar</Button>
+              <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()}>
+                {inviting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+                Enviar convite
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

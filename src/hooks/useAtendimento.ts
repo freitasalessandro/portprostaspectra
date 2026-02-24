@@ -445,38 +445,21 @@ export function useOpenTicketCount() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const fetchCount = async () => {
-      try {
-        const { count: total, error } = await supabase
-          .from("tickets")
-          .select("*", { count: "exact", head: true })
-          .in("status", ["ABERTO", "AGUARDANDO"]);
-
-        if (error) throw error;
-        if (!cancelled) setCount(total || 0);
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Erro ao buscar contador de tickets:", error);
-          setCount(0);
-        }
-      }
+    const fetch = async () => {
+      const { count: c } = await supabase
+        .from("tickets")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["ABERTO", "AGUARDANDO"]);
+      setCount(c || 0);
     };
-
-    void fetchCount();
+    fetch();
 
     const channel = supabase
       .channel("ticket-count")
-      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, () => {
-        void fetchCount();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, () => fetch())
       .subscribe();
 
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   return count;

@@ -41,21 +41,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    // Helper to create atendente profile
-    const createAtendentePerfil = async (userId: string, displayName: string, cargo: string) => {
-      const validCargos = ["n1_triagem", "n2_tecnico", "supervisor"];
-      const finalCargo = validCargos.includes(cargo) ? cargo : "n1_triagem";
-      await supabaseAdmin.from("atendentes_perfil").upsert({
-        id: userId,
-        user_id: userId,
-        nome_completo: displayName || "Atendente",
-        cargo: finalCargo,
-      }, { onConflict: "id" });
-    };
-
     // INVITE
     if (action === "invite") {
-      const { email, role, display_name, cargo } = body;
+      const { email, role, display_name } = body;
       if (!email) return json({ error: "E-mail é obrigatório" }, 400);
 
       const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
@@ -69,36 +57,9 @@ Deno.serve(async (req) => {
           { user_id: inviteData.user.id, role: role || "viewer" },
           { onConflict: "user_id,role" }
         );
-        await createAtendentePerfil(inviteData.user.id, display_name || "", cargo || "n1_triagem");
       }
 
       return json({ success: true, user: inviteData?.user });
-    }
-
-    // CREATE (with email + password)
-    if (action === "create") {
-      const { email, password, role, display_name, cargo } = body;
-      if (!email) return json({ error: "E-mail é obrigatório" }, 400);
-      if (!password || password.length < 6) return json({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
-
-      const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: display_name || "" },
-      });
-
-      if (createError) return json({ error: createError.message }, 400);
-
-      if (createData?.user) {
-        await supabaseAdmin.from("user_roles").upsert(
-          { user_id: createData.user.id, role: role || "viewer" },
-          { onConflict: "user_id,role" }
-        );
-        await createAtendentePerfil(createData.user.id, display_name || "", cargo || "n1_triagem");
-      }
-
-      return json({ success: true, user: createData?.user });
     }
 
     // DELETE
