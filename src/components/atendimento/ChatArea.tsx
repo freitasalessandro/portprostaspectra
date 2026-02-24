@@ -82,14 +82,18 @@ function getFileType(file: File): PendingFile["tipo"] {
 }
 
 function MediaBubble({ msg, onImageClick }: { msg: Mensagem; onImageClick?: (url: string) => void }) {
+  const isSticker = msg.tipo === "IMAGE" && msg.midia_url && msg.midia_url.match(/\.webp/i) && !msg.conteudo;
+
   if (msg.tipo === "IMAGE" && msg.midia_url) {
     return (
       <div className="space-y-1.5">
         <img
           src={msg.midia_url}
-          alt="Imagem"
-          className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm"
-          style={{ maxHeight: 280 }}
+          alt={isSticker ? "Figurinha" : "Imagem"}
+          className={`rounded-lg cursor-pointer hover:opacity-90 transition-opacity ${
+            isSticker ? "max-w-[160px] bg-transparent" : "max-w-full shadow-sm"
+          }`}
+          style={isSticker ? {} : { maxHeight: 280 }}
           onClick={() => onImageClick?.(msg.midia_url!)}
         />
         {msg.conteudo && <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed">{msg.conteudo}</p>}
@@ -97,7 +101,36 @@ function MediaBubble({ msg, onImageClick }: { msg: Mensagem; onImageClick?: (url
     );
   }
 
-  if ((msg.tipo === "DOCUMENT" || msg.tipo === "AUDIO" || msg.tipo === "VIDEO") && msg.midia_url) {
+  if (msg.tipo === "AUDIO" && msg.midia_url) {
+    return (
+      <div className="space-y-1.5 min-w-[220px]">
+        <audio controls preload="metadata" className="w-full max-w-[300px] h-10 rounded-lg" style={{ filter: "saturate(0.8)" }}>
+          <source src={msg.midia_url} />
+          Seu navegador não suporta áudio.
+        </audio>
+        {msg.conteudo && <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed">{msg.conteudo}</p>}
+      </div>
+    );
+  }
+
+  if (msg.tipo === "VIDEO" && msg.midia_url) {
+    return (
+      <div className="space-y-1.5">
+        <video
+          controls
+          preload="metadata"
+          className="max-w-full rounded-lg shadow-sm"
+          style={{ maxHeight: 280 }}
+        >
+          <source src={msg.midia_url} />
+          Seu navegador não suporta vídeo.
+        </video>
+        {msg.conteudo && <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed">{msg.conteudo}</p>}
+      </div>
+    );
+  }
+
+  if (msg.tipo === "DOCUMENT" && msg.midia_url) {
     const fileName = msg.midia_url.split("/").pop() || "Arquivo";
     const isOut = msg.sentido === "SAIDA";
     return (
@@ -110,7 +143,7 @@ function MediaBubble({ msg, onImageClick }: { msg: Mensagem; onImageClick?: (url
             isOut ? "bg-primary-foreground/10 hover:bg-primary-foreground/15" : "bg-background/40 hover:bg-background/60"
           }`}
         >
-          {msg.tipo === "AUDIO" ? "🎵" : msg.tipo === "VIDEO" ? "🎬" : <FileText className="w-4 h-4 shrink-0 opacity-70" />}
+          <FileText className="w-4 h-4 shrink-0 opacity-70" />
           <span className="text-xs truncate flex-1 font-medium">{decodeURIComponent(fileName)}</span>
           <Download className="w-3.5 h-3.5 shrink-0 opacity-50" />
         </a>
