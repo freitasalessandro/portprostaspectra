@@ -159,8 +159,8 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
     switch (filter) {
       case "minha_fila":
         if (cargo === "supervisor") {
-          // Supervisors see all active tickets
-          query = query.in("status", activeStatuses);
+          // Supervisors: own tickets + unassigned
+          query = query.in("status", activeStatuses).or(`atendente_id.is.null,atendente_id.eq.${userId}`);
         } else if (cargo === "n1_triagem") {
           // N1 sees unassigned + own tickets
           query = query.in("status", activeStatuses).or(`atendente_id.is.null,atendente_id.eq.${userId}`);
@@ -173,9 +173,9 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
         if (cargo === "n1_triagem") {
           // N1 only sees unassigned in "todos"
           query = query.in("status", activeStatuses).is("atendente_id", null);
-        } else if (cargo === "supervisor") {
-          // Supervisor sees tickets assigned to others (not self) + unassigned
-          query = query.in("status", activeStatuses).or(`atendente_id.is.null,atendente_id.neq.${userId}`);
+      } else if (cargo === "supervisor") {
+          // Supervisor sees tickets assigned to others (not self)
+          query = query.in("status", activeStatuses).neq("atendente_id", userId!);
         } else {
           // N2 sees all tickets not assigned to self
           query = query.in("status", activeStatuses).neq("atendente_id", userId!);
@@ -205,7 +205,7 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
     // "Minha Fila" count
     let minhaFilaQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
     if (cargo === "supervisor") {
-      // supervisor sees all
+      minhaFilaQuery = minhaFilaQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
     } else if (cargo === "n1_triagem") {
       minhaFilaQuery = minhaFilaQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
     } else {
@@ -217,7 +217,7 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
     if (cargo === "n1_triagem") {
       todosQuery = todosQuery.is("atendente_id", null);
     } else if (cargo === "supervisor") {
-      todosQuery = todosQuery.or(`atendente_id.is.null,atendente_id.neq.${userId}`);
+      todosQuery = todosQuery.neq("atendente_id", userId!);
     } else {
       todosQuery = todosQuery.neq("atendente_id", userId!);
     }
