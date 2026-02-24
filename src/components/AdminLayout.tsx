@@ -98,11 +98,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
-    return localStorage.getItem('sidebar-collapsed') === 'true';
+    try {
+      return localStorage.getItem('sidebar-collapsed') === 'true';
+    } catch {
+      return false;
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('sidebar-collapsed', String(collapsed));
+    try {
+      localStorage.setItem('sidebar-collapsed', String(collapsed));
+    } catch {
+      // ignore storage failures
+    }
   }, [collapsed]);
   const { theme, setTheme } = useTheme();
   const openTicketCount = useOpenTicketCount();

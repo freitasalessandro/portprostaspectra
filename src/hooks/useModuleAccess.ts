@@ -11,6 +11,18 @@ type Permission = {
 type ModuleAccessMap = Record<string, Permission>;
 
 const defaultPerm: Permission = { can_view: false, can_create: false, can_edit: false, can_delete: false };
+const QUERY_TIMEOUT_MS = 8000;
+
+async function withTimeout<T>(promiseLike: PromiseLike<T>, label: string): Promise<T> {
+  const timeout = new Promise<never>((_, reject) => {
+    const id = window.setTimeout(() => {
+      window.clearTimeout(id);
+      reject(new Error(`Timeout em ${label}`));
+    }, QUERY_TIMEOUT_MS);
+  });
+
+  return Promise.race([Promise.resolve(promiseLike), timeout]);
+}
 
 export function useModuleAccess() {
   const [access, setAccess] = useState<ModuleAccessMap>({});
@@ -23,48 +35,51 @@ export function useModuleAccess() {
 
     const load = async (session: any) => {
       if (!session || cancelled) {
+        setUserId(null);
+        setIsAdmin(false);
+        setAccess({});
         setIsLoading(false);
         return;
       }
 
-      try {
-        const uid = session.user.id;
-        setUserId(uid);
+      const uid = session.user.id;
+      setUserId(uid);
+      setIsAdmin(false);
+      setAccess({});
 
-        // Check admin role
-        const { data: roleData, error: roleError } = await supabase
+      try {
+        const roleRequest = supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", uid)
           .eq("role", "admin")
           .maybeSingle();
 
+        const { data: roleData, error: roleError } = await withTimeout(roleRequest, "verificação de perfil admin");
+
         if (cancelled) return;
 
         if (roleError) {
           console.error("Error checking admin role:", roleError);
-          setIsLoading(false);
           return;
         }
 
         if (roleData) {
           setIsAdmin(true);
-          setAccess({});
-          setIsLoading(false);
           return;
         }
 
-        // Load module permissions
-        const { data, error: accessError } = await supabase
+        const accessRequest = supabase
           .from("user_module_access")
           .select("module, can_view, can_create, can_edit, can_delete")
           .eq("user_id", uid);
+
+        const { data, error: accessError } = await withTimeout(accessRequest, "carregamento de permissões");
 
         if (cancelled) return;
 
         if (accessError) {
           console.error("Error loading module access:", accessError);
-          setIsLoading(false);
           return;
         }
 
@@ -82,13 +97,16 @@ export function useModuleAccess() {
 
         setAccess(map);
       } catch (err) {
-        console.error("useModuleAccess error:", err);
+        if (!cancelled) {
+          console.error("useModuleAccess error:", err);
+          setIsAdmin(false);
+          setAccess({});
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     };
 
-    // Listen for auth state changes to handle session restore
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!cancelled) {
         setIsLoading(true);
@@ -96,9 +114,11 @@ export function useModuleAccess() {
       }
     });
 
-    // Also try immediately with current session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!cancelled) load(session);
+      if (!cancelled) {
+        setIsLoading(true);
+        load(session);
+      }
     });
 
     return () => {
@@ -110,7 +130,7 @@ export function useModuleAccess() {
   const hasAccess = useCallback(
     (module: string, action: keyof Permission = "can_view"): boolean => {
       if (isAdmin) return true;
-      return access[module]?.[action] ?? false;
+      return access[module]?.[action] ?? defaultPerm[action];
     },
     [isAdmin, access]
   );

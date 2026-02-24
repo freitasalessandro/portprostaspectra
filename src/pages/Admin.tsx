@@ -60,50 +60,77 @@ const Admin = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/login");
+          return;
+        }
+        await fetchProposals();
+      } catch (error) {
+        console.error("Erro ao validar sessão no Admin:", error);
+        toast({
+          title: "Falha ao abrir Admin",
+          description: "Não foi possível validar sua sessão. Tente novamente.",
+          variant: "destructive",
+        });
+        setLoading(false);
       }
-      fetchProposals();
     };
+
     checkAuth();
   }, [navigate]);
 
   const fetchProposals = async () => {
-    const [proposalsRes, sigsRes] = await Promise.all([
-      supabase.from("proposals").select("*").order("created_at", { ascending: false }),
-      supabase.from("proposal_signatures").select("*").order("signed_at", { ascending: false }),
-    ]);
+    try {
+      setLoading(true);
 
-    if (proposalsRes.error) {
-      toast({ title: "Erro ao carregar propostas", description: proposalsRes.error.message, variant: "destructive" });
-    } else {
-      setProposals(proposalsRes.data || []);
-      // Fetch view counts for all proposals
-      const ids = (proposalsRes.data || []).map(p => p.id);
-      if (ids.length > 0) {
-        const { data: views } = await supabase
-          .from("proposal_views")
-          .select("proposal_id")
-          .in("proposal_id", ids);
-        if (views) {
-          const counts: Record<string, number> = {};
-          views.forEach((v: any) => { counts[v.proposal_id] = (counts[v.proposal_id] || 0) + 1; });
-          setViewCounts(counts);
+      const [proposalsRes, sigsRes] = await Promise.all([
+        supabase.from("proposals").select("*").order("created_at", { ascending: false }),
+        supabase.from("proposal_signatures").select("*").order("signed_at", { ascending: false }),
+      ]);
+
+      if (proposalsRes.error) {
+        toast({ title: "Erro ao carregar propostas", description: proposalsRes.error.message, variant: "destructive" });
+      } else {
+        setProposals(proposalsRes.data || []);
+
+        const ids = (proposalsRes.data || []).map(p => p.id);
+        if (ids.length > 0) {
+          const { data: views, error: viewsError } = await supabase
+            .from("proposal_views")
+            .select("proposal_id")
+            .in("proposal_id", ids);
+
+          if (viewsError) {
+            console.error("Erro ao carregar visualizações:", viewsError);
+          }
+
+          if (views) {
+            const counts: Record<string, number> = {};
+            views.forEach((v: any) => { counts[v.proposal_id] = (counts[v.proposal_id] || 0) + 1; });
+            setViewCounts(counts);
+          }
         }
       }
-    }
 
-    if (!sigsRes.error && sigsRes.data) {
-      const sigMap: Record<string, ProposalSignature> = {};
-      (sigsRes.data as unknown as ProposalSignature[]).forEach(s => {
-        if (!sigMap[s.proposal_id]) sigMap[s.proposal_id] = s;
+      if (!sigsRes.error && sigsRes.data) {
+        const sigMap: Record<string, ProposalSignature> = {};
+        (sigsRes.data as unknown as ProposalSignature[]).forEach(s => {
+          if (!sigMap[s.proposal_id]) sigMap[s.proposal_id] = s;
+        });
+        setSignatures(sigMap);
+      }
+    } catch (error) {
+      console.error("Erro inesperado ao carregar propostas:", error);
+      toast({
+        title: "Erro inesperado",
+        description: "Houve uma falha ao carregar os dados do admin.",
+        variant: "destructive",
       });
-      setSignatures(sigMap);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const openViewHistory = async (proposalId: string) => {
