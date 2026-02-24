@@ -8,6 +8,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
 import PageSkeleton from "@/components/PageSkeleton";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -40,9 +41,11 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const LazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<PageSkeleton />}>
-    <PageTransition>{children}</PageTransition>
-  </Suspense>
+  <ErrorBoundary>
+    <Suspense fallback={<PageSkeleton />}>
+      <PageTransition>{children}</PageTransition>
+    </Suspense>
+  </ErrorBoundary>
 );
 
 const AnimatedRoutes = () => {
@@ -97,17 +100,19 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AnimatedRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+  <ErrorBoundary>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AnimatedRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
 );
 
 export default App;
