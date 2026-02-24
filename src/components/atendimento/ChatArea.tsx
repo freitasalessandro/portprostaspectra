@@ -494,6 +494,11 @@ export default function ChatArea({
                           : "bg-secondary/60 text-foreground rounded-2xl rounded-bl-md border border-border/20"
                       }`}
                     >
+                      {isOut && msg.assinatura && (
+                        <p className={`text-[11px] font-bold mb-0.5 ${isOut ? "text-primary-foreground/80" : "text-foreground/80"}`}>
+                          {msg.assinatura}:
+                        </p>
+                      )}
                       <MediaBubble msg={msg} onImageClick={openLightbox} />
                       <div className={`flex items-center gap-1.5 mt-1 ${isOut ? "justify-end" : "justify-start"}`}>
                         <span className={`text-[10px] ${isOut ? "text-primary-foreground/50" : "text-muted-foreground/60"}`}>
@@ -501,9 +506,6 @@ export default function ChatArea({
                         </span>
                         {isOut && <StatusIcon status={msg.status_envio} />}
                       </div>
-                      {isOut && msg.assinatura && (
-                        <p className="text-[10px] mt-0.5 text-primary-foreground/30">— {msg.assinatura}</p>
-                      )}
                     </div>
                   </div>
                 );
