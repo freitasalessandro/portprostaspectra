@@ -1,20 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { cargoLabels, cargoColors, type AtendenteCargo } from "@/hooks/useAtendimento";
+import { cargoLabels, type AtendenteCargo } from "@/hooks/useAtendimento";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -23,7 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fadeUp, staggerContainer } from "@/lib/motion";
-import { Plus, Trash2, Shield, UserCog, Mail, Loader2, Eye, EyeOff, UserPlus } from "lucide-react";
+import { Plus, Trash2, Shield, Mail, KeyRound } from "lucide-react";
+import UserInviteDialog from "@/components/admin/UserInviteDialog";
+import UserPermissionsDialog from "@/components/admin/UserPermissionsDialog";
 
 interface UserProfile {
   user_id: string;
@@ -52,13 +45,7 @@ const AdminUsuarios = () => {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
-  const [createMode, setCreateMode] = useState<"invite" | "create">("create");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteName, setInviteName] = useState("");
-  const [invitePassword, setInvitePassword] = useState("");
-  const [inviteRole, setInviteRole] = useState("viewer");
-  const [inviteCargo, setInviteCargo] = useState<AtendenteCargo>("n1_triagem");
-  const [inviting, setInviting] = useState(false);
+  const [permUser, setPermUser] = useState<{ id: string; name: string } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -85,14 +72,10 @@ const AdminUsuarios = () => {
     }
 
     const roleMap: Record<string, string> = {};
-    ((rolesRes.data as any[]) || []).forEach((r: any) => {
-      roleMap[r.user_id] = r.role;
-    });
+    ((rolesRes.data as any[]) || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
 
     const cargoMap: Record<string, AtendenteCargo> = {};
-    ((atendenteRes.data as any[]) || []).forEach((a: any) => {
-      cargoMap[a.user_id] = a.cargo || "n1_triagem";
-    });
+    ((atendenteRes.data as any[]) || []).forEach((a: any) => { cargoMap[a.user_id] = a.cargo || "n1_triagem"; });
 
     const merged: UserProfile[] = ((profilesRes.data as any[]) || []).map((p: any) => ({
       ...p,
@@ -100,7 +83,6 @@ const AdminUsuarios = () => {
       cargo: cargoMap[p.user_id] || "n1_triagem",
     }));
 
-    // Sort: admins first, then by name
     merged.sort((a, b) => {
       if (a.role === "admin" && b.role !== "admin") return -1;
       if (b.role === "admin" && a.role !== "admin") return 1;
@@ -111,66 +93,14 @@ const AdminUsuarios = () => {
     setLoading(false);
   };
 
-  const handleInvite = async () => {
-    if (!inviteEmail.trim()) return;
-    if (createMode === "create" && (!invitePassword || invitePassword.length < 6)) {
-      toast({ title: "Erro", description: "Senha deve ter no mínimo 6 caracteres", variant: "destructive" });
-      return;
-    }
-    setInviting(true);
-
-    try {
-      const body = createMode === "create"
-        ? {
-            action: "create",
-            email: inviteEmail.trim(),
-            password: invitePassword,
-            display_name: inviteName.trim(),
-            role: inviteRole,
-            cargo: inviteCargo,
-          }
-        : {
-            action: "invite",
-            email: inviteEmail.trim(),
-            display_name: inviteName.trim(),
-            role: inviteRole,
-            cargo: inviteCargo,
-          };
-
-      const { data, error } = await supabase.functions.invoke("manage-users", { body });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      toast({
-        title: createMode === "create" ? "Usuário criado!" : "Convite enviado!",
-        description: createMode === "create"
-          ? `Conta criada para ${inviteEmail}`
-          : `E-mail enviado para ${inviteEmail}`,
-      });
-      setShowInvite(false);
-      setInviteEmail("");
-      setInviteName("");
-      setInvitePassword("");
-      setInviteRole("viewer");
-      setInviteCargo("n1_triagem");
-      fetchUsers();
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
-    }
-    setInviting(false);
-  };
-
   const handleDelete = async (userId: string) => {
     if (!confirm("Tem certeza que deseja remover este usuário? Essa ação é irreversível.")) return;
-
     try {
       const { data, error } = await supabase.functions.invoke("manage-users", {
         body: { action: "delete", user_id: userId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
       toast({ title: "Usuário removido" });
       fetchUsers();
     } catch (e: any) {
@@ -185,7 +115,6 @@ const AdminUsuarios = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
       toast({ title: "Papel atualizado" });
       fetchUsers();
     } catch (e: any) {
@@ -195,14 +124,12 @@ const AdminUsuarios = () => {
 
   const handleCargoChange = async (userId: string, newCargo: AtendenteCargo) => {
     try {
-      // Upsert atendentes_perfil with new cargo
       const { error } = await supabase
         .from("atendentes_perfil")
         .update({ cargo: newCargo as any })
         .eq("user_id", userId);
-      
+
       if (error) {
-        // If no row exists, create one
         const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle();
         await supabase.from("atendentes_perfil").insert({
           id: userId,
@@ -221,7 +148,7 @@ const AdminUsuarios = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-4xl">
+      <div className="max-w-5xl">
         <motion.div
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10"
           initial={{ opacity: 0, y: 20 }}
@@ -233,7 +160,7 @@ const AdminUsuarios = () => {
               <span className="w-6 h-px bg-primary/40" />
               Equipe
             </p>
-            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Usuários</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Usuários & Permissões</h1>
           </div>
           <Button
             onClick={() => setShowInvite(true)}
@@ -253,7 +180,7 @@ const AdminUsuarios = () => {
               <motion.div
                 key={u.user_id}
                 variants={fadeUp}
-                className="glass-card-premium p-5 flex items-center justify-between gap-4 group hover:border-primary/30 transition-all duration-500 relative overflow-hidden"
+                className="glass-card-premium p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 transition-all duration-500 relative overflow-hidden"
               >
                 <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/30 to-transparent transition-all duration-500" />
 
@@ -278,7 +205,7 @@ const AdminUsuarios = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
                   {/* Cargo selector */}
                   <Select value={u.cargo} onValueChange={(val) => handleCargoChange(u.user_id, val as AtendenteCargo)}>
                     <SelectTrigger className="w-[120px] h-8 text-xs">
@@ -308,6 +235,18 @@ const AdminUsuarios = () => {
                           <SelectItem value="viewer">Visualizador</SelectItem>
                         </SelectContent>
                       </Select>
+
+                      {/* Permissions button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setPermUser({ id: u.user_id, name: u.display_name || u.email || "Usuário" })}
+                        title="Permissões de módulos"
+                        className="w-8 h-8 text-muted-foreground/60 hover:text-primary hover:bg-primary/10"
+                      >
+                        <KeyRound className="w-4 h-4" />
+                      </Button>
+
                       <Button
                         variant="ghost"
                         size="icon"
@@ -325,109 +264,18 @@ const AdminUsuarios = () => {
           </motion.div>
         )}
 
-        {/* Create/Invite dialog */}
-        <Dialog open={showInvite} onOpenChange={setShowInvite}>
-          <DialogContent className="glass-card border-border/30">
-            <DialogHeader>
-              <DialogTitle className="font-display">
-                {createMode === "create" ? "Criar usuário" : "Convidar usuário"}
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground/60">
-                {createMode === "create"
-                  ? "Crie uma conta com e-mail e senha definidos."
-                  : "Um e-mail será enviado com o link de acesso."}
-              </DialogDescription>
-            </DialogHeader>
+        {/* Invite/Create dialog */}
+        <UserInviteDialog open={showInvite} onOpenChange={setShowInvite} onCreated={fetchUsers} />
 
-            {/* Mode toggle */}
-            <div className="flex gap-1 p-1 bg-muted/50 rounded-md">
-              <button
-                onClick={() => setCreateMode("create")}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                  createMode === "create" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <UserPlus className="w-3.5 h-3.5" /> Criar conta
-              </button>
-              <button
-                onClick={() => setCreateMode("invite")}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                  createMode === "invite" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Mail className="w-3.5 h-3.5" /> Enviar convite
-              </button>
-            </div>
-
-            <div className="space-y-3 py-2">
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">E-mail *</label>
-                <Input
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="email@exemplo.com"
-                  type="email"
-                  className="text-sm"
-                />
-              </div>
-              {createMode === "create" && (
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Senha *</label>
-                  <Input
-                    value={invitePassword}
-                    onChange={(e) => setInvitePassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    type="password"
-                    className="text-sm"
-                  />
-                </div>
-              )}
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Nome</label>
-                <Input
-                  value={inviteName}
-                  onChange={(e) => setInviteName(e.target.value)}
-                  placeholder="Nome completo"
-                  className="text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Papel</label>
-                <Select value={inviteRole} onValueChange={setInviteRole}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin — acesso total</SelectItem>
-                    <SelectItem value="editor">Editor — pode criar e editar</SelectItem>
-                    <SelectItem value="viewer">Visualizador — somente leitura</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Cargo</label>
-                <Select value={inviteCargo} onValueChange={(v) => setInviteCargo(v as AtendenteCargo)}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="n1_triagem">N1 · Triagem</SelectItem>
-                    <SelectItem value="n2_tecnico">N2 · Técnico</SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowInvite(false)}>Cancelar</Button>
-              <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()}>
-                {inviting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : createMode === "create" ? <UserPlus className="w-4 h-4 mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
-                {createMode === "create" ? "Criar usuário" : "Enviar convite"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Permissions dialog */}
+        {permUser && (
+          <UserPermissionsDialog
+            open={!!permUser}
+            onOpenChange={(open) => !open && setPermUser(null)}
+            userId={permUser.id}
+            userName={permUser.name}
+          />
+        )}
       </div>
     </AdminLayout>
   );
