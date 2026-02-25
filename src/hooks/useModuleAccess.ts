@@ -40,12 +40,14 @@ export function useModuleAccess() {
 
   const fetchPermissions = useCallback(async (uid: string) => {
     try {
+      console.log("[useModuleAccess] fetchPermissions for uid:", uid);
       // Check admin role first
-      const { data: roleData } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", uid)
         .maybeSingle();
+      console.log("[useModuleAccess] roleData:", roleData, "roleError:", roleError);
 
       if (roleData?.role === "admin") {
         setIsAdmin(true);

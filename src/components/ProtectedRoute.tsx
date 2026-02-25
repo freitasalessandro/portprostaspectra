@@ -12,6 +12,8 @@ const ProtectedRoute = ({ children, requiredModule, requiredAction = "can_view" 
   const navigate = useNavigate();
   const { permissions, loading, isAdmin, userId } = useModuleAccess();
 
+  console.log("[ProtectedRoute] state:", { loading, userId, isAdmin, requiredModule, requiredAction });
+
   // Still loading auth + permissions
   if (loading) {
     return (
