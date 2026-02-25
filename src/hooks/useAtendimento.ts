@@ -193,68 +193,85 @@ export function useTickets(filter: string = "minha_fila", cargo?: AtendenteCargo
     setLoading(true);
     setHasMore(false);
 
-    const activeStatuses = ["EM_ATENDIMENTO", "AGUARDANDO"] as const;
-    
-    // "Minha Fila" count — only tickets assigned to current user
-    const minhaFilaQuery = supabase.from("tickets").select("id", { count: "exact", head: true })
-      .in("status", activeStatuses).eq("atendente_id", userId!);
+    try {
+      const activeStatuses = ["EM_ATENDIMENTO", "AGUARDANDO"] as const;
 
-    // "Todos" count — tickets assigned to others
-    let todosQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
-    if (cargo === "n1_triagem") {
-      todosQuery = todosQuery.not("atendente_id", "is", null).neq("atendente_id", userId!);
-    } else {
-      todosQuery = todosQuery.neq("atendente_id", userId!);
-    }
+      // "Minha Fila" count — only tickets assigned to current user
+      const minhaFilaQuery = supabase.from("tickets").select("id", { count: "exact", head: true })
+        .in("status", activeStatuses).eq("atendente_id", userId!);
 
-    // "Aguardando" count — ABERTO (unassigned) + AGUARDANDO
-    let aguardandoQuery = supabase.from("tickets").select("id", { count: "exact", head: true })
-      .in("status", ["ABERTO", "AGUARDANDO"]);
-    if (cargo === "n1_triagem") {
-      aguardandoQuery = aguardandoQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
-    }
+      // "Todos" count — tickets assigned to others
+      let todosQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", activeStatuses);
+      if (cargo === "n1_triagem") {
+        todosQuery = todosQuery.not("atendente_id", "is", null).neq("atendente_id", userId!);
+      } else {
+        todosQuery = todosQuery.neq("atendente_id", userId!);
+      }
 
-    const countQueries = [
-      minhaFilaQuery,
-      todosQuery,
-      aguardandoQuery,
-      supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "ENCERRADO"),
-    ];
+      // "Aguardando" count — ABERTO (unassigned) + AGUARDANDO
+      let aguardandoQuery = supabase.from("tickets").select("id", { count: "exact", head: true })
+        .in("status", ["ABERTO", "AGUARDANDO"]);
+      if (cargo === "n1_triagem") {
+        aguardandoQuery = aguardandoQuery.or(`atendente_id.is.null,atendente_id.eq.${userId}`);
+      }
 
-    const query = buildQuery().range(0, PAGE_SIZE - 1);
-    const [{ data, error }, ...countResults] = await Promise.all([query, ...countQueries]);
+      const countQueries = [
+        minhaFilaQuery,
+        todosQuery,
+        aguardandoQuery,
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "ENCERRADO"),
+      ];
 
-    setTabCounts({
-      minha_fila: countResults[0].count ?? 0,
-      todos: countResults[1].count ?? 0,
-      aguardando: countResults[2].count ?? 0,
-      encerrados: countResults[3].count ?? 0,
-    });
+      const query = buildQuery().range(0, PAGE_SIZE - 1);
+      const [queryResult, ...countResults] = await Promise.allSettled([query, ...countQueries]);
 
-    if (!error && data) {
-      const enriched = await enrichTickets(data);
-      setTickets(enriched);
-      setHasMore(filter === "encerrados" && data.length === PAGE_SIZE);
-    } else if (!error) {
+      setTabCounts({
+        minha_fila: countResults[0]?.status === "fulfilled" ? (countResults[0].value.count ?? 0) : 0,
+        todos: countResults[1]?.status === "fulfilled" ? (countResults[1].value.count ?? 0) : 0,
+        aguardando: countResults[2]?.status === "fulfilled" ? (countResults[2].value.count ?? 0) : 0,
+        encerrados: countResults[3]?.status === "fulfilled" ? (countResults[3].value.count ?? 0) : 0,
+      });
+
+      if (queryResult.status !== "fulfilled") throw queryResult.reason;
+      const { data, error } = queryResult.value;
+      if (error) throw error;
+
+      if (data) {
+        const enriched = await enrichTickets(data);
+        setTickets(enriched);
+        setHasMore(filter === "encerrados" && data.length === PAGE_SIZE);
+      } else {
+        setTickets([]);
+      }
+    } catch (error) {
+      console.error("[useTickets] Failed to fetch tickets:", error);
       setTickets([]);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [userId, filter, cargo]);
 
   const fetchMore = useCallback(async () => {
     if (!userId || loadingMore || !hasMore) return;
     setLoadingMore(true);
 
-    const offset = tickets.length;
-    const query = buildQuery().range(offset, offset + PAGE_SIZE - 1);
-    const { data, error } = await query;
+    try {
+      const offset = tickets.length;
+      const query = buildQuery().range(offset, offset + PAGE_SIZE - 1);
+      const { data, error } = await query;
+      if (error) throw error;
 
-    if (!error && data) {
-      const enriched = await enrichTickets(data);
-      setTickets(prev => [...prev, ...enriched]);
-      setHasMore(data.length === PAGE_SIZE);
+      if (data) {
+        const enriched = await enrichTickets(data);
+        setTickets(prev => [...prev, ...enriched]);
+        setHasMore(data.length === PAGE_SIZE);
+      }
+    } catch (error) {
+      console.error("[useTickets] Failed to fetch more tickets:", error);
+    } finally {
+      setLoadingMore(false);
     }
-    setLoadingMore(false);
   }, [userId, tickets.length, loadingMore, hasMore, filter]);
 
   useEffect(() => {
@@ -282,15 +299,27 @@ export function useMensagens(ticketId: string | null) {
   const playSound = useNotificationSound();
 
   const fetchMensagens = useCallback(async () => {
-    if (!ticketId) { setMensagens([]); return; }
+    if (!ticketId) {
+      setMensagens([]);
+      return;
+    }
+
     setLoading(true);
-    const { data } = await supabase
-      .from("mensagens")
-      .select("*")
-      .eq("ticket_id", ticketId)
-      .order("created_at", { ascending: true });
-    if (data) setMensagens(data as Mensagem[]);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("mensagens")
+        .select("*")
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      setMensagens((data as Mensagem[]) ?? []);
+    } catch (error) {
+      console.error("[useMensagens] Failed to fetch messages:", error);
+      setMensagens([]);
+    } finally {
+      setLoading(false);
+    }
   }, [ticketId]);
 
   useEffect(() => { fetchMensagens(); }, [fetchMensagens]);
@@ -354,32 +383,46 @@ export function useAtendentePerfil() {
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const { data: p } = await supabase
-        .from("atendentes_perfil")
-        .select("*")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-      if (p) {
-        setPerfil(p as AtendentePerfil);
-      } else {
-        // Auto-create profile if it doesn't exist
-        const displayName = data.user.email?.split("@")[0] || "Atendente";
-        const { data: created } = await supabase
-          .from("atendentes_perfil")
-          .insert({
-            id: data.user.id,
-            user_id: data.user.id,
-            nome_completo: displayName,
-            setor: null,
-            assinatura_padrao: null,
-            assinatura_ativa: false,
-          })
-          .select()
-          .single();
-        if (created) setPerfil(created as AtendentePerfil);
+      if (!data.user) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const { data: p, error: profileError } = await supabase
+          .from("atendentes_perfil")
+          .select("*")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        if (p) {
+          setPerfil(p as AtendentePerfil);
+        } else {
+          // Auto-create profile if it doesn't exist
+          const displayName = data.user.email?.split("@")[0] || "Atendente";
+          const { data: created, error: createError } = await supabase
+            .from("atendentes_perfil")
+            .insert({
+              id: data.user.id,
+              user_id: data.user.id,
+              nome_completo: displayName,
+              setor: null,
+              assinatura_padrao: null,
+              assinatura_ativa: false,
+            })
+            .select()
+            .single();
+
+          if (createError) throw createError;
+          if (created) setPerfil(created as AtendentePerfil);
+        }
+      } catch (error) {
+        console.error("[useAtendentePerfil] Failed to load profile:", error);
+      } finally {
+        setLoading(false);
+      }
     });
   }, []);
 
