@@ -52,7 +52,7 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<LazyPage><Index /></LazyPage>} />
         <Route path="/login" element={<LazyPage><Login /></LazyPage>} />
-        <Route path="/admin" element={<LazyPage><ProtectedRoute requiredModule="propostas"><Admin /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin" element={<LazyPage><ProtectedRoute><Admin /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/cases" element={<LazyPage><ProtectedRoute requiredModule="catalogo"><AdminCases /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/servicos" element={<LazyPage><ProtectedRoute requiredModule="catalogo"><AdminServicos /></ProtectedRoute></LazyPage>} />
         <Route path="/admin/categorias" element={<LazyPage><ProtectedRoute requiredModule="catalogo"><AdminCategorias /></ProtectedRoute></LazyPage>} />

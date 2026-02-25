@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useModuleAccess, type ModuleKey } from "@/hooks/useModuleAccess";
 
@@ -12,22 +10,10 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requiredModule, requiredAction = "can_view" }: ProtectedRouteProps) => {
   const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { permissions, loading: permLoading, isAdmin } = useModuleAccess();
+  const { permissions, loading, isAdmin, userId } = useModuleAccess();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/login", { replace: true });
-      } else {
-        setIsAuthenticated(true);
-      }
-      setAuthChecked(true);
-    });
-  }, [navigate]);
-
-  if (!authChecked || !isAuthenticated) {
+  // Still loading auth + permissions
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
@@ -35,20 +21,19 @@ const ProtectedRoute = ({ children, requiredModule, requiredAction = "can_view" 
     );
   }
 
-  if (permLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
-      </div>
-    );
+  // Not authenticated
+  if (!userId) {
+    navigate("/login", { replace: true });
+    return null;
   }
 
-  // If no module required, just auth check is enough
+  // No module required — just auth is enough
   if (!requiredModule) return <>{children}</>;
 
-  // Admins always have access
+  // Admins always pass
   if (isAdmin) return <>{children}</>;
 
+  // Check granular permission
   const perm = permissions[requiredModule];
   if (!perm || !perm[requiredAction]) {
     return (
