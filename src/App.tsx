@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
 import PageSkeleton from "@/components/PageSkeleton";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
@@ -51,30 +52,30 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<LazyPage><Index /></LazyPage>} />
         <Route path="/login" element={<LazyPage><Login /></LazyPage>} />
-        <Route path="/admin" element={<LazyPage><Admin /></LazyPage>} />
-        <Route path="/admin/cases" element={<LazyPage><AdminCases /></LazyPage>} />
-        <Route path="/admin/servicos" element={<LazyPage><AdminServicos /></LazyPage>} />
-        <Route path="/admin/categorias" element={<LazyPage><AdminCategorias /></LazyPage>} />
-        <Route path="/admin/usuarios" element={<LazyPage><AdminUsuarios /></LazyPage>} />
-        <Route path="/admin/configuracoes" element={<LazyPage><AdminConfiguracoes /></LazyPage>} />
-        <Route path="/admin/pagamentos" element={<LazyPage><AdminPagamentos /></LazyPage>} />
-        <Route path="/admin/integracoes" element={<LazyPage><AdminIntegracoes /></LazyPage>} />
-        <Route path="/admin/auditoria" element={<LazyPage><AdminAuditoria /></LazyPage>} />
-        <Route path="/admin/comunicacoes/modelos" element={<LazyPage><AdminComunicacoesModelos /></LazyPage>} />
-        <Route path="/admin/comunicacoes/gatilhos" element={<LazyPage><AdminComunicacoesGatilhos /></LazyPage>} />
-        <Route path="/admin/comunicacoes/historico" element={<LazyPage><AdminComunicacoesHistorico /></LazyPage>} />
-        <Route path="/admin/contratos" element={<LazyPage><AdminContratos /></LazyPage>} />
-        <Route path="/admin/contratos/configuracoes" element={<LazyPage><AdminContratosConfig /></LazyPage>} />
-        <Route path="/admin/contratos/:id" element={<LazyPage><ContractEditor /></LazyPage>} />
-        <Route path="/admin/proposta/:id" element={<LazyPage><ProposalEditor /></LazyPage>} />
+        <Route path="/admin" element={<LazyPage><ProtectedRoute requiredModule="propostas"><Admin /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/cases" element={<LazyPage><ProtectedRoute requiredModule="catalogo"><AdminCases /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/servicos" element={<LazyPage><ProtectedRoute requiredModule="catalogo"><AdminServicos /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/categorias" element={<LazyPage><ProtectedRoute requiredModule="catalogo"><AdminCategorias /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/usuarios" element={<LazyPage><ProtectedRoute requiredModule="usuarios"><AdminUsuarios /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/configuracoes" element={<LazyPage><ProtectedRoute requiredModule="configuracoes"><AdminConfiguracoes /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/pagamentos" element={<LazyPage><ProtectedRoute requiredModule="pagamentos"><AdminPagamentos /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/integracoes" element={<LazyPage><ProtectedRoute requiredModule="integracoes"><AdminIntegracoes /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/auditoria" element={<LazyPage><ProtectedRoute requiredModule="auditoria"><AdminAuditoria /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/comunicacoes/modelos" element={<LazyPage><ProtectedRoute requiredModule="comunicacoes"><AdminComunicacoesModelos /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/comunicacoes/gatilhos" element={<LazyPage><ProtectedRoute requiredModule="comunicacoes"><AdminComunicacoesGatilhos /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/comunicacoes/historico" element={<LazyPage><ProtectedRoute requiredModule="comunicacoes"><AdminComunicacoesHistorico /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/contratos" element={<LazyPage><ProtectedRoute requiredModule="contratos"><AdminContratos /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/contratos/configuracoes" element={<LazyPage><ProtectedRoute requiredModule="contratos"><AdminContratosConfig /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/contratos/:id" element={<LazyPage><ProtectedRoute requiredModule="contratos"><ContractEditor /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/proposta/:id" element={<LazyPage><ProtectedRoute requiredModule="propostas"><ProposalEditor /></ProtectedRoute></LazyPage>} />
         <Route path="/proposta/:id" element={<LazyPage><ProposalView /></LazyPage>} />
         <Route path="/p/:id" element={<LazyPage><ProposalView /></LazyPage>} />
         <Route path="/contrato/:id" element={<LazyPage><ContractView /></LazyPage>} />
-        <Route path="/atendimento" element={<LazyPage><Atendimento /></LazyPage>} />
-        <Route path="/atendimento/dashboard" element={<LazyPage><AtendimentoDashboard /></LazyPage>} />
-        <Route path="/atendimento/configuracoes" element={<LazyPage><AtendimentoConfiguracoes /></LazyPage>} />
-        <Route path="/atendimento/contatos" element={<LazyPage><AtendimentoContatos /></LazyPage>} />
-        <Route path="/admin/perfil" element={<LazyPage><MeuPerfil /></LazyPage>} />
+        <Route path="/atendimento" element={<LazyPage><ProtectedRoute requiredModule="atendimento"><Atendimento /></ProtectedRoute></LazyPage>} />
+        <Route path="/atendimento/dashboard" element={<LazyPage><ProtectedRoute requiredModule="atendimento"><AtendimentoDashboard /></ProtectedRoute></LazyPage>} />
+        <Route path="/atendimento/configuracoes" element={<LazyPage><ProtectedRoute requiredModule="atendimento"><AtendimentoConfiguracoes /></ProtectedRoute></LazyPage>} />
+        <Route path="/atendimento/contatos" element={<LazyPage><ProtectedRoute requiredModule="atendimento"><AtendimentoContatos /></ProtectedRoute></LazyPage>} />
+        <Route path="/admin/perfil" element={<LazyPage><ProtectedRoute><MeuPerfil /></ProtectedRoute></LazyPage>} />
         <Route path="*" element={<LazyPage><NotFound /></LazyPage>} />
       </Routes>
     </AnimatePresence>
