@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import PageSkeleton from "@/components/PageSkeleton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ModuleAccessProvider } from "@/hooks/useModuleAccess";
@@ -93,21 +94,23 @@ const App = () => {
   }, []);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <div className="min-h-screen">
-        <QueryClientProvider client={queryClient}>
-          <ModuleAccessProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AnimatedRoutes />
-              </BrowserRouter>
-            </TooltipProvider>
-          </ModuleAccessProvider>
-        </QueryClientProvider>
-      </div>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <div className="min-h-screen">
+          <QueryClientProvider client={queryClient}>
+            <ModuleAccessProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AnimatedRoutes />
+                </BrowserRouter>
+              </TooltipProvider>
+            </ModuleAccessProvider>
+          </QueryClientProvider>
+        </div>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 
