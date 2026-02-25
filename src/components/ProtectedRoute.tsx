@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useModuleAccess, type ModuleKey } from "@/hooks/useModuleAccess";
 
@@ -10,12 +10,9 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requiredModule, requiredAction = "can_view" }: ProtectedRouteProps) => {
   const navigate = useNavigate();
-  const { permissions, loading, isAdmin, userId } = useModuleAccess();
+  const { permissions, loading, initialized, isAdmin, userId } = useModuleAccess();
 
-  console.log("[ProtectedRoute] state:", { loading, userId, isAdmin, requiredModule, requiredAction });
-
-  // Still loading auth + permissions
-  if (loading) {
+  if (!initialized || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
@@ -23,19 +20,12 @@ const ProtectedRoute = ({ children, requiredModule, requiredAction = "can_view" 
     );
   }
 
-  // Not authenticated
   if (!userId) {
-    navigate("/login", { replace: true });
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
-  // No module required — just auth is enough
-  if (!requiredModule) return <>{children}</>;
+  if (!requiredModule || isAdmin) return <>{children}</>;
 
-  // Admins always pass
-  if (isAdmin) return <>{children}</>;
-
-  // Check granular permission
   const perm = permissions[requiredModule];
   if (!perm || !perm[requiredAction]) {
     return (
