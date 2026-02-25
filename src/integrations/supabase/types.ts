@@ -484,6 +484,45 @@ export type Database = {
           },
         ]
       }
+      frontend_error_logs: {
+        Row: {
+          context: string | null
+          created_at: string
+          error_message: string | null
+          error_stack: string | null
+          error_type: string
+          id: string
+          metadata: Json | null
+          route: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          error_message?: string | null
+          error_stack?: string | null
+          error_type?: string
+          id?: string
+          metadata?: Json | null
+          route?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          error_message?: string | null
+          error_stack?: string | null
+          error_type?: string
+          id?: string
+          metadata?: Json | null
+          route?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       mensagens: {
         Row: {
           assinatura: string | null
