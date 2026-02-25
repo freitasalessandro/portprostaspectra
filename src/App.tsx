@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
 import PageSkeleton from "@/components/PageSkeleton";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ModuleAccessProvider } from "@/hooks/useModuleAccess";
 
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
@@ -85,15 +86,18 @@ const AnimatedRoutes = () => {
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AnimatedRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
+      <ModuleAccessProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AnimatedRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ModuleAccessProvider>
     </QueryClientProvider>
   </ThemeProvider>
 );
 
 export default App;
+
