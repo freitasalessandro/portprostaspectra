@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useModuleAccess, type ModuleKey } from "@/hooks/useModuleAccess";
 import { Button } from "@/components/ui/button";
+import { logError } from "@/hooks/useErrorTelemetry";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ const TIMEOUT_MS = 10000;
 
 const ProtectedRoute = ({ children, requiredModule, requiredAction = "can_view" }: ProtectedRouteProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { permissions, loading, initialized, isAdmin, userId, refreshPermissions } = useModuleAccess();
   const [timedOut, setTimedOut] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -66,6 +68,14 @@ const ProtectedRoute = ({ children, requiredModule, requiredAction = "can_view" 
 
   const perm = permissions[requiredModule];
   if (!perm || !perm[requiredAction]) {
+    logError({
+      error_type: "permission_denied",
+      error_message: `Access denied: ${requiredModule}.${requiredAction}`,
+      route: location.pathname,
+      context: `userId=${userId}`,
+      metadata: { module: requiredModule, action: requiredAction, isAdmin },
+    });
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-3">
