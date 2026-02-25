@@ -94,17 +94,19 @@ const App = () => {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <QueryClientProvider client={queryClient}>
-        <ModuleAccessProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AnimatedRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
-        </ModuleAccessProvider>
-      </QueryClientProvider>
+      <div className="min-h-screen">
+        <QueryClientProvider client={queryClient}>
+          <ModuleAccessProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AnimatedRoutes />
+              </BrowserRouter>
+            </TooltipProvider>
+          </ModuleAccessProvider>
+        </QueryClientProvider>
+      </div>
     </ThemeProvider>
   );
 };

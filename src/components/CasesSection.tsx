@@ -111,20 +111,32 @@ const CasesSection = () => {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [servicesRes, filesRes] = await Promise.all([
-        supabase.from("services").select("*").eq("is_case", true).order("sort_order"),
-        supabase.from("service_files").select("*").order("sort_order"),
-      ]);
+      try {
+        const [servicesRes, filesRes] = await Promise.all([
+          supabase.from("services").select("*").eq("is_case", true).order("sort_order"),
+          supabase.from("service_files").select("*").order("sort_order"),
+        ]);
 
-      const services = (servicesRes.data as DbService[]) || [];
-      const files = (filesRes.data as DbFile[]) || [];
+        if (servicesRes.error) throw servicesRes.error;
+        if (filesRes.error) throw filesRes.error;
 
-      setSaasProducts(services.filter(s => s.section === "saas").map(s => toCaseItem(s, files)));
-      setCustomDev(services.filter(s => s.section === "custom").map(s => toCaseItem(s, files)));
-      setDesignServices(services.filter(s => s.section === "design").map(s => toCaseItem(s, files)));
-      setLoaded(true);
+        const services = (servicesRes.data as DbService[]) || [];
+        const files = (filesRes.data as DbFile[]) || [];
+
+        setSaasProducts(services.filter(s => s.section === "saas").map(s => toCaseItem(s, files)));
+        setCustomDev(services.filter(s => s.section === "custom").map(s => toCaseItem(s, files)));
+        setDesignServices(services.filter(s => s.section === "design").map(s => toCaseItem(s, files)));
+      } catch (error) {
+        console.error("[CasesSection] Failed to load cases:", error);
+        setSaasProducts([]);
+        setCustomDev([]);
+        setDesignServices([]);
+      } finally {
+        setLoaded(true);
+      }
     };
-    fetchAll();
+
+    void fetchAll();
   }, []);
 
   if (!loaded) return null;

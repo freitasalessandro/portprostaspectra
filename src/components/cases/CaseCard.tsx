@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 import { useRef } from "react";
 import type { CaseItem } from "../CasesSection";
@@ -136,18 +136,15 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
             <div className="relative w-full aspect-[16/9] overflow-hidden bg-card/30 border border-border/20 group/ss">
               {/* Reflective glare on screenshot */}
               <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-br from-white/[0.03] via-transparent to-transparent" />
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={activeScreenshot[key] ?? 0}
-                  src={item.screenshots[activeScreenshot[key] ?? 0]}
-                  alt={`${item.title} screenshot`}
-                  className="w-full h-full object-cover object-top"
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
-                />
-              </AnimatePresence>
+              <motion.img
+                key={activeScreenshot[key] ?? 0}
+                src={item.screenshots[activeScreenshot[key] ?? 0]}
+                alt={`${item.title} screenshot`}
+                className="w-full h-full object-cover object-top"
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
+              />
             </div>
 
             {item.screenshots.length > 1 && (
