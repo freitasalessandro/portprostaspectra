@@ -5,7 +5,7 @@ import {
   FileText, Briefcase, Wrench, Users, Settings, LogOut, Menu, X, Tag,
   CreditCard, Plug, ScrollText, MessageSquare, FileSignature, ChevronDown,
   LayoutDashboard, Shield, Sun, Moon, MessageCircle, Headphones, Sliders, Contact, UserCircle,
-  PanelLeftClose, PanelLeft,
+  PanelLeftClose, PanelLeft, Bug,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useOpenTicketCount } from "@/hooks/useAtendimento";
@@ -79,6 +79,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Usuários", icon: Users, path: "/admin/usuarios", module: "usuarios" },
       { title: "Integrações", icon: Plug, path: "/admin/integracoes", module: "integracoes" },
       { title: "Auditoria", icon: Shield, path: "/admin/auditoria", module: "auditoria" },
+      { title: "Logs de Erro", icon: Bug, path: "/admin/error-logs", module: "auditoria" },
       { title: "Configurações", icon: Settings, path: "/admin/configuracoes", module: "configuracoes" },
     ],
   },
