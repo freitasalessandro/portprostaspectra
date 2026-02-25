@@ -38,6 +38,24 @@ const MODULE_KEYS: ModuleKey[] = [
 
 const FULL_ACCESS: ModulePermission = { can_view: true, can_create: true, can_edit: true, can_delete: true };
 const NO_ACCESS: ModulePermission = { can_view: false, can_create: false, can_edit: false, can_delete: false };
+const QUERY_TIMEOUT_MS = 8000;
+
+const withTimeout = <T,>(promiseLike: PromiseLike<T>, context: string): Promise<T> =>
+  new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`[ModuleAccessProvider] Timeout while loading ${context}`));
+    }, QUERY_TIMEOUT_MS);
+
+    Promise.resolve(promiseLike)
+      .then((result) => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
 
 const createNoAccessMap = (): PermissionsMap =>
   MODULE_KEYS.reduce((acc, key) => {
@@ -96,10 +114,13 @@ export function ModuleAccessProvider({ children }: { children: React.ReactNode }
     applyIfCurrent(requestId, () => setLoading(true));
 
     try {
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", uid);
+      const { data: roles, error: rolesError } = await withTimeout(
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", uid),
+        "user roles"
+      );
 
       if (rolesError) throw rolesError;
 
@@ -113,10 +134,13 @@ export function ModuleAccessProvider({ children }: { children: React.ReactNode }
         return;
       }
 
-      const { data: rows, error: accessError } = await supabase
-        .from("user_module_access")
-        .select("module, can_view, can_create, can_edit, can_delete")
-        .eq("user_id", uid);
+      const { data: rows, error: accessError } = await withTimeout(
+        supabase
+          .from("user_module_access")
+          .select("module, can_view, can_create, can_edit, can_delete")
+          .eq("user_id", uid),
+        "module permissions"
+      );
 
       if (accessError) throw accessError;
 
