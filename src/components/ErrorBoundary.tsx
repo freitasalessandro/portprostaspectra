@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { RefreshCw, AlertTriangle, Copy } from "lucide-react";
+import { logError } from "@/hooks/useErrorTelemetry";
 
 interface Props {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface State {
   errorId: string;
   errorMessage: string;
   copied: boolean;
+  errorSource: "render";
 }
 
 const generateErrorId = () =>
@@ -18,7 +20,7 @@ const generateErrorId = () =>
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, errorId: "", errorMessage: "", copied: false };
+    this.state = { hasError: false, errorId: "", errorMessage: "", copied: false, errorSource: "render" };
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
@@ -26,24 +28,33 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: true,
       errorId: generateErrorId(),
       errorMessage: error?.message || "Erro desconhecido",
+      errorSource: "render",
     };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error(`[ErrorBoundary] ${this.state.errorId}:`, error, info.componentStack);
+    logError({
+      error_type: "render_error",
+      error_message: error?.message || "Erro de renderização",
+      error_stack: `${error?.stack || ""}\n${info.componentStack || ""}`.slice(0, 4000),
+      route: window.location.pathname,
+      context: "ErrorBoundary.componentDidCatch",
+      metadata: { errorId: this.state.errorId },
+    });
   }
 
   handleReload = () => {
-    this.setState({ hasError: false, errorId: "", errorMessage: "", copied: false });
+    this.setState({ hasError: false, errorId: "", errorMessage: "", copied: false, errorSource: "render" });
     window.location.reload();
   };
 
   handleRetry = () => {
-    this.setState({ hasError: false, errorId: "", errorMessage: "", copied: false });
+    this.setState({ hasError: false, errorId: "", errorMessage: "", copied: false, errorSource: "render" });
   };
 
   handleCopy = () => {
-    const text = `ID: ${this.state.errorId}\nErro: ${this.state.errorMessage}`;
+    const text = `ID: ${this.state.errorId}\nFonte: ${this.state.errorSource}\nErro: ${this.state.errorMessage}`;
     navigator.clipboard.writeText(text).then(() => {
       this.setState({ copied: true });
       setTimeout(() => this.setState({ copied: false }), 2000);
@@ -77,6 +88,7 @@ class ErrorBoundary extends Component<Props, State> {
                   {this.state.copied ? "Copiado!" : "Copiar"}
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground/70">Fonte: {this.state.errorSource}</p>
               <p className="text-xs text-muted-foreground/70 truncate">{this.state.errorMessage}</p>
             </div>
 
