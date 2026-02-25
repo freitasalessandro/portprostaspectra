@@ -122,6 +122,7 @@ export function useErrorTelemetry() {
 
     const onError = (event: ErrorEvent) => {
       captureError(event.error || event.message, "async_error", `${event.filename}:${event.lineno}`);
+      if (event.cancelable) event.preventDefault();
     };
 
     window.addEventListener("unhandledrejection", onUnhandledRejection);
