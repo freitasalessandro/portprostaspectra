@@ -152,19 +152,41 @@ export default function TicketList({
       const cleanNum = newNumber.replace(/\D/g, "");
       if (cleanNum.length < 12 || cleanNum.length > 13) { toast({ title: "Número inválido", description: "Informe o número com DDI + DDD + número (ex: 5511999999999)", variant: "destructive" }); setCreating(false); return; }
 
-      const { data: contato, error: cErr } = await supabase
+      const { data: existingContato, error: existingContatoError } = await supabase
         .from("contatos")
-        .upsert({ whatsapp_number: cleanNum, nome: newNome || null, user_id: user.id }, { onConflict: "whatsapp_number" })
-        .select()
-        .single();
-      if (cErr) throw cErr;
+        .select("id, user_id, nome")
+        .eq("whatsapp_number", cleanNum)
+        .maybeSingle();
+      if (existingContatoError) throw existingContatoError;
+
+      let contato: any = null;
+
+      if (existingContato) {
+        const { data: updatedContato, error: updateContatoError } = await supabase
+          .from("contatos")
+          .update({ nome: newNome || existingContato.nome || null })
+          .eq("id", existingContato.id)
+          .select()
+          .single();
+        if (updateContatoError) throw updateContatoError;
+        contato = updatedContato;
+      } else {
+        const { data: createdContato, error: createContatoError } = await supabase
+          .from("contatos")
+          .insert({ whatsapp_number: cleanNum, nome: newNome || null, user_id: user.id })
+          .select()
+          .single();
+        if (createContatoError) throw createContatoError;
+        contato = createdContato;
+      }
+
+      const ownerUserId = contato?.user_id || user.id;
 
       const { data: ticket, error: tErr } = await supabase
         .from("tickets")
-        .insert({ whatsapp_number: cleanNum, contato_id: contato.id, user_id: user.id, atendente_id: user.id, status: "EM_ATENDIMENTO", assumed_at: new Date().toISOString() })
+        .insert({ whatsapp_number: cleanNum, contato_id: contato.id, user_id: ownerUserId, atendente_id: user.id, status: "EM_ATENDIMENTO", assumed_at: new Date().toISOString() })
         .select("*, contatos(*)")
         .single();
-      if (tErr) throw tErr;
 
       onNewTicket({ ...ticket, contato: ticket.contatos, tags: ticket.tags || [] } as any);
       setNewDialog(false); resetDialog();
