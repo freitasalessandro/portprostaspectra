@@ -19,23 +19,24 @@ export default function Atendimento() {
   const { mensagens, loading: loadingMensagens } = useMensagens(selectedTicket?.id || null);
   const { motivos } = useMotivos();
   const openCount = useOpenTicketCount();
-  useForwardNotification(perfil?.id || null);
+  const perfilUserId = perfil?.user_id || null;
+  useForwardNotification(perfilUserId);
   useNewTicketNotification(userId, perfil?.cargo);
 
   // Track tickets forwarded to current user — highlight them temporarily
   useEffect(() => {
-    if (!perfil?.id) return;
+    if (!perfilUserId) return;
     const channel = supabase
-      .channel(`forward-highlight-${perfil.id}`)
+      .channel(`forward-highlight-${perfilUserId}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "tickets",
-        filter: `atendente_id=eq.${perfil.id}`,
+        filter: `atendente_id=eq.${perfilUserId}`,
       }, (payload) => {
         const oldAtendente = (payload.old as any)?.atendente_id;
         const newAtendente = (payload.new as any)?.atendente_id;
-        if (newAtendente === perfil.id && oldAtendente !== perfil.id) {
+        if (newAtendente === perfilUserId && oldAtendente !== perfilUserId) {
           const ticketId = (payload.new as any).id;
           setHighlightedIds(prev => new Set(prev).add(ticketId));
           setTimeout(() => {
@@ -49,7 +50,7 @@ export default function Atendimento() {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [perfil?.id]);
+  }, [perfilUserId]);
 
   // Update document title
   useEffect(() => {
