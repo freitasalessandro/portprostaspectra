@@ -204,20 +204,50 @@ export default function ChatArea({
 
       setCurrentUserId(data.user.id);
 
-      const { data: settings } = await supabase
+      const cols = "atendimento_api_instance, atendimento_api_url";
+      const hasConfig = (s: any) => Boolean(s?.atendimento_api_instance);
+
+      // 1. Try current user's settings
+      const { data: ownSettings } = await supabase
         .from("company_settings")
-        .select("atendimento_api_instance, atendimento_api_url")
+        .select(cols)
         .eq("user_id", data.user.id)
         .maybeSingle();
-      const s = settings as any;
-      if (s?.atendimento_api_instance) {
+
+      if (hasConfig(ownSettings)) {
         setInstanceInfo({
-          name: s.atendimento_api_instance,
-          url: (s.atendimento_api_url || "").replace(/\/+$/, ""),
+          name: (ownSettings as any).atendimento_api_instance,
+          url: ((ownSettings as any).atendimento_api_url || "").replace(/\/+$/, ""),
         });
-      } else {
-        setInstanceInfo(null);
+        return;
       }
+
+      // 2. Fallback: find any admin with configured settings
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      const adminIds = (adminRoles ?? []).map((r: any) => r.user_id).filter(Boolean);
+      if (adminIds.length > 0) {
+        const { data: adminSettings } = await supabase
+          .from("company_settings")
+          .select(cols)
+          .in("user_id", adminIds)
+          .not("atendimento_api_instance", "is", null)
+          .limit(1)
+          .maybeSingle();
+
+        if (hasConfig(adminSettings)) {
+          setInstanceInfo({
+            name: (adminSettings as any).atendimento_api_instance,
+            url: ((adminSettings as any).atendimento_api_url || "").replace(/\/+$/, ""),
+          });
+          return;
+        }
+      }
+
+      setInstanceInfo(null);
     });
   }, []);
 
