@@ -20,10 +20,10 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
     offset: ["start end", "end start"],
   });
 
-  const cardY = useTransform(scrollYProgress, [0, 0.3], [40, 0]);
-  const cardOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
-  const screenshotScale = useTransform(scrollYProgress, [0.2, 0.5], [0.95, 1]);
-  const screenshotY = useTransform(scrollYProgress, [0.2, 0.5], [20, 0]);
+  const cardY = useTransform(scrollYProgress, [0, 0.15], [20, 0]);
+  const cardOpacity = useTransform(scrollYProgress, [0, 0.08], [0.4, 1]);
+  const screenshotScale = useTransform(scrollYProgress, [0.1, 0.3], [0.98, 1]);
+  const screenshotY = useTransform(scrollYProgress, [0.1, 0.3], [10, 0]);
 
   return (
     <motion.div
