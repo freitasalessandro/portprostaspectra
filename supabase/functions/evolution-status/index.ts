@@ -34,11 +34,38 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const { data: settings } = await supabase
+    const settingsCols = "atendimento_api_url, atendimento_api_instance, atendimento_api_token";
+    const hasConfig = (s: any) => Boolean(s?.atendimento_api_url && s?.atendimento_api_instance && s?.atendimento_api_token);
+
+    // 1. Try current user's settings
+    let settings: any = null;
+    const { data: ownSettings } = await supabase
       .from("company_settings")
-      .select("atendimento_api_url, atendimento_api_instance, atendimento_api_token")
+      .select(settingsCols)
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
+    if (hasConfig(ownSettings)) settings = ownSettings;
+
+    // 2. Fallback: admin settings
+    if (!settings) {
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+      const adminIds = (adminRoles ?? []).map((r: any) => r.user_id).filter(Boolean);
+      if (adminIds.length > 0) {
+        const { data: adminSettings } = await supabase
+          .from("company_settings")
+          .select(settingsCols)
+          .in("user_id", adminIds)
+          .not("atendimento_api_url", "is", null)
+          .not("atendimento_api_instance", "is", null)
+          .not("atendimento_api_token", "is", null)
+          .limit(1)
+          .maybeSingle();
+        if (hasConfig(adminSettings)) settings = adminSettings;
+      }
+    }
 
     const evoUrl = settings?.atendimento_api_url;
     const evoInstance = settings?.atendimento_api_instance;
