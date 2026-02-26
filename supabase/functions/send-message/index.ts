@@ -143,6 +143,9 @@ Deno.serve(async (req) => {
     const evoInstance = settings?.atendimento_api_instance;
     const evoToken = settings?.atendimento_api_token;
 
+    let sendStatus: "ENVIADO" | "ERRO" = "ENVIADO";
+    let sendErrorDetail: string | null = null;
+
     if (evoUrl && evoInstance && evoToken) {
       const baseUrl = evoUrl.replace(/\/+$/, "");
       try {
@@ -150,44 +153,32 @@ Deno.serve(async (req) => {
           ? ticket.whatsapp_number
           : ticket.whatsapp_number + "@s.whatsapp.net";
 
+        let evoResponse: Response | null = null;
+
         if (msgTipo === "TEXT") {
-          await fetch(
+          evoResponse = await fetch(
             `${baseUrl}/message/sendText/${evoInstance}`,
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: evoToken,
-              },
+              headers: { "Content-Type": "application/json", apikey: evoToken },
               body: JSON.stringify({ number: waNumber, text: finalText }),
             }
           );
         } else if (msgTipo === "IMAGE" && midia_url) {
-          await fetch(
+          evoResponse = await fetch(
             `${baseUrl}/message/sendMedia/${evoInstance}`,
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: evoToken,
-              },
-              body: JSON.stringify({
-                number: waNumber,
-                mediatype: "image",
-                media: midia_url,
-                caption: conteudo || "",
-              }),
+              headers: { "Content-Type": "application/json", apikey: evoToken },
+              body: JSON.stringify({ number: waNumber, mediatype: "image", media: midia_url, caption: conteudo || "" }),
             }
           );
         } else if ((msgTipo === "DOCUMENT" || msgTipo === "AUDIO" || msgTipo === "VIDEO") && midia_url) {
-          await fetch(
+          evoResponse = await fetch(
             `${baseUrl}/message/sendMedia/${evoInstance}`,
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: evoToken,
-              },
+              headers: { "Content-Type": "application/json", apikey: evoToken },
               body: JSON.stringify({
                 number: waNumber,
                 mediatype: msgTipo === "DOCUMENT" ? "document" : msgTipo === "VIDEO" ? "video" : "audio",
@@ -198,12 +189,29 @@ Deno.serve(async (req) => {
             }
           );
         }
-      } catch (err) {
-        console.error("Evolution API error:", err);
+
+        if (evoResponse) {
+          const responseText = await evoResponse.text();
+          if (!evoResponse.ok) {
+            sendStatus = "ERRO";
+            sendErrorDetail = `HTTP ${evoResponse.status}: ${responseText.slice(0, 500)}`;
+            console.error("Evolution API error response:", { status: evoResponse.status, body: responseText.slice(0, 1000) });
+          } else {
+            console.log("Evolution API success:", { status: evoResponse.status, body: responseText.slice(0, 300) });
+          }
+        }
+      } catch (err: any) {
+        sendStatus = "ERRO";
+        sendErrorDetail = `Exception: ${err?.message || String(err)}`.slice(0, 500);
+        console.error("Evolution API exception:", err);
       }
+    } else {
+      sendStatus = "ERRO";
+      sendErrorDetail = "Nenhuma configuração de API WhatsApp encontrada (ticket owner, sender, admin)";
+      console.warn("No Evolution API settings found for sending message");
     }
 
-    // Insert message
+    // Insert message with real send status
     const { data: msg, error: msgError } = await supabase.from("mensagens").insert({
       ticket_id,
       sentido: "SAIDA",
@@ -212,7 +220,7 @@ Deno.serve(async (req) => {
       midia_url: midia_url || null,
       atendente_id: atendente_id || userId,
       assinatura: operatorName || null,
-      status_envio: "ENVIADO",
+      status_envio: sendStatus,
     }).select().single();
 
     if (msgError) {
@@ -228,7 +236,11 @@ Deno.serve(async (req) => {
       }).eq("id", ticket_id);
     }
 
-    return new Response(JSON.stringify({ success: true, message: msg }), {
+    return new Response(JSON.stringify({
+      success: sendStatus === "ENVIADO",
+      message: msg,
+      ...(sendErrorDetail ? { send_error: sendErrorDetail } : {}),
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
