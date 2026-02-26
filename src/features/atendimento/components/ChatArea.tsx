@@ -651,7 +651,7 @@ export default function ChatArea({
                     autoFocus
                   />
                 </div>
-                <ScrollArea className="max-h-[240px]">
+                <ScrollArea className="h-[240px] overflow-y-auto">
                   {(() => {
                     const s = quickSearch.toLowerCase();
                     const filtered = quickReplies.filter(qr =>
