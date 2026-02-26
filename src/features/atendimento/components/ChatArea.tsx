@@ -177,8 +177,9 @@ export default function ChatArea({
   const [dragging, setDragging] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [instanceInfo, setInstanceInfo] = useState<{ name: string; url: string } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [forwardDialog, setForwardDialog] = useState(false);
-  const [atendentes, setAtendentes] = useState<{ id: string; nome_completo: string; cargo: string; setor: string | null }[]>([]);
+  const [atendentes, setAtendentes] = useState<{ id: string; user_id: string; nome_completo: string; cargo: string; setor: string | null }[]>([]);
   const [forwardTarget, setForwardTarget] = useState("");
   const [forwardMotivo, setForwardMotivo] = useState("");
   const [forwarding, setForwarding] = useState(false);
@@ -195,7 +196,14 @@ export default function ChatArea({
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+      if (!data.user) {
+        setCurrentUserId(null);
+        setInstanceInfo(null);
+        return;
+      }
+
+      setCurrentUserId(data.user.id);
+
       const { data: settings } = await supabase
         .from("company_settings")
         .select("atendimento_api_instance, atendimento_api_url")
@@ -256,29 +264,72 @@ export default function ChatArea({
   };
 
   const handleSend = async () => {
-    if ((!text.trim() && !pendingFile) || !ticket || !perfil) return;
+    if ((!text.trim() && !pendingFile) || !ticket) return;
     setSending(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { toast({ title: "Erro", description: "Sessão expirada.", variant: "destructive" }); setSending(false); return; }
+      if (!session?.access_token || !session.user?.id) {
+        toast({ title: "Erro", description: "Sessão expirada.", variant: "destructive" });
+        setSending(false);
+        return;
+      }
+
       let midiaUrl: string | null = null;
       let tipo = "TEXT";
-      if (pendingFile) { midiaUrl = await uploadFile(pendingFile.file); if (!midiaUrl) { setSending(false); return; } tipo = pendingFile.tipo; }
+      if (pendingFile) {
+        midiaUrl = await uploadFile(pendingFile.file);
+        if (!midiaUrl) {
+          setSending(false);
+          return;
+        }
+        tipo = pendingFile.tipo;
+      }
+
       const { error } = await supabase.functions.invoke("send-message", {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { ticket_id: ticket.id, conteudo: text.trim() || null, atendente_id: perfil.id, tipo, midia_url: midiaUrl },
+        body: {
+          ticket_id: ticket.id,
+          conteudo: text.trim() || null,
+          atendente_id: session.user.id,
+          tipo,
+          midia_url: midiaUrl,
+        },
       });
-      if (error) { toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" }); }
-      else { setText(""); clearPendingFile(); onTicketUpdate(); }
-    } catch (err: any) { toast({ title: "Erro ao enviar", description: err.message || "Falha no envio", variant: "destructive" }); }
+
+      if (error) {
+        toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
+      } else {
+        setText("");
+        clearPendingFile();
+        onTicketUpdate();
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar", description: err.message || "Falha no envio", variant: "destructive" });
+    }
     setSending(false);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } };
 
   const handleAssumir = async () => {
-    if (!ticket || !perfil) return;
-    await supabase.from("tickets").update({ atendente_id: perfil.id, status: "EM_ATENDIMENTO" as any, assumed_at: new Date().toISOString() }).eq("id", ticket.id);
+    if (!ticket) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
+      toast({ title: "Sessão expirada", description: "Faça login novamente.", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("tickets")
+      .update({ atendente_id: user.id, status: "EM_ATENDIMENTO" as any, assumed_at: new Date().toISOString() })
+      .eq("id", ticket.id);
+
+    if (error) {
+      toast({ title: "Erro ao assumir ticket", description: error.message, variant: "destructive" });
+      return;
+    }
+
     onTicketUpdate();
     toast({ title: "Ticket assumido com sucesso" });
   };
@@ -303,8 +354,8 @@ export default function ChatArea({
   };
 
   const openForwardDialog = async () => {
-    const { data } = await supabase.from("atendentes_perfil").select("id, nome_completo, cargo, setor");
-    setAtendentes((data || []).filter(a => a.id !== perfil?.id));
+    const { data } = await supabase.from("atendentes_perfil").select("id, user_id, nome_completo, cargo, setor");
+    setAtendentes((data || []).filter(a => a.user_id !== currentUserId));
     setForwardTarget("");
     setForwardMotivo("");
     setForwardDialog(true);
@@ -313,7 +364,7 @@ export default function ChatArea({
   const handleForward = async () => {
     if (!ticket || !forwardTarget) return;
     setForwarding(true);
-    const target = atendentes.find(a => a.id === forwardTarget);
+    const target = atendentes.find(a => a.user_id === forwardTarget);
     const motivoText = forwardMotivo.trim();
     await supabase.from("tickets").update({ atendente_id: forwardTarget, status: "EM_ATENDIMENTO" as any }).eq("id", ticket.id);
     // Update the auto-created transfer record with motivo
@@ -715,7 +766,7 @@ export default function ChatArea({
             </SelectTrigger>
             <SelectContent>
               {atendentes.map(a => (
-                <SelectItem key={a.id} value={a.id}>
+                <SelectItem key={a.user_id} value={a.user_id}>
                   <span className="flex items-center gap-2">
                     <span>{a.nome_completo}</span>
                     <Badge variant="outline" className="text-[9px] h-4">{a.cargo === "supervisor" ? "Supervisor" : a.cargo === "n2_tecnico" ? "N2" : "N1"}</Badge>

@@ -80,6 +80,7 @@ export const cargoColors: Record<AtendenteCargo, string> = {
 
 export interface AtendentePerfil {
   id: string;
+  user_id: string;
   nome_completo: string;
   setor: string | null;
   assinatura_padrao: string | null;
