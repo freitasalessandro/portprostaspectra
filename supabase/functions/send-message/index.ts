@@ -95,11 +95,49 @@ Deno.serve(async (req) => {
     if (msgTipo === "TEXT" && sigActive && perfil?.assinatura_padrao) {
       finalText += "\n\n" + perfil.assinatura_padrao;
     }
-    const { data: settings } = await supabase
+    const settingsColumns = "atendimento_api_url, atendimento_api_instance, atendimento_api_token";
+    const hasAtendimentoSettings = (s: any) =>
+      Boolean(s?.atendimento_api_url && s?.atendimento_api_instance && s?.atendimento_api_token);
+
+    let settings: any = null;
+
+    const { data: ticketOwnerSettings } = await supabase
       .from("company_settings")
-      .select("atendimento_api_url, atendimento_api_instance, atendimento_api_token")
+      .select(settingsColumns)
       .eq("user_id", ticket.user_id)
-      .single();
+      .maybeSingle();
+    settings = ticketOwnerSettings;
+
+    if (!hasAtendimentoSettings(settings)) {
+      const { data: senderSettings } = await supabase
+        .from("company_settings")
+        .select(settingsColumns)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (hasAtendimentoSettings(senderSettings)) settings = senderSettings;
+    }
+
+    if (!hasAtendimentoSettings(settings)) {
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      const adminIds = (adminRoles ?? []).map((row: any) => row.user_id).filter(Boolean);
+      if (adminIds.length > 0) {
+        const { data: adminSettings } = await supabase
+          .from("company_settings")
+          .select(settingsColumns)
+          .in("user_id", adminIds)
+          .not("atendimento_api_url", "is", null)
+          .not("atendimento_api_instance", "is", null)
+          .not("atendimento_api_token", "is", null)
+          .limit(1)
+          .maybeSingle();
+
+        if (hasAtendimentoSettings(adminSettings)) settings = adminSettings;
+      }
+    }
 
     const evoUrl = settings?.atendimento_api_url;
     const evoInstance = settings?.atendimento_api_instance;
