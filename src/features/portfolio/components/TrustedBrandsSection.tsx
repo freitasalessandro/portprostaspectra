@@ -80,7 +80,7 @@ const TrustedBrandsSection = () => {
             {[...brands, ...brands].map((brand, i) => (
               <div
                 key={`${brand.name}-${i}`}
-                className="shrink-0 flex items-center justify-center h-12 md:h-20 w-28 md:w-44 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                className="shrink-0 flex items-center justify-center h-12 md:h-20 w-28 md:w-44 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
               >
                 <img
                   src={brand.logo}
