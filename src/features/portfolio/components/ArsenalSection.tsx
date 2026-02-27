@@ -69,7 +69,7 @@ const TiltCard = ({ service, index }: { service: typeof services[0]; index: numb
 
       <div className="flex items-center justify-between mb-4 md:mb-5 relative" style={{ transform: "translateZ(20px)" }}>
         <motion.div whileHover={{ rotate: 10, scale: 1.1 }} transition={{ duration: 0.3 }}>
-          <service.icon className="w-5 h-5 text-primary/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
+          <service.icon className="w-5 h-5 text-primary group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
         </motion.div>
         <span className="font-display text-xs text-muted-foreground/20 tracking-[0.2em] group-hover:text-primary/20 transition-colors duration-300">
           0{index + 1}
@@ -80,7 +80,7 @@ const TiltCard = ({ service, index }: { service: typeof services[0]; index: numb
         <h3 className="font-display text-base md:text-xl font-bold mb-2 md:mb-3 group-hover:text-primary transition-colors duration-300 leading-tight">
           {service.title}
         </h3>
-        <p className="text-muted-foreground/70 font-body text-sm md:text-base leading-relaxed">
+        <p className="text-muted-foreground font-body text-sm md:text-base leading-relaxed">
           {service.description}
         </p>
       </div>
@@ -134,7 +134,7 @@ const ArsenalSection = () => {
           </p>
           <h2 className="font-display text-2xl sm:text-3xl md:text-6xl font-black tracking-tight leading-[0.95]">
             Ferramentas<br />
-            <span className="font-extralight text-foreground/60">de guerra.</span>
+            <span className="font-extralight text-foreground/80">de guerra.</span>
           </h2>
         </motion.div>
 
