@@ -95,9 +95,9 @@ const ArsenalSection = () => {
     offset: ["start end", "end start"],
   });
 
-  const headerY = useTransform(scrollYProgress, [0, 0.4], [60, 0]);
-  const headerOpacity = useTransform(scrollYProgress, [0, 0.25], [0, 1]);
-  const gridY = useTransform(scrollYProgress, [0.1, 0.5], [80, 0]);
+  const headerY = useTransform(scrollYProgress, [0, 0.15], [20, 0]);
+  const headerOpacity = useTransform(scrollYProgress, [0, 0.08], [0.4, 1]);
+  const gridY = useTransform(scrollYProgress, [0.05, 0.2], [30, 0]);
   const orbScale = useTransform(scrollYProgress, [0, 0.5], [0.6, 1.2]);
 
   return (
