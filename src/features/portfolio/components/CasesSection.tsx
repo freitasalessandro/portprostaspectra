@@ -161,10 +161,10 @@ const CasesSection = () => {
       </p>
       <h2 className="font-display text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95]">
         {titleBold}<br />
-        <span className="font-extralight text-foreground/60">{titleLight}</span>
+        <span className="font-extralight text-foreground/80">{titleLight}</span>
       </h2>
       {subtitle && (
-        <p className="text-muted-foreground/60 font-body text-sm mt-3 md:mt-4 max-w-xl">
+        <p className="text-muted-foreground font-body text-sm mt-3 md:mt-4 max-w-xl">
           {subtitle}
         </p>
       )}
