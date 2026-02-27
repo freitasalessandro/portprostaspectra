@@ -59,7 +59,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
                 >
                   {item.metric}
                 </motion.span>
-                <span className="font-body text-xs text-muted-foreground/50 uppercase tracking-widest mt-1 block">
+                <span className="font-body text-xs text-muted-foreground uppercase tracking-widest mt-1 block">
                   {item.metricLabel}
                 </span>
               </>
@@ -71,10 +71,10 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
         <div className="flex-1 p-4 md:p-7 flex flex-col md:flex-row md:items-center gap-3 md:gap-8">
           <div className="flex items-center gap-3 md:w-56 shrink-0">
             <motion.div whileHover={{ rotate: 15 }} transition={{ duration: 0.3 }}>
-              <item.icon className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
+              <item.icon className="w-4 h-4 text-primary group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
             </motion.div>
             <div>
-              <span className="text-xs text-primary/70 tracking-[0.25em] uppercase font-body font-semibold block">
+              <span className="text-xs text-primary tracking-[0.25em] uppercase font-body font-semibold block">
                 {item.category}
               </span>
               <h3 className="font-display text-base md:text-lg font-bold group-hover:text-primary transition-colors duration-300 leading-tight">
@@ -88,7 +88,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
             </div>
           </div>
 
-          <p className="text-muted-foreground/60 font-body text-sm md:text-base leading-relaxed flex-1">
+          <p className="text-muted-foreground font-body text-sm md:text-base leading-relaxed flex-1">
             {item.description}
           </p>
 
@@ -119,7 +119,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
             ) : (
               <>
                 <span className="font-display text-xl font-black text-gradient-intense">{item.metric}</span>
-                <span className="font-body text-xs text-muted-foreground/50 uppercase tracking-wider">{item.metricLabel}</span>
+                <span className="font-body text-xs text-muted-foreground uppercase tracking-wider">{item.metricLabel}</span>
               </>
             )}
           </div>
