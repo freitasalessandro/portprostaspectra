@@ -63,7 +63,11 @@ export default function AtendimentoConfiguracoes() {
 
   // Grupos permitidos
   interface AllowedGroup { id: string; group_jid: string; group_name: string | null; ativo: boolean; user_id: string; }
+  interface EvoGroup { id: string; subject: string; size: number; }
   const [grupos, setGrupos] = useState<AllowedGroup[]>([]);
+  const [evoGroups, setEvoGroups] = useState<EvoGroup[]>([]);
+  const [loadingEvoGroups, setLoadingEvoGroups] = useState(false);
+  const [selectedEvoGroup, setSelectedEvoGroup] = useState("");
   const [newGroupJid, setNewGroupJid] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
 
@@ -143,7 +147,41 @@ export default function AtendimentoConfiguracoes() {
     if (data) setGrupos(data as any[]);
   };
 
-  const addGrupo = async () => {
+  const fetchEvoGroups = async () => {
+    setLoadingEvoGroups(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Não autenticado");
+      const { data, error } = await supabase.functions.invoke("list-groups", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      setEvoGroups(data?.groups || []);
+      if (!data?.groups?.length && data?.error) {
+        toast({ title: "Aviso", description: data.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao buscar grupos", description: err.message, variant: "destructive" });
+    }
+    setLoadingEvoGroups(false);
+  };
+
+  const addGrupoFromSelection = async () => {
+    if (!userId) return;
+    const evoGroup = evoGroups.find(g => g.id === selectedEvoGroup);
+    if (!evoGroup) return;
+    // Check duplicate
+    if (grupos.some(g => g.group_jid === evoGroup.id)) {
+      toast({ title: "Grupo já adicionado", variant: "destructive" });
+      return;
+    }
+    await supabase.from("allowed_groups").insert({ user_id: userId, group_jid: evoGroup.id, group_name: evoGroup.subject });
+    setSelectedEvoGroup("");
+    fetchGrupos();
+    toast({ title: "Grupo adicionado" });
+  };
+
+  const addGrupoManual = async () => {
     if (!newGroupJid.trim() || !userId) return;
     const jid = newGroupJid.trim().includes("@") ? newGroupJid.trim() : newGroupJid.trim() + "@g.us";
     await supabase.from("allowed_groups").insert({ user_id: userId, group_jid: jid, group_name: newGroupName.trim() || null });
@@ -687,31 +725,75 @@ export default function AtendimentoConfiguracoes() {
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex gap-2 flex-wrap">
-                  <div className="flex-1 min-w-[180px] space-y-1">
-                    <Label className="text-xs">JID do Grupo</Label>
-                    <Input
-                      value={newGroupJid}
-                      onChange={e => setNewGroupJid(e.target.value)}
-                      placeholder="5511999...@g.us"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[140px] space-y-1">
-                    <Label className="text-xs">Nome (opcional)</Label>
-                    <Input
-                      value={newGroupName}
-                      onChange={e => setNewGroupName(e.target.value)}
-                      placeholder="Ex: Suporte Clientes"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <Button size="sm" onClick={addGrupo} disabled={!newGroupJid.trim()}>
-                      <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+                {/* Buscar da API */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={fetchEvoGroups} disabled={loadingEvoGroups}>
+                      {loadingEvoGroups ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
+                      {loadingEvoGroups ? "Buscando..." : "Buscar Grupos da Instância"}
                     </Button>
+                    {evoGroups.length > 0 && (
+                      <span className="text-xs text-muted-foreground">{evoGroups.length} grupos encontrados</span>
+                    )}
                   </div>
+
+                  {evoGroups.length > 0 && (
+                    <div className="flex gap-2 items-end flex-wrap">
+                      <div className="flex-1 min-w-[220px] space-y-1">
+                        <Label className="text-xs">Selecionar Grupo</Label>
+                        <Select value={selectedEvoGroup} onValueChange={setSelectedEvoGroup}>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Selecione um grupo..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {evoGroups
+                              .filter(eg => !grupos.some(g => g.group_jid === eg.id))
+                              .map(eg => (
+                                <SelectItem key={eg.id} value={eg.id}>
+                                  {eg.subject} ({eg.size} membros)
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button size="sm" onClick={addGrupoFromSelection} disabled={!selectedEvoGroup}>
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+                      </Button>
+                    </div>
+                  )}
                 </div>
+
+                {/* Manual fallback */}
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
+                    Adicionar manualmente por JID
+                  </summary>
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    <div className="flex-1 min-w-[180px] space-y-1">
+                      <Label className="text-xs">JID do Grupo</Label>
+                      <Input
+                        value={newGroupJid}
+                        onChange={e => setNewGroupJid(e.target.value)}
+                        placeholder="5511999...@g.us"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-[140px] space-y-1">
+                      <Label className="text-xs">Nome (opcional)</Label>
+                      <Input
+                        value={newGroupName}
+                        onChange={e => setNewGroupName(e.target.value)}
+                        placeholder="Ex: Suporte Clientes"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button size="sm" onClick={addGrupoManual} disabled={!newGroupJid.trim()}>
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+                      </Button>
+                    </div>
+                  </div>
+                </details>
 
                 {grupos.length === 0 ? (
                   <p className="text-xs text-muted-foreground/60 italic py-4 text-center">
