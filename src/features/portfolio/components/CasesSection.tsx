@@ -143,7 +143,7 @@ const CasesSection = () => {
 
   const SectionHeader = ({ label, titleBold, titleLight, subtitle }: { label: string; titleBold: string; titleLight: string; subtitle?: string }) => (
     <motion.div
-      initial={{ opacity: 0.4, y: 15 }}
+      initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
@@ -228,7 +228,7 @@ const CasesSection = () => {
               {designServices.map((service, i) => (
                 <motion.div
                   key={service.title}
-                  initial={{ opacity: 0.4, y: 10 }}
+                  initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
