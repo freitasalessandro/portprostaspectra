@@ -651,42 +651,6 @@ export type Database = {
         }
         Relationships: []
       }
-      portfolio_sections: {
-        Row: {
-          created_at: string
-          id: string
-          label: string
-          section_key: string
-          subtitle: string | null
-          title_bold: string
-          title_light: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          label?: string
-          section_key: string
-          subtitle?: string | null
-          title_bold?: string
-          title_light?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          label?: string
-          section_key?: string
-          subtitle?: string | null
-          title_bold?: string
-          title_light?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null

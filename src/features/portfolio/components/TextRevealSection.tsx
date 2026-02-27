@@ -27,7 +27,7 @@ const TextRevealSection = () => {
           {words.map((word, i) => (
             <motion.span
               key={i}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0.1, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-20%" }}
               transition={{ duration: 0.5, delay: i * 0.06 }}

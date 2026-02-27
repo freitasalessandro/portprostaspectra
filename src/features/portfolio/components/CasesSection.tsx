@@ -62,8 +62,6 @@ interface DbService {
   link: string | null;
   section: string;
   sort_order: number;
-  metric: string | null;
-  metric_label: string | null;
 }
 
 interface DbFile {
@@ -71,14 +69,6 @@ interface DbFile {
   file_path: string;
   file_type: string;
   sort_order: number;
-}
-
-interface DbSectionHeader {
-  section_key: string;
-  label: string;
-  title_bold: string;
-  title_light: string;
-  subtitle: string;
 }
 
 const getPublicUrl = (path: string) => {
@@ -97,18 +87,12 @@ const toCaseItem = (s: DbService, dbFiles: DbFile[]): CaseItem => {
     category: s.category,
     description: s.description,
     icon: iconMap[s.icon] || FileText,
-    metric: s.metric || metricMap[s.title]?.metric || "—",
-    metricLabel: s.metric_label || metricMap[s.title]?.metricLabel || "",
+    metric: metricMap[s.title]?.metric || "—",
+    metricLabel: metricMap[s.title]?.metricLabel || "",
     screenshots: uploadedImages.length > 0 ? uploadedImages : (staticScreenshotMap[s.title] || []),
     comingSoon: s.status === "development",
     link: s.link || undefined,
   };
-};
-
-const defaultHeaders: Record<string, { label: string; title_bold: string; title_light: string; subtitle: string }> = {
-  saas: { label: "Cases", title_bold: "Resultados", title_light: "que falam sozinhos.", subtitle: "" },
-  custom: { label: "Sob Demanda", title_bold: "Desenvolvimento", title_light: "sob medida.", subtitle: "Projetos exclusivos desenvolvidos para resolver desafios específicos de cada cliente, com tecnologia de ponta e entrega personalizada." },
-  design: { label: "Inteligência em Design", title_bold: "Marca que", title_light: "domina.", subtitle: "" },
 };
 
 const CasesSection = () => {
@@ -116,7 +100,6 @@ const CasesSection = () => {
   const [saasProducts, setSaasProducts] = useState<CaseItem[]>([]);
   const [customDev, setCustomDev] = useState<CaseItem[]>([]);
   const [designServices, setDesignServices] = useState<CaseItem[]>([]);
-  const [sectionHeaders, setSectionHeaders] = useState(defaultHeaders);
   const [loaded, setLoaded] = useState(false);
 
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -129,10 +112,9 @@ const CasesSection = () => {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [servicesRes, filesRes, headersRes] = await Promise.all([
+        const [servicesRes, filesRes] = await Promise.all([
           supabase.from("services").select("*").eq("is_case", true).order("sort_order"),
           supabase.from("service_files").select("*").order("sort_order"),
-          supabase.from("portfolio_sections").select("*"),
         ]);
 
         if (servicesRes.error) throw servicesRes.error;
@@ -144,20 +126,6 @@ const CasesSection = () => {
         setSaasProducts(services.filter(s => s.section === "saas").map(s => toCaseItem(s, files)));
         setCustomDev(services.filter(s => s.section === "custom").map(s => toCaseItem(s, files)));
         setDesignServices(services.filter(s => s.section === "design").map(s => toCaseItem(s, files)));
-
-        // Merge DB headers with defaults
-        if (!headersRes.error && headersRes.data) {
-          const merged = { ...defaultHeaders };
-          (headersRes.data as DbSectionHeader[]).forEach(h => {
-            merged[h.section_key] = {
-              label: h.label || defaultHeaders[h.section_key]?.label || "",
-              title_bold: h.title_bold || defaultHeaders[h.section_key]?.title_bold || "",
-              title_light: h.title_light || defaultHeaders[h.section_key]?.title_light || "",
-              subtitle: h.subtitle || defaultHeaders[h.section_key]?.subtitle || "",
-            };
-          });
-          setSectionHeaders(merged);
-        }
       } catch (error) {
         console.error("[CasesSection] Failed to load cases:", error);
         setSaasProducts([]);
@@ -175,7 +143,7 @@ const CasesSection = () => {
 
   const SectionHeader = ({ label, titleBold, titleLight, subtitle }: { label: string; titleBold: string; titleLight: string; subtitle?: string }) => (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
@@ -193,10 +161,10 @@ const CasesSection = () => {
       </p>
       <h2 className="font-display text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95]">
         {titleBold}<br />
-        <span className="font-extralight text-foreground/80">{titleLight}</span>
+        <span className="font-extralight text-foreground/60">{titleLight}</span>
       </h2>
       {subtitle && (
-        <p className="text-muted-foreground font-body text-sm mt-3 md:mt-4 max-w-xl">
+        <p className="text-muted-foreground/60 font-body text-sm mt-3 md:mt-4 max-w-xl">
           {subtitle}
         </p>
       )}
@@ -216,7 +184,7 @@ const CasesSection = () => {
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* SaaS Products */}
-        <SectionHeader label={sectionHeaders.saas.label} titleBold={sectionHeaders.saas.title_bold} titleLight={sectionHeaders.saas.title_light} subtitle={sectionHeaders.saas.subtitle} />
+        <SectionHeader label="Cases" titleBold="Resultados" titleLight="que falam sozinhos." />
 
         <div className="space-y-3 mb-20 md:mb-24">
           {saasProducts.map((item, i) => (
@@ -232,10 +200,10 @@ const CasesSection = () => {
 
         {/* Custom Development */}
         <SectionHeader
-          label={sectionHeaders.custom.label}
-          titleBold={sectionHeaders.custom.title_bold}
-          titleLight={sectionHeaders.custom.title_light}
-          subtitle={sectionHeaders.custom.subtitle}
+          label="Sob Demanda"
+          titleBold="Desenvolvimento"
+          titleLight="sob medida."
+          subtitle="Projetos exclusivos desenvolvidos para resolver desafios específicos de cada cliente, com tecnologia de ponta e entrega personalizada."
         />
 
         <div className="space-y-3 mb-20 md:mb-24">
@@ -254,13 +222,13 @@ const CasesSection = () => {
         {/* Design Services */}
         {designServices.length > 0 && (
           <>
-            <SectionHeader label={sectionHeaders.design.label} titleBold={sectionHeaders.design.title_bold} titleLight={sectionHeaders.design.title_light} subtitle={sectionHeaders.design.subtitle} />
+            <SectionHeader label="Inteligência em Design" titleBold="Marca que" titleLight="domina." />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {designServices.map((service, i) => (
                 <motion.div
                   key={service.title}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
