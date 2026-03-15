@@ -162,13 +162,13 @@
 
   .text-gradient-intense {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(220 100% 55%), hsl(200 100% 60%), hsl(220 100% 65%));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(220 100% 60%), hsl(200 100% 55%));
     background-size: 200% 200%;
     animation: gradient-shift 4s ease-in-out infinite;
   }
 
-  .light .text-gradient-intense {
-    background-image: linear-gradient(135deg, hsl(220 100% 45%), hsl(200 100% 50%), hsl(220 100% 55%));
+  .surface-light .text-gradient-intense {
+    background-image: linear-gradient(135deg, hsl(220 100% 40%), hsl(220 100% 50%), hsl(200 100% 45%));
   }
 
   .glow-box {
