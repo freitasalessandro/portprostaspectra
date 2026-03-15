@@ -95,6 +95,39 @@
   }
 }
 
+  /* Forced light surface for content sections in dark mode */
+  .surface-light {
+    --background: 220 20% 97%;
+    --foreground: 220 30% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 8%;
+    --primary: 220 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 90%;
+    --secondary-foreground: 220 30% 8%;
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 15% 38%;
+    --accent: 220 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 220 100% 45%;
+    --glow-primary: 0 0 40px hsl(220 100% 45% / 0.15);
+    --glow-strong: 0 0 80px hsl(220 100% 45% / 0.1), 0 0 160px hsl(220 100% 45% / 0.05);
+  }
+
+  .light .surface-light {
+    --background: 220 20% 97%;
+    --foreground: 220 30% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 8%;
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 15% 38%;
+    --border: 220 20% 88%;
+  }
+
 @layer base {
   * {
     @apply border-border;

@@ -12,12 +12,17 @@ const Index = () => {
     <main className="bg-background text-foreground overflow-x-hidden">
       <Navbar />
       <HeroSection />
-      <MarqueeBar />
-      <ManifestoSection />
-      <ArsenalSection />
-      <CasesSection />
-      <TrustedBrandsSection />
-      <CTASection />
+
+      {/* Content sections with light surface */}
+      <div className="surface-light bg-background text-foreground">
+        <MarqueeBar />
+        <ManifestoSection />
+        <ArsenalSection />
+        <CasesSection />
+        <TrustedBrandsSection />
+        <CTASection />
+      </div>
+
       <WhatsAppButton />
     </main>
   );
