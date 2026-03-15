@@ -41,7 +41,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
 
       <div className="flex items-stretch">
         {/* Big metric */}
-        <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/15 bg-card/20 group-hover:bg-primary/5 transition-all duration-500">
+        <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/20 bg-muted/30 group-hover:bg-primary/5 transition-all duration-500">
           <div className="text-center">
             {item.comingSoon ? (
               <>
