@@ -158,7 +158,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
                         : "border-border/20 opacity-50 hover:opacity-80"
                     }`}
                   >
-                    <img src={src} alt="" className="w-full h-full object-cover object-top" />
+                    <img src={src} alt="" className="w-full h-full object-cover object-top brightness-100" />
                   </button>
                 ))}
               </div>
