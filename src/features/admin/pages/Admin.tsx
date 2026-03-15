@@ -59,16 +59,8 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
-      fetchProposals();
-    };
-    checkAuth();
-  }, [navigate]);
+    fetchProposals();
+  }, []);
 
   const fetchProposals = async () => {
     const [proposalsRes, sigsRes] = await Promise.all([
