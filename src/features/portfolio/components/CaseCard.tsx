@@ -30,7 +30,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
       ref={cardRef}
       style={{ y: cardY, opacity: cardOpacity }}
       whileHover={{ x: 6, transition: { duration: 0.3 } }}
-      className="group flex flex-col border border-border/20 hover:border-primary/30 transition-all duration-500 bg-background relative overflow-hidden"
+      className="group flex flex-col border border-border/30 hover:border-primary/30 transition-all duration-500 bg-card relative overflow-hidden shadow-sm"
     >
       <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-primary transition-all duration-500" />
 
@@ -41,7 +41,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
 
       <div className="flex items-stretch">
         {/* Big metric */}
-        <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/15 bg-card/20 group-hover:bg-primary/5 transition-all duration-500">
+        <div className="hidden md:flex w-40 shrink-0 items-center justify-center border-r border-border/20 bg-muted/30 group-hover:bg-primary/5 transition-all duration-500">
           <div className="text-center">
             {item.comingSoon ? (
               <>
@@ -133,7 +133,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
           style={{ scale: screenshotScale, y: screenshotY }}
         >
           <div className="flex flex-col gap-4">
-            <div className="relative w-full aspect-[16/9] overflow-hidden bg-card/30 border border-border/20 group/ss">
+            <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted/50 border border-border/20 group/ss">
               {/* Reflective glare on screenshot */}
               <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-br from-white/[0.03] via-transparent to-transparent" />
               <motion.img

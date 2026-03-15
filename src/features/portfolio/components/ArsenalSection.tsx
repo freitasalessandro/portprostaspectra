@@ -51,7 +51,7 @@ const TiltCard = ({ service, index }: { service: typeof services[0]; index: numb
         transformPerspective: 800,
         transformStyle: "preserve-3d",
       }}
-      className={`group ${service.span} relative bg-card/30 border border-border/20 p-6 md:p-8 hover:border-primary/30 hover:bg-card/50 transition-colors duration-500 cursor-default overflow-hidden`}
+      className={`group ${service.span} relative bg-card border border-border/30 p-6 md:p-8 hover:border-primary/30 hover:bg-card transition-colors duration-500 cursor-default overflow-hidden shadow-sm`}
     >
       {/* Glare overlay */}
       <motion.div
