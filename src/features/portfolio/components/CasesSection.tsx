@@ -233,7 +233,7 @@ const CasesSection = () => {
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   whileHover={{ y: -4, transition: { duration: 0.3 } }}
-                  className="group border border-border/30 p-5 md:p-6 hover:border-primary/40 transition-all duration-500 bg-card/10 hover:bg-card/30 cursor-pointer relative overflow-hidden"
+                  className="group border border-border/30 p-5 md:p-6 hover:border-primary/40 transition-all duration-500 bg-card hover:bg-card cursor-pointer relative overflow-hidden shadow-sm"
                 >
                   <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/40 to-transparent transition-all duration-500" />
                   <div className="w-9 h-9 md:w-10 md:h-10 bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 md:mb-5 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(220_100%_55%/0.2)] transition-all duration-300">
