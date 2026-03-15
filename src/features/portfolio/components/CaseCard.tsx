@@ -134,8 +134,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
         >
           <div className="flex flex-col gap-4">
             <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted/50 border border-border/20 group/ss">
-              {/* Reflective glare on screenshot */}
-              <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-br from-white/[0.03] via-transparent to-transparent" />
+              {/* Removed dark overlay - screenshots should be crisp */}
               <motion.img
                 key={activeScreenshot[key] ?? 0}
                 src={item.screenshots[activeScreenshot[key] ?? 0]}
