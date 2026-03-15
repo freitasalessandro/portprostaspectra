@@ -30,7 +30,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
       ref={cardRef}
       style={{ y: cardY, opacity: cardOpacity }}
       whileHover={{ x: 6, transition: { duration: 0.3 } }}
-      className="group flex flex-col border border-border/20 hover:border-primary/30 transition-all duration-500 bg-background relative overflow-hidden"
+      className="group flex flex-col border border-border/30 hover:border-primary/30 transition-all duration-500 bg-card relative overflow-hidden shadow-sm"
     >
       <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-primary transition-all duration-500" />
 
