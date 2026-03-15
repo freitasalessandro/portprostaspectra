@@ -133,7 +133,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
           style={{ scale: screenshotScale, y: screenshotY }}
         >
           <div className="flex flex-col gap-4">
-            <div className="relative w-full aspect-[16/9] overflow-hidden bg-card/30 border border-border/20 group/ss">
+            <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted/50 border border-border/20 group/ss">
               {/* Reflective glare on screenshot */}
               <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-br from-white/[0.03] via-transparent to-transparent" />
               <motion.img
