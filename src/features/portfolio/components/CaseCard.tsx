@@ -133,7 +133,7 @@ const CaseCard = ({ item, index, indexKey, activeScreenshot, setActiveScreenshot
           style={{ scale: screenshotScale, y: screenshotY }}
         >
           <div className="flex flex-col gap-4">
-            <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted/50 border border-border/20 group/ss">
+            <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted border border-border group/ss">
               {/* Removed dark overlay - screenshots should be crisp */}
               <motion.img
                 key={activeScreenshot[key] ?? 0}
